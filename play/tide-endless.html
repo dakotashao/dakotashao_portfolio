@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tide Strips Endless</title>
+<meta name="description" content="An endless ASCII ocean loader in thin horizontal strips: waves wash in and out, with sunlight flashing on the crests.">
+<meta property="og:title" content="Tide Strips Endless">
+<meta property="og:description" content="An endless ASCII ocean loader in thin horizontal strips: waves wash in and out, with sunlight flashing on the crests.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dakotashao.github.io/tide-loader/strips-endless/">
+<meta property="og:image" content="https://dakotashao.github.io/tide-loader/strips-endless/preview.png">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="800">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dakotashao.github.io/tide-loader/strips-endless/preview.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#eef1f6; --ink:#12204a; --muted:#6b7596; --line:#d5dbe8; --accent:#1238e8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --ground:#0b0f1c; --ink:#e4e9f7; --muted:#8791b0; --line:#232b44; --accent:#6f8fff; color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --ground:#0b0f1c; --ink:#e4e9f7; --muted:#8791b0; --line:#232b44; --accent:#6f8fff; color-scheme:dark; }
+
+html,body{height:100%; margin:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  display:grid; place-items:center; padding-inline:16px; padding-block:24px; box-sizing:border-box;
+}
+.wrap{display:flex; flex-direction:column; gap:14px; width:100vmax}
+canvas{display:block; width:100%; aspect-ratio:1; max-width:100%; background:#fff}
+.meta{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink); font-weight:500}
+.bar{height:2px; background:var(--line); position:relative; overflow:hidden}
+.bar i{position:absolute; inset:0 auto 0 0; width:0; background:var(--accent)}
+.controls{display:flex; gap:8px; flex-wrap:wrap}
+button{
+  font:inherit; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+  background:transparent; color:var(--ink); border:1px solid var(--line); padding:7px 12px; cursor:pointer;
+}
+button:hover{border-color:var(--accent); color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+/* embedded in the portfolio card: square fills the whole frame */
+body{padding:0 !important; overflow:hidden; display:grid; place-items:center}
+canvas{width:100vmax !important; height:100vmax !important}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <canvas id="sea" role="img" aria-label="ASCII ocean loader: blue waves flood a white square from left to right"></canvas>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('sea'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const COLS = 52, ROWS = 52;
+  const FILL = 12, HOLD = 3, EBB = 0, REST = 0;   // no ebb: fill, hold 3s, restart   // seconds
+  const DRY = .35;     // grains stay still, but the far edge of the wet sand slowly dries away
+  const BAND = 1;     // rows per horizontal strip of water
+  // the tide comes in as a series of surges: run up, pull back a little, run up further
+  const PEAKS   = [.30, .55, .78, 1.0];
+  const TROUGHS = [.21, .46, .69];
+  const KEYS = (() => {           // [time 0..1, level, 'up' | 'back']
+    const k = [[0, 0, 'up']], n = PEAKS.length, seg = 1/(n*2 - 1);
+    let t = 0;
+    PEAKS.forEach((pk, i) => {
+      t += seg*1.15; k.push([t, pk, 'up']);
+      if (i < TROUGHS.length){ t += seg*.85; k.push([t, TROUGHS[i], 'back']); }
+    });
+    k.forEach(e => e[0] /= t);
+    return k;
+  })();
+  const wet = new Float32Array(ROWS).fill(-99);   // furthest reach per row, drying over time
+  let lastT = 0, lastCycle = 0;
+  const FRAG = "+=-:·*=+-";
+  let loop = true, calm = reduce, start = performance.now(), size = 0, cell = 0;
+
+  // palette: paper → shallow → deep
+  const PAPER = [255,255,255];
+  const FOAM_BG = [0,72,255], SHALLOW = [0,60,255], MID = [0,46,245], DEEP = [0,30,190], ABYSS = [0,18,120];
+  const RAMP = " .·:-=+*≈#%@";
+  const FOAM = "~≈^~∽-";
+
+  const mix = (a,b,t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  const rgb = c => `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
+  const clamp = (v,a,b) => v<a?a:v>b?b:v;
+  const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+  const hash = (x,y=0) => { const s = Math.sin(x*127.1 + y*311.7)*43758.5453; return s - Math.floor(s); };
+  const noise1 = x => { const i = Math.floor(x), f = x - i, u = f*f*(3-2*f); return hash(i)*(1-u) + hash(i+1)*u; };
+
+  function resize(){
+    const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio||1, 2);
+    size = r.width; cv.width = cv.height = Math.round(size*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cell = size/COLS;
+    ctx.font = `500 ${cell*1.02}px "IBM Plex Mono", ui-monospace, monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  }
+
+  // returns {level 0..1 of fill, label, pct}
+  // indeterminate: no progress to show, so the tide never fills or resets.
+  // each wave runs up to its own peak, then drains back to its own trough, forever.
+  const WAVE = 3.4;                                   // seconds per wave (run-up + backwash)
+  const peakOf   = k => .50 + .16*(hash(k, 1) - .5)*2;   // how far wave k reaches (0..1 of the square)
+  const troughOf = k => .30 + .08*(hash(k, 2) - .5)*2;   // where the water settles before wave k
+  function phase(s){
+    const k = Math.floor(s / WAVE), u = s/WAVE - k;
+    const ease = x => (1 - Math.cos(x*Math.PI))/2;       // gentle in, gentle out
+    if (u < .55) return {lv: troughOf(k) + (peakOf(k) - troughOf(k))*ease(u/.55), pct:0, label:''};
+    return {lv: peakOf(k) + (troughOf(k+1) - peakOf(k))*ease((u-.55)/.45), pct:0, label:''};
+  }
+
+
+  // glyphs for light streaks, bright head → faint tail
+  const STREAK_SETS = ["≡≈=~-·", "#≈=-·", "≡=+-·", "≈~=-.", "%≡=~-"];
+  // brightness 0..1 of a light streak at (row, col); most rows have none at a given moment
+  function glint(r, c, t){
+    let best = 0;
+    for (let k = 0; k < 2; k++){
+      const seed = hash(r*3.1 + k*17, 9);
+      if (seed < .45) continue;                          // this lane is dark
+      const speed = 3 + seed*3;                          // 3–6 columns per second
+      const len = 3 + Math.floor(hash(r, k + 5)*6);      // 3–8 cells long
+      const span = COLS + 30;
+      const head = ((t*speed + seed*span*3) % span) - 10;
+      const x = head - c;                                // 0 at the head, grows toward the tail
+      if (x >= 0 && x < len) best = Math.max(best, 1 - x/len);
+    }
+    return best;
+  }
+
+  // brightness 0..1 of a crest flash at a cell `d` columns behind the wave front
+  const CREST_GAP = 10, CREST_SPEED = 3.5, CREST_WIDTH = .9, FLASH_RATE = 7;
+  function crestLight(d, r, c, t){
+    // crests travel toward the front (shoreward) and bend gently so they never read as ruled lines
+    const ph = (d + t*CREST_SPEED + Math.sin(r*.13 + t*.3)*2.2 + Math.sin(r*.37 - t*.2)*.8) / CREST_GAP;
+    const k = Math.floor(ph);                           // which crest this is
+    const off = (ph - k - .5) * CREST_GAP;              // columns from the crest line
+    const profile = Math.exp(-(off*off) / (2*CREST_WIDTH*CREST_WIDTH));
+    const set = .55 + .45*noise1(k*.9 + 3);              // sets: some crests catch more light
+    const shallow = .5 + .5*clamp(1 - (d - 2)/28, 0, 1); // more flashes in the shallows
+    const chance = profile * set * shallow;
+    // short-lived glints: each cell re-rolls several times a second
+    const roll = hash(c*1.7 + r*.3, r*2.3 + Math.floor(t*FLASH_RATE + hash(c, r)*4));
+    if (chance < .15 || roll > chance*1.3) return 0;
+    return profile * set * (.75 + .25*hash(c, r + 5));  // brightness of the flash itself
+  }
+
+  function surface(x, t, lv, amp){
+    // reach of the water from the left edge, in columns (x = row index here)
+    const base = lv*(COLS+18) - 12;   // starts fully off-canvas so the square begins pure white
+    const w = Math.sin(x*.17 + t*1.7)*1.0
+            + Math.sin(x*.063 - t*.8 + 1.3)*2.2
+            + Math.sin(x*.41 + t*2.2)*.3
+            + Math.sin(x*.11 + t*1.1 + Math.sin(t*.4)*2)*.8;
+    // a rolling swell that travels down the front
+    const swell = Math.exp(-Math.pow(((x/COLS) - ((t*.18)%1.6 - .3))*4, 2)) * 5;
+    return base + (w + swell)*amp;
+  }
+
+  function frame(now){
+    const t = (now - start)/1000;
+    const {lv, pct, label} = phase(t);
+    const tt = calm ? t*.35 : t;
+    const dt = clamp(t - lastT, 0, .1); lastT = t;
+    const amp = calm ? .35 : (0.9 + 2.0*Math.sin(Math.PI*clamp(lv,0,1))) * (1 - .75*clamp((lv-.9)/.1, 0, 1));
+
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,size);
+
+    for (let r=0; r<ROWS; r++){
+      // water arrives as thin flat strips; their ends trace one continuous wave contour,
+      // with only a slight per-strip ripple so the outline still reads as a wave
+      const b = Math.floor(r/BAND);
+      const ripple = (noise1(b*1.9 + tt*.25) - .5)*2.2;
+      // a few strips shoot out ahead of the wave line, like tongues of water running up the sand
+      const sn = noise1(b*.85 + 40 + tt*.12);
+      const tu = clamp((sn - .7)/.3, 0, 1);
+      const tongue = tu*tu*(3 - 2*tu) * 7;           // eases in and out, no pop
+      const h = surface(b*BAND + BAND/2, tt, lv, amp) + ripple*amp*.5 + tongue*Math.min(amp, 1.6)*.7;
+      const cy = r*cell + cell/2;
+      wet[r] = Math.max(h, wet[r] - DRY*dt);
+      for (let c=0; c<COLS; c++){
+        const xl = c + .5;                 // column distance from the left edge
+        const d = h - xl;                  // depth behind the wave front
+        const cx = c*cell + cell/2;
+        const n = hash(c, r);
+
+        if (d < 0 && xl < wet[r]){
+          // wet sand the wave just left: scattered blue grains and bubbles, densest along the high-water line
+          // grains are fixed to the sand: same cells, same symbols, no flicker
+          const k = hash(c*1.3, r*1.7);
+          if (k < .34){
+            const g = FRAG[Math.floor(hash(r, c)*FRAG.length)];
+            ctx.fillStyle = k < .15 ? rgb(MID) : rgb(SHALLOW);
+            ctx.fillText(g, cx, cy);
+          }
+          continue;
+        }
+        if (d < 0){
+          // above water: paper with faint grain; spray right above crests
+          continue;   // dry paper stays pure white
+        }
+
+        // water body
+        const dn = clamp(d/(ROWS*.9), 0, 1);
+        let bg;
+        if (d < 1)      bg = mix(FOAM_BG, SHALLOW, d);
+        else if (dn<.25) bg = mix(SHALLOW, MID, dn/.25);
+        else if (dn<.6)  bg = mix(MID, DEEP, (dn-.25)/.35);
+        else             bg = mix(DEEP, ABYSS, (dn-.6)/.4);
+        ctx.fillStyle = rgb(bg);
+        if (d < 1) { ctx.fillRect(c*cell, r*cell, cell*d + .6, cell+.6); }
+        else ctx.fillRect(c*cell, r*cell, cell+.6, cell+.6);
+
+        if (d < 1.1){
+          // white foam cap at the end of each strip; steady glyph, fades in as the cell fills
+          if (d > .55){
+            ctx.fillStyle = rgb(mix(bg, [255,255,255], clamp((d-.55)/.4, 0, 1)));
+            ctx.fillText(r % 3 ? '~' : '=', cx, cy);
+          }
+          continue;
+        }
+        // sunlight: short horizontal streaks that glide along the strip, left → right
+        // sunlight rides on the wave crests: bands parallel to the wave front roll toward the shore,
+        // and inside a band individual cells flash for a split second, then go dark again
+        const g = crestLight(d, r, c, tt);
+        if (g > 0){
+          ctx.fillStyle = g > .7 ? '#ffffff' : rgb(mix(bg, [255,255,255], .45 + .5*g));
+          ctx.fillText(g > .75 ? '≈' : g > .5 ? '=' : g > .3 ? '-' : '·', cx, cy);
+          continue;
+        }
+        // body texture: sparse horizontal marks drifting slowly with the water
+        const f = Math.sin(c*.33 - tt*.9 + hash(r, 3)*6.28) + Math.sin(c*.11 - tt*.4 + r*.7)*.7;
+        if (f < .95 || n < .5) continue;   // quieter body texture so the crest light reads
+        ctx.fillStyle = rgb(mix(bg,[0,0,40],.45));
+        ctx.fillText(n > .75 ? '-' : '·', cx, cy);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+
+  addEventListener('resize', resize);
+  resize();
+  document.fonts?.ready.then(resize);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
