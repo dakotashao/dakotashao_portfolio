@@ -139,7 +139,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
 /* ---------- Projects ---------- */
 .projects { padding-block: 150px 60px; scroll-margin-top: -60px; }
-.proj { display: block; cursor: default; margin-bottom: 74px; }
+.proj { display: block; margin-bottom: 74px; }
 .shot {
   position: relative; border-radius: 16px; background: var(--card);
   display: grid; place-items: center; overflow: hidden; max-width: 100%;
@@ -481,14 +481,14 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
     <section class="projects wrap" id="works-list">
       <p class="label">[ Projects ]</p>
       ${PROJECTS.map((p) => `
-        <div class="proj" aria-disabled="true">
+        <a class="proj" href="#work-${p.slug}">
           <div class="shot" style="aspect-ratio:${p.ratio}">
             ${p.slug === "btob" ? `<img src="${p.hero}" alt="24 Hour Home Care family portal" loading="lazy">` : ""}
             <div class="meta">${(p.tags || (p.name ? [p.cat, p.year] : ["BtoB", "2025"])).map((t) => `<span class="chip">${t}</span>`).join("")}</div>
           </div>
           <h4>${p.name || "Baidu"}</h4>
           <p>${p.desc || projDesc}</p>
-        </div>`).join("")}
+        </a>`).join("")}
     </section>
 
     <section class="wrap">
@@ -528,10 +528,10 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
       return "";
     }).join("");
     const pn = (q, dir, cls) => q
-      ? `<a class="${cls}" href="#${q.slug}"><span>${dir}</span><b>${esc(q.cat)}</b></a>`
+      ? `<a class="${cls}" href="#work-${q.slug}"><span>${dir}</span><b>${esc(q.cat)}</b></a>`
       : `<div class="${cls}"><span>${dir}</span><b>More projects soon…</b></div>`;
     const map = p.blocks.filter((b) => b.t === "label").map((b) =>
-      `<a href="#${p.slug}" data-target="sec-${slugify(b.text)}">${esc(b.text.replace(/\b\w/g, (c) => c.toUpperCase()))}</a>`).join("");
+      `<a href="#work-${p.slug}" data-target="sec-${slugify(b.text)}">${esc(b.text.replace(/\b\w/g, (c) => c.toUpperCase()))}</a>`).join("");
     return `
     <aside class="works-map" aria-label="Sections">
       <a class="wm-back" href="#works"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M6 2.5 1.5 7 6 11.5M1.5 7h11" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Back</a>
@@ -654,7 +654,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
   function render() {
     const h = location.hash.slice(1) || "home";
     const isAbout = h === "about";
-    const work = PROJECTS.find((p) => p.slug === h);
+    const work = PROJECTS.find((p) => "work-" + p.slug === h);
     app.innerHTML = `<div class="view">${work ? caseStudy(work) : isAbout ? about() : h === "playground" ? playground() : home()}${footer()}</div>`;
     const key = work ? "works" : isAbout ? "about" : h === "playground" ? "playground" : ["works", "contact"].includes(h) ? h : "home";
     nav.forEach((a) => a.classList.toggle("on", a.dataset.k === key));
