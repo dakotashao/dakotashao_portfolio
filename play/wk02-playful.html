@@ -177,6 +177,7 @@ html.thumb body{background:#f6f6f6}
 html.thumb .page{padding-block:0}
 html.thumb .dock{display:none}
 </style>
+<style>/*pg-embed*/ html,body{overflow:hidden} .dock{display:none!important}</style>
 </head>
 <body>
 <script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
@@ -738,6 +739,9 @@ html.thumb .dock{display:none}
   shell.style.height = geo().sh + 'px';
   renderBadge(false); syncButtons();
 })();
+</script>
+<script>
+addEventListener('load',()=>{let n=0;setInterval(()=>{n++;const b=document.getElementById(n%6===0?'restoreBtn':'newBtn');b&&b.click();},2200);});
 </script>
 </body>
 </html>

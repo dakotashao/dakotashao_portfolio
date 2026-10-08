@@ -162,6 +162,7 @@ html.thumb .page{max-width:none;min-height:100vh;padding:0;justify-content:cente
 html.thumb .canvas{padding:0}
 html.thumb .controls{display:none}
 </style>
+<style>/*pg-embed*/ html,body{overflow:hidden} .controls{display:none!important}</style>
 </head>
 <body>
 <script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
@@ -735,5 +736,6 @@ html.thumb .controls{display:none}
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 </script>
+
 </body>
 </html>

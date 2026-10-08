@@ -208,6 +208,7 @@ h2 { font: inherit; letter-spacing: .02em; margin-right: auto; white-space: nowr
   .cur, .b-dot[data-state="locked"], .b-content[data-state="locked"], .wires path, .led { animation: none !important; }
 }
 </style>
+<style>/*pg-embed*/ html,body{overflow:hidden} .hud-zoom{display:none!important}</style>
 </head>
 <body>
 
@@ -891,5 +892,12 @@ h2 { font: inherit; letter-spacing: .02em; margin-right: auto; white-space: nowr
   setTimeout(() => { Badge.set(7); setTimeout(() => Dot.show(true), 300); }, 700);
 })();
 </script>
+
+<script>/*pg-zoom*/addEventListener('load',()=>setTimeout(()=>{
+const f=document.getElementById('z-fit'),z=document.getElementById('z-in'),w=document.getElementById('world');
+f&&f.click();z&&z.click();
+const r=[...document.querySelectorAll('.node')].map(n=>n.getBoundingClientRect());
+const l=Math.min(...r.map(a=>a.left)),t=Math.min(...r.map(a=>a.top)),R=Math.max(...r.map(a=>a.right)),B=Math.max(...r.map(a=>a.bottom));
+w.style.translate=Math.round(innerWidth/2-(l+R)/2)+'px '+Math.round(innerHeight/2-(t+B)/2)+'px';},700));</script>
 </body>
 </html>

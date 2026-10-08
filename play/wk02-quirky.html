@@ -314,6 +314,7 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
 /* Thumbnail mode (page opened with #thumb): no controls, the canvas fills the frame. */
 .thumb .controls, .thumb .notice { display: none; }
 </style>
+<style>/*pg-embed*/ html,body{overflow:hidden} .controls{display:none!important}</style>
 </head>
 <body>
 <script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
@@ -926,6 +927,11 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     setInterval(() => { if (!document.hidden) select(loop[step++ % loop.length]); }, 2600);
   }
 })();
+</script>
+<script>
+/* playground thumbnail: cycle the badge states on a loop */
+addEventListener('load',()=>{const ks=['dot','3','12','99+','none'];let i=0;
+const go=()=>{const b=document.querySelector('.seg [data-k="'+ks[i%ks.length]+'"]');b&&b.click();i++;};setTimeout(go,900);setInterval(go,2600);});
 </script>
 </body>
 </html>

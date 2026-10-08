@@ -114,6 +114,7 @@
   .rBody { fill: var(--on-surface); fill-opacity: .66; font-weight: 400; font-size: 11px; }
   .rAct { fill: var(--on-liquid); font-weight: 600; font-size: 11px; text-anchor: middle; }
 </style>
+<style>/*pg-embed*/ html,body{overflow:hidden} .controls{display:none!important} .page{padding:0!important;margin:0!important;max-width:none!important;min-height:100vh!important;height:100vh!important;display:block!important} .frame{height:100vh!important;border:0!important;border-radius:0!important;box-shadow:none!important}</style>
 </head>
 <body>
 <main class="page">
@@ -929,6 +930,11 @@
     setTimeout(() => { if (!badge.anim && state === 'empty' && !last && target === 'none' && TIPS.every(tp => !tp.want)) request('3'); }, 800);
   }
 })();
+</script>
+<script>
+/* playground thumbnail: cycle the badge states on a loop */
+addEventListener('load',()=>{const ks=['dot','3','12','99+','none'];let i=0;
+const go=()=>{const b=document.querySelector('.seg [data-k="'+ks[i%ks.length]+'"]');b&&b.click();i++;};setTimeout(go,900);setInterval(go,2600);});
 </script>
 </body>
 </html>
