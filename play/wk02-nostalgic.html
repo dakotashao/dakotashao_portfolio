@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resolving Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: a pannable canvas on a white ground scattered with plus signs; the frames are blue. A Resolver panel in the centre lists
+   its four outputs, one port and one live value each, and is wired to four frames: the two badges
+   on its left, the two tooltips on its right. A tooltip opens as one more node. Every header
+   is a solid white bar. Every frame can be dragged (tooltips by their header) and the wires follow. Every wire
+   is the same line: a round port, level, a rounded right-angle turn, level, a round port. Every
+   frame is a rounded hairline panel: a header row with a state light, a path name and a state
+   chip, then the body. Under 760px the frames stack and the page scrolls. Blue and white only. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff;            /* the canvas ground */
+  --blue: #3462db;          /* frames, wires, ports */
+  --fg: #ffffff;
+  --muted: rgba(255, 255, 255, .74);
+  --dim: rgba(255, 255, 255, .46);
+  --line: rgba(255, 255, 255, .36);
+  --stage: rgba(255, 255, 255, .1);
+  --ring: #3462db;          /* the frame fill: also the cut-out around badges and icon details */
+  --wait: #8ea6ec;          /* an unresolved badge */
+  --ink: #2748b4;           /* type on white */
+  --ink-dim: rgba(39, 72, 180, .4);
+  --sans: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 4px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 400 13px/1.5 var(--mono); overflow: hidden; -webkit-font-smoothing: antialiased; }
+p, h1, h2 { margin: 0; }
+button { font: inherit; color: inherit; }
+.anchor:focus-visible, .seg button:focus-visible, .act:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+.app { height: 100%; }
+.app.is-flow { height: auto; }
+
+/* ---------- canvas ---------- */
+.vp { position: relative; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
+/* the canvas ground: sparse plus signs. They pan and spread with the world and stay one size. */
+.grid { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.grid path { fill: none; stroke: #c9cbd1; stroke-width: 1; shape-rendering: crispEdges; }
+.vp.is-panning { cursor: grabbing; user-select: none; }
+.vp.is-panning .world { pointer-events: none; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.is-flow .vp { height: auto; overflow: visible; touch-action: auto; cursor: auto; }
+.is-flow .world { position: relative; }
+.hud { position: absolute; z-index: 20; cursor: default; }
+h1 { left: 22px; top: 20px; color: var(--ink); font: 500 13px/1.2 var(--mono); pointer-events: none; }
+.hud-zoom { left: 22px; bottom: 18px; }
+.is-flow h1 { position: static; padding: 20px 20px 0; }
+.is-flow .hud-zoom { display: none; }
+
+.wires { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.wires path { fill: none; stroke: rgba(52, 98, 219, .4); stroke-width: 1.25; }
+.ports { position: absolute; left: 0; top: 0; z-index: 100000; overflow: visible; pointer-events: none; }
+.ports circle { fill: var(--bg); stroke: var(--blue); stroke-width: 1.25; }
+.ports g[data-s="locked"] circle { fill: var(--blue); stroke: var(--bg); stroke-width: 1.5; }
+.wires g[data-s="locked"] path { stroke: var(--blue); }
+.wires g[data-s="resolving"] path, .wires g[data-s="clearing"] path { stroke: var(--blue); stroke-dasharray: 3 7; animation: flow 420ms steps(5) infinite; }
+.wires g[data-s="clearing"] path { animation-direction: reverse; animation-duration: 300ms; }
+@keyframes flow { to { stroke-dashoffset: -10; } }
+
+/* ---------- frames: rounded hairline panel, header row with light, path and chip ---------- */
+.node, .frame { position: relative; isolation: isolate; border: 1px solid var(--blue); border-radius: 9px; background: var(--ring);
+  box-shadow: 0 22px 36px -26px rgba(12, 28, 96, .55); }
+.node { position: absolute; cursor: default; }
+.node-h { cursor: grab; }
+.is-flow .node-h { cursor: default; }
+.node-h, .fh { height: 34px; padding: 0 8px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line);
+  background: var(--fg); color: var(--ink); border-bottom-color: var(--fg); border-radius: 8px 8px 0 0; font: 500 12px/1.4 var(--mono); }
+h2 { font: inherit; letter-spacing: .02em; margin-right: auto; white-space: nowrap; }
+/* the tooltip's header is also the handle it is dragged by */
+.fh { --unres: var(--ink-dim); cursor: grab; touch-action: none; user-select: none; }
+.fh:active { cursor: grabbing; }
+.is-flow .fh { cursor: default; touch-action: auto; }
+.led { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+.node-h .led { background: var(--ink-dim); }
+[data-s="resolving"] > .node-h .led { background: var(--ink); animation: blink 240ms steps(2) infinite; }
+[data-s="clearing"] > .node-h .led { background: var(--ink); animation: blink 160ms steps(2) infinite; }
+[data-s="locked"] > .node-h .led, .node-h .led.is-live { background: var(--ink); box-shadow: 0 0 0 3px rgba(39, 72, 180, .2); }
+@keyframes blink { 50% { opacity: .25; } }
+.chip { flex: none; display: inline-flex; align-items: center; justify-content: center; height: 20px; min-width: 78px; padding: 0 7px;
+  border: 1px solid var(--ink-dim); border-radius: 4px; color: rgba(39, 72, 180, .72); font: 500 9.5px/1 var(--mono); letter-spacing: .12em; }
+[data-s="resolving"] > .node-h .chip { color: var(--ink); border-color: var(--ink); }
+[data-s="locked"] > .node-h .chip { background: var(--ink); border-color: var(--ink); color: var(--fg); }
+.node-b { padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+/* the resolver: one row per output, each with its own port, light and live value */
+.rows { padding: 7px 0; }
+.prow { height: 26px; padding: 0 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); font: 400 11.5px/1 var(--mono); white-space: nowrap; }
+.prow .pn { margin-right: auto; }
+.prow .pv { color: var(--dim); font-variant-numeric: tabular-nums; white-space: pre; }
+.prow[data-s="resolving"] .led { background: var(--fg); animation: blink 240ms steps(2) infinite; }
+.prow[data-s="clearing"] .led { background: var(--muted); animation: blink 160ms steps(2) infinite; }
+.prow[data-s="locked"] { color: var(--fg); }
+.prow[data-s="locked"] .led { background: var(--fg); box-shadow: 0 0 0 3px rgba(255, 255, 255, .22); }
+.prow[data-s="locked"] .pv { color: var(--fg); font-weight: 500; }
+.node-f { height: 32px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line);
+  color: var(--muted); font: 500 9.5px/1 var(--mono); letter-spacing: .12em; white-space: nowrap; }
+.node-f b { font-weight: 500; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+/* ---------- anchor ---------- */
+.wrap { position: relative; --ax: calc(76px + (var(--nw, 200px) - 76px) / 2); }
+.anchor {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 76px; padding: 10px 0 8px; border: 0; border-radius: var(--r);
+  background: transparent; color: var(--fg); font: 500 12px/1.2 var(--sans); cursor: pointer;
+}
+.icon { position: relative; width: 24px; height: 24px; }
+.icon svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; }
+/* hover: the icon fills white; its inner lines switch to the ground colour. No box. */
+@media (hover: hover) {
+  .wrap:hover .icon .s { fill: currentColor; }
+  .wrap:hover .icon .d { stroke: var(--ring); }
+}
+.wrap[data-open] .icon .s, .anchor:focus-visible .icon .s { fill: currentColor; }
+.wrap[data-open] .icon .d, .anchor:focus-visible .icon .d { stroke: var(--ring); }
+
+/* ---------- reels and flaps ---------- */
+.reel { display: inline-block; min-width: calc(var(--rw, 0) * 1ch); }
+.reel::after { content: "\200b"; }
+.reel[data-state="blank"], .reel[data-state="cycling"], .reel[data-state="clearing"] { color: var(--unres); }
+.flap[data-state] { color: inherit; }
+.ch { display: inline-block; font-style: normal; }
+.ch[data-s="blank"], .ch[data-s="cycling"], .ch[data-s="clearing"] { color: var(--unres); }
+/* a block cursor's plain cousin: one underscore after the last locked line, blinking in hard steps */
+.cur { visibility: hidden; }
+.flap[data-state="locked"] + .cur { visibility: visible; animation: cur 1060ms step-end infinite; }
+@keyframes cur { 50% { opacity: 0; } }
+.line { white-space: pre; }
+.line:has(.reel[data-state="empty"]) .static { visibility: hidden; }
+
+/* ---------- badges ---------- */
+.b { position: absolute; pointer-events: none; }
+.b-dot { top: -2px; right: -3px; width: 8px; height: 8px; display: grid; place-items: center; color: var(--fg); font: 600 12px/1 var(--mono); --unres: var(--fg); }
+.b-dot[data-state="locked"]::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2px var(--ring); }
+.b-dot[data-state="locked"] { animation: snap 150ms step-end; }
+.b-content {
+  top: -7px; left: 14px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--wait); color: var(--fg); outline: 2px solid var(--ring); --unres: rgba(255, 255, 255, .8);
+  font: 600 10px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; white-space: nowrap;
+  transform-origin: 0 100%;
+}
+.b-content .reel { min-width: 1ch; text-align: center; }
+.b-content[data-step="0"] { visibility: hidden; }
+.b-content[data-step="1"] { scale: .35; }
+.b-content[data-step="2"] { scale: .7; }
+.b-content[data-state="locked"] { background: var(--fg); color: var(--ink); animation: snap 150ms step-end; }
+@keyframes snap { 0% { translate: 0 -2px; } 45% { translate: 0 1px; } 100% { translate: 0 0; } }
+
+/* ---------- tooltip: one more node, wired from the frame's edge ---------- */
+/* the wire is white where it crosses the frame's blue body and blue once it is out on the ground */
+.conn { position: absolute; z-index: 3; left: var(--ax); top: -6px; width: 58px; height: 28px; overflow: visible; pointer-events: none; fill: none; stroke: var(--blue); stroke-width: 1.25; }
+.conn .in { stroke: var(--fg); }
+.conn path { stroke-dasharray: 80; stroke-dashoffset: 80; }
+.wrap[data-link="1"] .conn path { stroke-dashoffset: 53; }
+.wrap[data-link="2"] .conn path { stroke-dashoffset: 27; }
+.wrap[data-link="3"] .conn path { stroke-dashoffset: 0; }
+.conn circle { fill: var(--fg); stroke: none; visibility: hidden; }
+.conn .a { stroke: var(--blue); stroke-width: 1.25; }
+.conn .b { fill: var(--blue); stroke: var(--fg); stroke-width: 1.5; }
+.wrap[data-link] .conn .a, .wrap[data-link="3"] .conn .b { visibility: visible; }
+.tip { position: absolute; left: 76px; top: -23px; padding-left: calc(var(--ax) - 76px + 58px); z-index: 2; }
+.tip[data-step="0"] { visibility: hidden; }
+.is-flow .tip { translate: none !important; }
+.frame { background: var(--ink); border-color: var(--ink); color: var(--fg); --unres: var(--dim); font: 400 12px/1.4 var(--mono); transform-origin: 0 17px; }
+.tip[data-step="1"] .frame { scale: .3 1; }
+.tip[data-step="2"] .frame { scale: .65 1; }
+.fb { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.frame.plain { white-space: nowrap; }
+.frame.plain .fb { flex-direction: row; gap: 0; font-size: 13px; font-weight: 500; }
+.frame.rich { width: 222px; }
+.rt { font-size: 11px; font-variant-numeric: tabular-nums; }
+.pg { display: flex; flex-direction: column; gap: 4px; }
+.act { margin-top: 6px; padding: 5px 10px; border: 0; border-radius: var(--r); background: transparent; box-shadow: inset 0 0 0 1px var(--dim); color: var(--fg); font: 500 12px/1.2 var(--mono); white-space: pre; cursor: default; }
+.act[data-ready="true"] { background: var(--fg); box-shadow: none; color: var(--ink); cursor: pointer; }
+@media (hover: hover) { .act[data-ready="true"]:hover { background: var(--blue); color: var(--fg); } }
+
+/* ---------- switches ---------- */
+.seg-b { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); background: var(--ink); }
+.hud .seg button:focus-visible { outline-color: var(--ink); }
+.seg button { padding: 6px 8px; border: 0; background: transparent; color: var(--fg); font: 400 12px/1.2 var(--mono); cursor: pointer; border-radius: 3px; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--ink); }
+/* the zoom bar: bare bracketed commands in a row in the bottom-left corner */
+.zoom .seg-b { align-items: center; gap: 12px; border: 0; background: none; }
+.zoom button { padding: 3px 0; color: var(--ink); white-space: pre; }
+.zoom button::before { content: "[ "; color: var(--ink-dim); }
+.zoom button::after { content: " ]"; color: var(--ink-dim); }
+@media (hover: hover) { .zoom button:hover { background: var(--blue); color: var(--fg); } .zoom button:hover::before, .zoom button:hover::after { color: var(--fg); } }
+.zoom output { display: none; }
+
+/* ---------- stacked on a phone: the tooltip opens inside its own frame ---------- */
+.is-flow .node--tip .node-b { align-items: flex-start; padding: 44px 2px 18px; min-height: 126px; }
+.is-flow .node--tip.is-rich .node-b { min-height: 208px; }
+.is-flow .wrap { --ax: 54px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cur, .b-dot[data-state="locked"], .b-content[data-state="locked"], .wires path, .led { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="vp" id="vp">
+    <svg class="grid" aria-hidden="true"><defs><pattern id="plus" patternUnits="userSpaceOnUse" width="56" height="56"><path d="M26 28.5h5M28.5 26v5"/></pattern></defs><rect width="100%" height="100%" fill="url(#plus)"/></svg>
+    <h1 class="hud">Resolving Data</h1>
+
+    <div class="world" id="world">
+      <svg class="wires" id="wires" aria-hidden="true"></svg>
+
+      <section class="node node--hub" id="n-res" aria-label="Resolver">
+        <div class="node-h"><i class="led is-live"></i><h2>system/resolver</h2><span class="chip" id="chip-res" aria-hidden="true">0/4 LOCKED</span></div>
+        <div class="rows" aria-hidden="true">
+          <div class="prow" data-id="badge" data-s="empty"><i class="led"></i><span class="pn">badge/content</span><span class="pv">_</span></div>
+          <div class="prow" data-id="dot" data-s="empty"><i class="led"></i><span class="pn">badge/dot</span><span class="pv">_</span></div>
+          <div class="prow" data-id="plain" data-s="empty"><i class="led"></i><span class="pn">tooltip/plain</span><span class="pv">_</span></div>
+          <div class="prow" data-id="rich" data-s="empty"><i class="led"></i><span class="pn">tooltip/rich</span><span class="pv">_</span></div>
+        </div>
+        <div class="node-f" aria-hidden="true"><span>CYCLE MS</span><b>45 45 60 75 110</b></div>
+      </section>
+
+      <section class="node" id="n-badge" aria-labelledby="h-1">
+        <div class="node-h"><i class="led"></i><h2 id="h-1" aria-label="Badge">badge/content</h2><span class="chip" id="chip-badge" aria-hidden="true">BLANK</span></div>
+        <div class="node-b">
+          <div class="wrap">
+            <button class="anchor" type="button" id="s1-anchor" aria-label="Mail, no new messages">
+              <span class="icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect class="s" x="3" y="5" width="18" height="14" rx="1"/><path class="d" d="M3.5 7.5l8.5 6 8.5-6"/></svg>
+                <span class="b b-content" id="badge" data-step="0" data-state="open" aria-hidden="true"></span>
+              </span>
+              <span class="lbl">Mail</span>
+            </button>
+          </div>
+          <div class="seg" id="seg-count" role="group" aria-label="Badge count"><div class="seg-b">
+            <button type="button" id="s1-n-none" data-n="none" aria-pressed="true">None</button>
+            <button type="button" id="s1-n-1" data-n="1" aria-pressed="false">1</button>
+            <button type="button" id="s1-n-3" data-n="3" aria-pressed="false">3</button>
+            <button type="button" id="s1-n-7" data-n="7" aria-pressed="false">7</button>
+            <button type="button" id="s1-n-12" data-n="12" aria-pressed="false">12</button>
+            <button type="button" id="s1-n-99" data-n="99+" aria-pressed="false">99+</button>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="node" id="n-dot" aria-labelledby="h-2">
+        <div class="node-h"><i class="led"></i><h2 id="h-2" aria-label="Dot badge">badge/dot</h2><span class="chip" id="chip-dot" aria-hidden="true">BLANK</span></div>
+        <div class="node-b">
+          <div class="wrap">
+            <button class="anchor" type="button" id="s2-anchor" aria-label="Chat, nothing new">
+              <span class="icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path class="s" d="M4 5h16v11H9.5L4 20z"/></svg>
+                <span class="b b-dot" id="dot" data-state="empty" aria-hidden="true"></span>
+              </span>
+              <span class="lbl">Chat</span>
+            </button>
+          </div>
+          <div class="seg" id="seg-dot" role="group" aria-label="Dot badge"><div class="seg-b">
+            <button type="button" id="s2-d-none" data-d="none" aria-pressed="true">None</button>
+            <button type="button" id="s2-d-dot" data-d="dot" aria-pressed="false">Dot</button>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="node node--tip" id="n-plain" aria-labelledby="h-3">
+        <div class="node-h"><i class="led"></i><h2 id="h-3" aria-label="Tooltip">tooltip/plain</h2><span class="chip" id="chip-plain" aria-hidden="true">BLANK</span></div>
+        <div class="node-b">
+          <div class="wrap" id="s3-wrap">
+            <button class="anchor" type="button" id="s3-anchor" aria-describedby="s3-sr">
+              <span class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="s" d="M6 3h8l4 4v14H6z"/><path class="d" d="M14 3v4h4"/></svg></span>
+              <span class="lbl">File</span>
+            </button>
+            <svg class="conn" viewBox="0 0 58 28" aria-hidden="true"><clipPath id="clip-s3"><rect/></clipPath><path class="out" pathLength="80" d="M0 28H20Q29 28 29 19V9Q29 0 38 0H58"/><path class="in" clip-path="url(#clip-s3)" pathLength="80" d="M0 28H20Q29 28 29 19V9Q29 0 38 0H58"/><circle class="a" cx="0" cy="28" r="4"/><circle class="b" cx="58" cy="0" r="4.5"/></svg>
+            <div class="tip" id="s3-tip" data-step="0" aria-hidden="true">
+              <div class="frame plain"><div class="fh line"><span class="static">LAST </span><span class="reel flap" id="p-word" style="--rw:8"></span></div><div class="fb line"><span class="reel flap" id="p-date" style="--rw:12"></span><span class="cur" aria-hidden="true">_</span></div></div>
+            </div>
+            <span id="s3-sr" hidden>Last edited Sep 24, 1998</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="node node--tip is-rich" id="n-rich" aria-labelledby="h-4">
+        <div class="node-h"><i class="led"></i><h2 id="h-4" aria-label="Rich tooltip">tooltip/rich</h2><span class="chip" id="chip-rich" aria-hidden="true">BLANK</span></div>
+        <div class="node-b">
+          <div class="wrap" id="s4-wrap">
+            <button class="anchor" type="button" id="s4-anchor" aria-describedby="s4-sr">
+              <span class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="s" d="M6 3h8l4 4v14H6z"/><path class="d" d="M14 3v4h4"/></svg></span>
+              <span class="lbl">File</span>
+            </button>
+            <svg class="conn" viewBox="0 0 58 28" aria-hidden="true"><clipPath id="clip-s4"><rect/></clipPath><path class="out" pathLength="80" d="M0 28H20Q29 28 29 19V9Q29 0 38 0H58"/><path class="in" clip-path="url(#clip-s4)" pathLength="80" d="M0 28H20Q29 28 29 19V9Q29 0 38 0H58"/><circle class="a" cx="0" cy="28" r="4"/><circle class="b" cx="58" cy="0" r="4.5"/></svg>
+            <div class="tip" id="s4-tip" data-step="0">
+              <div class="frame rich" role="group" aria-label="File status">
+                <div class="fh line" aria-hidden="true"><span class="reel flap" id="r-head" style="--rw:12"></span></div>
+                <div class="fb">
+                  <div class="pg" id="pg-status" aria-hidden="true"><p class="rt line"><span class="static">Last </span><span class="reel flap" id="r-pri" style="--rw:19"></span></p><p class="rt line"><span class="reel flap" id="r-sec" style="--rw:29"></span><span class="cur" aria-hidden="true">_</span></p></div>
+                  <div class="pg" id="pg-history" aria-hidden="true" hidden></div>
+                  <button type="button" class="act" id="s4-action" aria-label="View history" data-ready="false"><span class="reel flap" id="r-act" aria-hidden="true"></span></button>
+                </div>
+              </div>
+            </div>
+            <span id="s4-sr" hidden>File status. Last edited Sep 24, 1998. 3 previous versions available.</span>
+          </div>
+        </div>
+      </section>
+      <svg class="ports" id="ports" width="1" height="1" aria-hidden="true"></svg>
+    </div>
+
+    <div class="hud hud-zoom seg zoom" role="group" aria-label="Zoom"><div class="seg-b">
+      <button type="button" id="z-in" aria-label="Zoom in">+</button>
+      <button type="button" id="z-out" aria-label="Zoom out">−</button>
+      <button type="button" id="z-fit" aria-label="Fit to window">fit</button>
+      <output id="z-l">100%</output>
+    </div></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const rnd = n => Math.floor(Math.random() * n);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ================= canvas: layout, wires, pan and zoom ================= */
+  const Canvas = (() => {
+    const app = $('#app'), vp = $('#vp'), world = $('#world'), svg = $('#wires'), zl = $('#z-l');
+    const el = { res: $('#n-res'), badge: $('#n-badge'), dot: $('#n-dot'), plain: $('#n-plain'), rich: $('#n-rich') };
+    const NS = 'http://www.w3.org/2000/svg';
+    const mk = (tag, parent) => parent.appendChild(document.createElementNS(NS, tag));
+    const EDGES = ['badge', 'dot', 'plain', 'rich'].map(id => {
+      const g = mk('g', svg), pg = mk('g', $('#ports')); g.dataset.s = pg.dataset.s = 'empty';
+      return { id, g, pg, path: mk('path', g), a: mk('circle', pg), b: mk('circle', pg) };
+    });
+    EDGES.forEach(e => [e.a, e.b].forEach(c => c.setAttribute('r', 4.5)));
+    const ROWS = {}, GLYPH = '#*+=/-.:';
+    document.querySelectorAll('#n-res .prow').forEach(r => { ROWS[r.dataset.id] = { el: r, pv: r.querySelector('.pv'), st: 'empty', val: '' }; });
+    ROWS.dot.val = '\u25CF'; ROWS.plain.val = 'SEP 24, 1998'; ROWS.rich.val = 'FILE STATUS';
+    const rowY = id => ROWS[id].el.offsetTop + ROWS[id].el.offsetHeight / 2;
+    let tick = null;
+    const V = { x: 0, y: 0, s: 1 };
+    let flow = false, W = 0, H = 0, R = {}, lastW = -1, lastFlow = null, zTop = 1;
+    /* how far each frame has been dragged from where the layout put it */
+    const D = { res: [0, 0], badge: [0, 0], dot: [0, 0], plain: [0, 0], rich: [0, 0] }, hooks = [];
+
+    function place(k, x, y, w) {
+      const n = el[k]; n.style.left = x + 'px'; n.style.top = y + 'px'; n.style.width = w + 'px'; n.style.setProperty('--nw', w + 'px');
+      return (R[k] = { x, y, w, h: n.offsetHeight });
+    }
+    function layout() {
+      flow = vp.clientWidth < 760;
+      app.classList.toggle('is-flow', flow);
+      document.body.style.overflow = flow ? 'visible' : 'hidden';
+      if (flow) {
+        const vw = vp.clientWidth, x = 34, w = vw - x - 16;
+        let y = 20;
+        place('res', x, y, w); y += R.res.h + 28;
+        for (const k of ['badge', 'dot', 'plain', 'rich']) { place(k, x, y, w); y += R[k].h + 28; }
+        W = vw; H = y + 12;
+      } else {
+        const top = 96, gap = 56, c1 = 72, w1 = 270, g = 150, wh = 268, c2 = c1 + w1 + g, c3 = c2 + wh + g, w3 = 232;
+        place('badge', c1, 0, w1); place('dot', c1, 0, w1); place('plain', c3, 0, w3); place('rich', c3, 0, w3); place('res', c2, 0, wh);
+        const hL = R.badge.h + gap + R.dot.h, hR = R.plain.h + gap + R.rich.h, mid = top + Math.max(hL, hR) / 2;
+        place('badge', c1, mid - hL / 2, w1); place('dot', c1, mid - hL / 2 + R.badge.h + gap, w1);
+        place('plain', c3, mid - hR / 2, w3); place('rich', c3, mid - hR / 2 + R.plain.h + gap, w3);
+        /* the resolver sits so its last row is level with the frame it feeds */
+        place('res', c2, Math.round(R.rich.y + 17 - rowY('rich')), wh);
+        W = c3 + w3 + 58 + 222 + 72;
+        H = Math.max(R.dot.y + R.dot.h, R.res.y + R.res.h, R.rich.y + 34 + 18 - 23 + 190) + 72;
+        for (const k in D) move(k, R[k].x + D[k][0], R[k].y + D[k][1]);
+      }
+      world.style.width = W + 'px'; world.style.height = H + 'px';
+      if (flow) { world.style.transform = 'none'; grid(56, 0, 0); }
+      else if (lastFlow !== flow) fit(); else apply();
+      lastFlow = flow;
+      draw();
+      hooks.forEach(f => f());
+    }
+    function move(k, x, y) { R[k].x = x; R[k].y = y; el[k].style.left = x + 'px'; el[k].style.top = y + 'px'; }
+    /* Every wire is the same line: level out of the hub, a rounded turn through the channel, level into the frame. */
+    function rounded(p, r) {
+      let d = `M${p[0][0]} ${p[0][1]}`;
+      for (let i = 1; i < p.length - 1; i++) {
+        const [ax, ay] = p[i - 1], [cx, cy] = p[i], [bx, by] = p[i + 1];
+        const d1 = Math.hypot(cx - ax, cy - ay), d2 = Math.hypot(bx - cx, by - cy), rr = Math.min(r, d1 / 2, d2 / 2);
+        if (rr < 0.5) continue;
+        d += ` L${(cx - (cx - ax) / d1 * rr).toFixed(1)} ${(cy - (cy - ay) / d1 * rr).toFixed(1)} Q${cx} ${cy} ${(cx + (bx - cx) / d2 * rr).toFixed(1)} ${(cy + (by - cy) / d2 * rr).toFixed(1)}`;
+      }
+      const z = p[p.length - 1];
+      return d + ` L${z[0]} ${z[1]}`;
+    }
+    function draw() {
+      const hub = R.res;
+      EDGES.forEach(e => {
+        const n = R[e.id], py = n.y + 17, hy = Math.round(hub.y + rowY(e.id));
+        let ax, bx, pts;
+        if (flow) { ax = hub.x; bx = n.x; pts = [[ax, hy], [14, hy], [14, py], [bx, py]]; }
+        else {
+          /* the wire leaves the resolver on whichever side the frame is, and enters the frame's facing edge */
+          const left = n.x + n.w / 2 < hub.x + hub.w / 2, dir = left ? -1 : 1, m = 22;
+          ax = left ? hub.x : hub.x + hub.w; bx = left ? n.x + n.w : n.x;
+          if ((bx - ax) * dir >= 2 * m) { const ch = Math.round((ax + bx) / 2); pts = [[ax, hy], [ch, hy], [ch, py], [bx, py]]; }
+          else {
+            /* dragged over or under the resolver: step out of both and cross between them */
+            const my = Math.round(n.y > hub.y + hub.h ? (hub.y + hub.h + n.y) / 2 : n.y + n.h < hub.y ? (n.y + n.h + hub.y) / 2 : (hy + py) / 2);
+            pts = [[ax, hy], [ax + dir * m, hy], [ax + dir * m, my], [bx - dir * m, my], [bx - dir * m, py], [bx, py]];
+          }
+        }
+        e.path.setAttribute('d', rounded(pts, 9));
+        e.a.setAttribute('cx', ax); e.a.setAttribute('cy', hy);
+        e.b.setAttribute('cx', bx); e.b.setAttribute('cy', py);
+      });
+    }
+    /* one plus per cell, centred; the cell follows pan and zoom, the plus keeps its size */
+    const pat = $('#plus'), plus = pat.querySelector('path');
+    function grid(g, x, y) {
+      const c = Math.round(g / 2) + 0.5;
+      pat.setAttribute('width', g); pat.setAttribute('height', g); pat.setAttribute('x', x); pat.setAttribute('y', y);
+      plus.setAttribute('d', `M${c - 2.5} ${c}h5M${c} ${c - 2.5}v5`);
+    }
+    function apply() {
+      world.style.transform = `translate(${Math.round(V.x)}px,${Math.round(V.y)}px) scale(${V.s})`;
+      grid(56 * V.s, Math.round(V.x), Math.round(V.y));
+      zl.textContent = Math.round(V.s * 100) + '%';
+    }
+    function fit() {
+      const vw = vp.clientWidth, vh = vp.clientHeight;
+      V.s = clamp(Math.min(vw / W, vh / H), 0.55, 1.25);
+      V.x = (vw - W * V.s) / 2; V.y = Math.max(0, (vh - H * V.s) / 2);
+      apply();
+    }
+    function zoomAt(f, cx, cy) {
+      const s = clamp(V.s * f, 0.4, 2.5), k = s / V.s;
+      V.x = cx - (cx - V.x) * k; V.y = cy - (cy - V.y) * k; V.s = s; apply();
+    }
+    const mid = () => [vp.clientWidth / 2, vp.clientHeight / 2];
+    $('#z-in').addEventListener('click', () => zoomAt(1.2, ...mid()));
+    $('#z-out').addEventListener('click', () => zoomAt(1 / 1.2, ...mid()));
+    $('#z-fit').addEventListener('click', fit);
+
+    let drag = null;
+    vp.addEventListener('pointerdown', e => {
+      if (flow || e.button !== 0 || e.target.closest('button, .tip, .hud')) return;
+      /* on a frame the drag moves that frame; on the empty canvas it pans */
+      const node = e.target.closest('.node'), key = node ? Object.keys(el).find(k => el[k] === node) : null;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, vx: V.x, vy: V.y, moved: false, key, nx: key ? R[key].x : 0, ny: key ? R[key].y : 0, d: key ? [...D[key]] : null };
+      if (key) raise(key);
+    });
+    window.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved) { if (Math.hypot(dx, dy) < 4) return; drag.moved = true; vp.classList.add('is-panning'); }
+      if (drag.key) {
+        const mx = Math.round(dx / V.s), my = Math.round(dy / V.s);
+        D[drag.key] = [drag.d[0] + mx, drag.d[1] + my];
+        move(drag.key, drag.nx + mx, drag.ny + my); draw();
+      } else { V.x = drag.vx + dx; V.y = drag.vy + dy; apply(); }
+    });
+    const endDrag = e => { if (drag && e.pointerId === drag.id) { drag = null; vp.classList.remove('is-panning'); } };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    vp.addEventListener('wheel', e => {
+      if (flow) return;
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) { const r = vp.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0022), e.clientX - r.left, e.clientY - r.top); }
+      else { V.x -= e.deltaX; V.y -= e.deltaY; apply(); }
+    }, { passive: false });
+    vp.addEventListener('scroll', () => { if (!flow) { vp.scrollTop = 0; vp.scrollLeft = 0; } });
+    vp.addEventListener('focusin', e => {
+      if (flow || !e.target.matches(':focus-visible') || e.target.closest('.hud')) return;
+      const r = e.target.getBoundingClientRect(), v = vp.getBoundingClientRect();
+      let dx = 0, dy = 0;
+      if (r.left < v.left + 24) dx = v.left + 24 - r.left; else if (r.right > v.right - 24) dx = v.right - 24 - r.right;
+      if (r.top < v.top + 24) dy = v.top + 24 - r.top; else if (r.bottom > v.bottom - 24) dy = v.bottom - 24 - r.bottom;
+      if (dx || dy) { V.x += dx; V.y += dy; apply(); }
+    });
+    new ResizeObserver(() => { if (vp.clientWidth !== lastW) { lastW = vp.clientWidth; layout(); } }).observe(vp);
+
+    /* A component reports its state; the wire from the Resolver follows. */
+    const WORD = { empty: 'BLANK', resolving: 'RESOLVING', locked: 'LOCKED', clearing: 'CLEARING' };
+    function set(id, st, v) {
+      const e = EDGES.find(x => x.id === id); if (!e) return;
+      e.g.dataset.s = e.pg.dataset.s = st; el[id].dataset.s = st; $('#chip-' + id).textContent = WORD[st] || WORD.empty;
+      const r = ROWS[id]; r.st = st; r.el.dataset.s = st; if (v != null) r.val = v;
+      paint();
+    }
+    /* The resolver's rows: the value scrambles in ASCII while its component is in transit, and reads plain once locked. */
+    function paint() {
+      let busy = false, n = 0;
+      for (const k in ROWS) {
+        const r = ROWS[k];
+        if (r.st === 'locked') { n++; r.pv.textContent = r.val; }
+        else if (r.st === 'empty' || mq.matches) r.pv.textContent = '_';
+        else { busy = true; r.pv.textContent = [...(r.val || '_')].map(c => c === ' ' ? ' ' : GLYPH[rnd(GLYPH.length)]).join(''); }
+      }
+      $('#chip-res').textContent = n + '/4 LOCKED';
+      el.res.dataset.s = n === 4 ? 'locked' : busy ? 'resolving' : 'empty';
+      if (busy && !mq.matches) { if (!tick) tick = setInterval(paint, 60); }
+      else if (tick) { clearInterval(tick); tick = null; }
+    }
+    function val(id, v) { ROWS[id].val = v; paint(); }
+    function raise(k) { el[k].style.zIndex = ++zTop; }
+    return { layout, set, val, raise, rounded, flow: () => flow, scale: () => V.s, onLayout: f => hooks.push(f) };
+  })();
+
+  /* ================= timing ================= */
+  const ENTER5 = [45, 45, 60, 75, 110];
+  /* One runner per component. begin() invalidates whatever was running before it. */
+  function runner() {
+    let gen = 0;
+    return {
+      begin() {
+        const me = ++gen;
+        return {
+          ok: () => me === gen,
+          wait(ms) {
+            if (mq.matches || ms <= 0) return Promise.resolve(me === gen);
+            return new Promise(r => setTimeout(() => r(me === gen), ms));
+          }
+        };
+      }
+    };
+  }
+  const notSame = (make, final) => prev => { let v; do { v = make(); } while (v === prev || v === final); return v; };
+  const digitPick = final => notSame(() => String(rnd(10)), final);
+  const symPick = notSame(() => ['-', '=', '*', '#', '/'][rnd(5)], '+');
+  const seq = list => (prev, i) => list[i % list.length];
+
+  /* ================= reel: one value that cycles, slows and locks ================= */
+  class Reel {
+    constructor(el, o) {
+      this.el = el; this.final = o.final; this.pick = o.pick; this.unpick = o.unpick || o.pick;
+      this.blank = o.blank ?? '_';
+      this.state = 'empty'; this.text = '';
+      el.textContent = ''; el.dataset.state = 'empty';
+    }
+    set(text, state, i = 0) {
+      this.text = text; this.state = state;
+      this.el.textContent = text;
+      this.el.dataset.state = state;
+    }
+    async resolve(t, { delay = 0, durs = ENTER5 } = {}) {
+      if (this.state === 'locked') return true;
+      if (this.state === 'empty') this.set(this.blank, 'blank');
+      if (!await t.wait(delay)) return false;
+      let prev = this.text;
+      for (let i = 0; i < durs.length; i++) {
+        prev = this.pick(prev, i);
+        this.set(prev, 'cycling', i);
+        if (!await t.wait(durs[i])) return false;
+      }
+      this.set(this.final, 'locked');
+      return true;
+    }
+    async clear(t, { delay = 0, frames = 1, dur = 36 } = {}) {
+      if (!await t.wait(delay)) return false;
+      if (this.state === 'empty') return true;
+      if (this.state !== 'blank') {
+        let prev = this.text;
+        for (let i = 0; i < frames; i++) {
+          prev = this.unpick(prev, i);
+          this.set(prev, 'clearing', i);
+          if (!await t.wait(dur)) return false;
+        }
+        this.set(this.blank, 'blank');
+        if (!await t.wait(dur)) return false;
+      }
+      this.set('', 'empty');
+      return true;
+    }
+  }
+
+  /* ================= flap: a line of text that resolves character by character =================
+     Every slot is filled from the start, with the wrong character. Then slots turn right in a
+     random order, a few at a time: each swaps in place through two to four candidates at an
+     uneven tick and locks; the last few tick slower. Nothing moves vertically. It clears the
+     same way, faster: characters turn wrong again in a random order, then all go. */
+  const UP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', LOW = UP.toLowerCase(), NUM = '0123456789';
+  class Flap {
+    constructor(el, o) {
+      this.el = el; this.final = o.final; this.alts = o.alts || []; this.on = o.on || null;
+      this.cells = []; this.state = 'empty'; el.dataset.state = 'empty';
+    }
+    mark(state) { this.state = state; this.el.dataset.state = state; if (this.on) this.on(state); }
+    put(i, ch, s, k = 0) {
+      const c = this.cells[i]; c.ch = ch; c.s = s;
+      c.el.textContent = ch; c.el.dataset.s = s;
+    }
+    build(keep = []) {
+      this.el.textContent = '';
+      this.cells = [...this.final].map(() => {
+        const e = document.createElement('i'); e.className = 'ch'; this.el.append(e);
+        return { el: e, ch: '', s: '' };
+      });
+      [...this.final].forEach((f, i) => {
+        if (keep[i] === f) this.put(i, f, 'locked'); else this.put(i, f === ' ' ? f : this.alt(i, 2), 'blank');
+      });
+    }
+    show() { if (this.state === 'empty') { this.build(); this.mark('blank'); } }
+    hide() { this.el.textContent = ''; this.cells = []; this.mark('empty'); }
+    /* Point an already-showing flap at a new value: characters that match stay locked. */
+    retarget(final, alts) {
+      const keep = this.state === 'empty' ? [] : this.cells.map(c => c.s === 'locked' ? c.ch : null);
+      this.final = final; this.alts = alts || [];
+      if (this.state !== 'empty') { this.build(keep); this.mark('blank'); }
+    }
+    alt(i, k) {
+      const f = this.final[i], a = this.alts.length ? this.alts[k % this.alts.length][i] : null;
+      if (a && a !== ' ' && a !== f) return a;
+      const pool = NUM.includes(f) ? NUM : UP.includes(f) ? UP : LOW.includes(f) ? LOW : null;
+      if (!pool) return f;
+      let v; do { v = pool[rnd(pool.length)]; } while (v === f);
+      return v;
+    }
+    async resolve(t, { delay = 0, durs = [16, 20] } = {}) {
+      if (this.state === 'locked') return true;
+      this.show();
+      if (!await t.wait(delay)) return false;
+      this.mark('cycling');
+      /* the order is drawn at random, and a few slots are in motion at once */
+      const idx = shuffle([...this.final].map((f, i) => i).filter(i => this.final[i] !== ' ' && this.cells[i].s !== 'locked'));
+      const base = durs.reduce((a, b) => a + b, 0) / durs.length;
+      let next = 0;
+      const lane = async l => {
+        if (!await t.wait(l * base * 0.6)) return false;
+        while (next < idx.length) {
+          const j = next++, i = idx[j], fin = this.final[i], slow = idx.length - j <= 3 ? 1.5 : 1;
+          if (this.alt(i, 0) !== fin) for (let k = 0, n = 2 + rnd(3); k < n; k++) {
+            this.put(i, this.alt(i, k), 'cycling', k);
+            if (!await t.wait(base * slow * (0.7 + Math.random() * 0.8))) return false;
+          }
+          this.put(i, fin, 'locked');
+        }
+        return true;
+      };
+      const lanes = clamp(Math.ceil(idx.length / 5), 2, 4);
+      if (!(await Promise.all(Array.from({ length: lanes }, (_, l) => lane(l)))).every(Boolean)) return false;
+      this.mark('locked');
+      return true;
+    }
+    async clear(t, { delay = 0, step = 13 } = {}) {
+      if (!await t.wait(delay)) return false;
+      if (this.state === 'empty') return true;
+      this.mark('clearing');
+      const idx = shuffle(this.cells.map((c, i) => i).filter(i => this.final[i] !== ' ' && this.cells[i].s !== 'blank'));
+      const jobs = idx.map(async (i, j) => {
+        if (!await t.wait(j * step)) return false;
+        this.put(i, this.alt(i, 0), 'clearing', 1);
+        if (!await t.wait(26)) return false;
+        this.put(i, this.alt(i, 1), 'blank');
+        return true;
+      });
+      if (!(await Promise.all(jobs)).every(Boolean)) return false;
+      if (!await t.wait(34)) return false;
+      this.hide();
+      return true;
+    }
+  }
+
+  /* Containers open and collapse in hard steps, never a fade. */
+  async function steps(el, key, list, t, ms = 26) {
+    for (const s of list) {
+      if (s === null) delete el.dataset[key]; else el.dataset[key] = s;
+      if (s !== list[list.length - 1] && !await t.wait(ms)) return false;
+    }
+    return true;
+  }
+  const press = (sel, key, val) => document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[key] === val)));
+
+  /* ================= 1. badge with content ================= */
+  const Badge = (() => {
+    const el = $('#badge'), anchor = $('#s1-anchor'), run = runner();
+    let value = null, reels = [];
+    const say = st => {
+      anchor.setAttribute('aria-label', value === null ? 'Mail, no new messages' : `Mail, ${value} new messages`);
+      press('#seg-count button', 'n', value === null ? 'none' : String(value));
+      Canvas.set('badge', st, value === null ? null : String(value));
+    };
+    async function set(v) {
+      const t = run.begin();
+      value = v; say('resolving');
+      const chars = v === '99+' ? ['9', '9', '+'] : String(v).split('');
+      const old = reels.map(r => r.text);
+      el.dataset.state = 'open';
+      el.textContent = '';
+      reels = chars.map((c, i) => {
+        const s = document.createElement('span'); s.className = 'reel'; el.append(s);
+        const r = new Reel(s, { final: c, pick: c === '+' ? symPick : digitPick(c) });
+        if (old[i] && old[i] !== '_') r.set(old[i], 'cycling'); else r.set(r.pick('', 0), 'cycling');
+        return r;
+      });
+      if (el.dataset.step !== '3' && !await steps(el, 'step', ['1', '2', '3'], t)) return;
+      /* the first digit runs the full 45/45/60/75/110 and locks before the next one starts */
+      /* every digit cycles at once on the 45/45/60/75/110 beat; they lock in a random order, a few beats apart */
+      const turn = shuffle(reels.map((r, i) => i));
+      const done = await Promise.all(reels.map((r, i) => r.resolve(t, { delay: 45, durs: [...ENTER5.slice(0, 4), ...Array(turn.indexOf(i) * 2).fill(70), 110] })));
+      if (done.every(Boolean) && t.ok()) { el.dataset.state = 'locked'; say('locked'); }
+    }
+    async function clear() {
+      if (value === null) return;
+      const t = run.begin();
+      value = null; say('clearing');
+      el.dataset.state = 'open';
+      const done = await Promise.all(reels.map((r, i) => r.clear(t, { delay: (reels.length - 1 - i) * 60, frames: 3, dur: 36 })));
+      if (!done.every(Boolean)) return;
+      if (!await steps(el, 'step', ['2', '1', '0'], t)) return;
+      el.textContent = ''; reels = []; say('empty');
+    }
+    document.querySelectorAll('#seg-count button').forEach(b => b.addEventListener('click', () => {
+      const n = b.dataset.n;
+      if (n === 'none') clear(); else set(/\D/.test(n) ? n : Number(n));
+    }));
+    return { set, clear };
+  })();
+
+  /* ================= 2. badge without content ================= */
+  const Dot = (() => {
+    const el = $('#dot'), anchor = $('#s2-anchor'), run = runner();
+    /* ASCII marks get denser until the signal resolves into a solid dot */
+    const reel = new Reel(el, { final: '', pick: seq(['.', '+', '*', '#']), unpick: seq(['#', '*', '+', '.']) });
+    let on = false;
+    async function show(want) {
+      if (want === on) return;
+      on = want;
+      anchor.setAttribute('aria-label', on ? 'Chat, new activity' : 'Chat, nothing new');
+      press('#seg-dot button', 'd', on ? 'dot' : 'none');
+      Canvas.set('dot', on ? 'resolving' : 'clearing');
+      const t = run.begin();
+      const ok = on ? await reel.resolve(t, { delay: 45, durs: [40, 45, 60, 85] }) : await reel.clear(t, { frames: 4, dur: 34 });
+      if (ok) Canvas.set('dot', on ? 'locked' : 'empty');
+    }
+    document.querySelectorAll('#seg-dot button').forEach(b => b.addEventListener('click', () => show(b.dataset.d === 'dot')));
+    return { show };
+  })();
+
+  /* ================= tooltips: dot, line, dot, frame, then the text ================= */
+  /* A tooltip's lines resolve together, each starting a beat after the one above; the action waits for all of them. */
+  async function resolveAll(t, p) {
+    const done = await Promise.all(p.filter(x => !x.after).map((x, i) => x.reel.resolve(t, { delay: 30 + i * 150, ...x.opt })));
+    if (!done.every(Boolean)) return false;
+    for (const x of p.filter(x => x.after)) if (!await x.reel.resolve(t, { delay: 40, ...x.opt })) return false;
+    return true;
+  }
+  function makeTip({ id, wrap, anchor, tip, plan, all, onClosed }) {
+    const run = runner();
+    let isOpen = false, timer = null, lastPtr = 'mouse';
+    /* Dragged by its header, the tooltip keeps its wire; once moved it stays open until a click elsewhere. */
+    const fh = tip.querySelector('.fh'), conn = wrap.querySelector('.conn'), cps = conn.querySelectorAll('path'), cb = conn.querySelector('.b'), off = [0, 0];
+    const body = wrap.closest('.node-b'), clip = conn.querySelector('clipPath rect');
+    let grab = null;
+    function link() {
+      const ox = Canvas.flow() ? 0 : off[0], oy = Canvas.flow() ? 0 : off[1], ex = 58 + ox, ey = oy;
+      tip.style.translate = ox || oy ? `${ox}px ${oy}px` : '';
+      const mx = Math.round(ex / 2), up = ey - 31;
+      const d = Canvas.rounded(ex >= 28 ? [[0, 28], [mx, 28], [mx, ey], [ex, ey]] : [[0, 28], [14, 28], [14, up], [ex - 14, up], [ex - 14, ey], [ex, ey]], 9);
+      cps.forEach(p => p.setAttribute('d', d));
+      /* the white copy of the wire shows only inside the frame's body */
+      const k = Canvas.flow() ? 1 : Canvas.scale(), a = body.getBoundingClientRect(), o = conn.getBoundingClientRect();
+      [['x', a.left - o.left], ['y', a.top - o.top], ['width', a.width], ['height', a.height]].forEach(([n, v]) => clip.setAttribute(n, v / k));
+      cb.setAttribute('cx', ex); cb.setAttribute('cy', ey);
+    }
+    fh.addEventListener('pointerdown', e => {
+      if (Canvas.flow() || e.button !== 0) return;
+      grab = { id: e.pointerId, x: e.clientX, y: e.clientY, o: [...off] };
+      fh.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    fh.addEventListener('pointermove', e => {
+      if (!grab || e.pointerId !== grab.id) return;
+      const k = Canvas.scale();
+      off[0] = Math.round(grab.o[0] + (e.clientX - grab.x) / k); off[1] = Math.round(grab.o[1] + (e.clientY - grab.y) / k);
+      link();
+    });
+    const drop = e => { if (grab && e.pointerId === grab.id) grab = null; };
+    fh.addEventListener('pointerup', drop); fh.addEventListener('pointercancel', drop);
+    Canvas.onLayout(link);
+    async function open() {
+      clearTimeout(timer);
+      if (isOpen) return; isOpen = true; wrap.dataset.open = '';
+      Canvas.raise(id);
+      const t = run.begin(), p = plan();
+      Canvas.set(id, 'resolving');
+      p.forEach(x => x.reel.show());
+      if (wrap.dataset.link !== '3' && !await steps(wrap, 'link', ['1', '2', '3'], t, 24)) return;
+      if (!await t.wait(24)) return;
+      if (tip.dataset.step !== '3' && !await steps(tip, 'step', ['1', '2', '3'], t)) return;
+      if (!await resolveAll(t, p)) return;
+      Canvas.set(id, 'locked');
+    }
+    async function close() {
+      clearTimeout(timer);
+      if (!isOpen) return; isOpen = false; delete wrap.dataset.open;
+      const t = run.begin();
+      Canvas.set(id, 'clearing');
+      const done = await Promise.all(all().map(x => x.reel.clear(t, { delay: x.out || 0 })));
+      if (!done.every(Boolean)) return;
+      if (!await steps(tip, 'step', ['2', '1', '0'], t)) return;
+      if (!await t.wait(20)) return;
+      if (!await steps(wrap, 'link', ['2', '1', null], t, 20)) return;
+      Canvas.set(id, 'empty');
+      if (onClosed) onClosed();
+    }
+    wrap.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') open(); });
+    wrap.addEventListener('pointerleave', e => {
+      if (e.pointerType !== 'mouse' || grab || off[0] || off[1]) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => { if (!wrap.querySelector(':focus-visible')) close(); }, 140);
+    });
+    wrap.addEventListener('pointerdown', e => { lastPtr = e.pointerType; });
+    wrap.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) open(); });
+    wrap.addEventListener('focusout', e => { if (!wrap.contains(e.relatedTarget)) close(); });
+    wrap.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    anchor.addEventListener('click', e => {
+      const pt = e.pointerType !== undefined ? e.pointerType : lastPtr;
+      if (pt === 'mouse') open(); else if (isOpen) close(); else open();
+    });
+    document.addEventListener('pointerdown', e => { if (!wrap.contains(e.target)) close(); });
+    return { open, close, run, isOpen: () => isOpen };
+  }
+
+  /* ================= 3. plain tooltip ================= */
+  (() => {
+    const plan = [
+      { reel: new Flap($('#p-word'), { final: 'EDITED', alts: ['OPENED', 'SAVED', 'ACCESSED'] }), delay: 45, out: 60 },
+      { reel: new Flap($('#p-date'), { final: 'SEP 24, 1998', alts: ['NOV 18, 2004', 'JAN 03, 1996', 'JUL 11, 2001'] }), delay: 40, out: 0 }
+    ];
+    makeTip({ id: 'plain', wrap: $('#s3-wrap'), anchor: $('#s3-anchor'), tip: $('#s3-tip'), plan: () => plan, all: () => plan });
+  })();
+
+  /* ================= 4. rich tooltip: status, and the history its action opens in place ================= */
+  (() => {
+    const act = $('#s4-action'), pgS = $('#pg-status'), pgH = $('#pg-history');
+    const head = new Flap($('#r-head'), { final: 'FILE STATUS', alts: ['FILE LENGTH', 'FILE RECORD'] });
+    const action = new Flap($('#r-act'), { final: 'VIEW HISTORY →', alts: ['OPEN ARCHIVE →', 'SHOW DETAILS →'],
+      on: s => { act.dataset.ready = String(s === 'locked'); } });
+    /* header, then primary, then secondary, then the action; cleared in the opposite order */
+    const status = [
+      { reel: new Flap($('#r-pri'), { final: 'edited Sep 24, 1998', alts: ['opened Nov 18, 2004', 'viewed Jan 03, 1996', 'copied Jul 11, 2001'] }), delay: 30, opt: { durs: [18] }, out: 80 },
+      { reel: new Flap($('#r-sec'), { final: '3 previous versions available' }), delay: 30, opt: { durs: [12] }, out: 40 }
+    ];
+    const history = [['v3', 'Sep 11, 1998  41 KB'], ['v2', 'Aug 30, 1998  38 KB'], ['v1', 'Aug 02, 1998  29 KB']].map(([v, row], i) => {
+      const p = document.createElement('p'); p.className = 'rt line';
+      p.innerHTML = `<span class="static">${v}  </span><span class="reel flap" style="--rw:19"></span>${i === 2 ? '<span class="cur" aria-hidden="true">_</span>' : ''}`;
+      pgH.append(p);
+      return { reel: new Flap(p.querySelector('.reel'), { final: row }), delay: 30, opt: { durs: [16] }, out: 40 + (2 - i) * 40 };
+    });
+    const headP = { reel: head, delay: 0, opt: { durs: [14, 18] }, out: 150 };
+    const PAGES = {
+      status: { head: ['FILE STATUS', ['FILE LENGTH', 'FILE RECORD']], act: ['VIEW HISTORY →', ['OPEN ARCHIVE →', 'SHOW DETAILS →']], label: 'View history', body: status, actDelay: 30 },
+      history: { head: ['FILE HISTORY', ['FILE ARCHIVE', 'FILE VERSION']], act: ['← BACK', ['← EXIT', '← DONE']], label: 'Back to file status', body: history, actDelay: 30 }
+    };
+    let page = 'status';
+    function point(to) {
+      page = to; const P = PAGES[to];
+      pgS.hidden = to !== 'status'; pgH.hidden = to !== 'history';
+      Canvas.val('rich', P.head[0]);
+      head.retarget(...P.head); action.retarget(...P.act);
+      act.setAttribute('aria-label', P.label);
+    }
+    const plan = () => [headP, ...PAGES[page].body, { reel: action, after: true, opt: { durs: [14, 18] }, out: 0 }];
+    const all = () => [headP, ...status, ...history, { reel: action, out: 0 }];
+    const tip = makeTip({ id: 'rich', wrap: $('#s4-wrap'), anchor: $('#s4-anchor'), tip: $('#s4-tip'), plan, all, onClosed: () => point('status') });
+
+    /* The action is real: the body de-resolves, then the other page resolves in the same frame. */
+    async function swap() {
+      const t = tip.run.begin(), from = PAGES[page].body;
+      Canvas.set('rich', 'clearing');
+      const gone = await Promise.all([action.clear(t), ...from.map(x => x.reel.clear(t, { delay: x.out }))]);
+      if (!gone.every(Boolean)) return;
+      point(page === 'status' ? 'history' : 'status');
+      Canvas.set('rich', 'resolving');
+      const p = plan(); p.forEach(x => x.reel.show());
+      if (!await resolveAll(t, p)) return;
+      Canvas.set('rich', 'locked');
+    }
+    act.addEventListener('click', () => { if (act.dataset.ready === 'true' && tip.isOpen()) swap(); });
+  })();
+
+  /* ================= on load ================= */
+  Canvas.layout();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => Canvas.layout());
+  setTimeout(() => { Badge.set(7); setTimeout(() => Dot.show(true), 300); }, 700);
+})();
+</script>
+</body>
+</html>

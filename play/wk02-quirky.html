@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  html { color-scheme: light; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Information Has Weight</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one flat ground. The pill bar sits at the centre of the window, scaled to suit it
+   (badges drop onto the bell, tooltips hang below the bar). Demo controls sit along the bottom. */
+:root {
+  --bg: #f6f6f6;
+  --stage: #f5f5f7;
+  --bar: #ffffff;
+  --bar-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --ink: #17181b;
+  --icon: #7b7f86;
+  --muted: #62666d;
+  --line: #dfe0e4;
+  --press: #eeeef1;
+  --badge: #dc4428;
+  --badge-ink: #ffffff;
+  --tip-bg: #1b1c20;
+  --tip-ink: #f4f4f6;
+  --tip-muted: #b5b8bf;
+  --tip-chip: rgba(255, 255, 255, 0.12);
+  --tip-chip-hover: rgba(255, 255, 255, 0.2);
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1012; --stage: #131517; --bar: #202226;
+    --bar-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    --ink: #eeeff1; --icon: #9a9ea5; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
+    --badge: #e8502f; --badge-ink: #ffffff;
+    --tip-bg: #eeeff1; --tip-ink: #17181b; --tip-muted: #50545b;
+    --tip-chip: rgba(18, 20, 24, 0.08); --tip-chip-hover: rgba(18, 20, 24, 0.14);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1012; --stage: #131517; --bar: #202226;
+  --bar-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --ink: #eeeff1; --icon: #9a9ea5; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
+  --badge: #e8502f; --badge-ink: #ffffff;
+  --tip-bg: #eeeff1; --tip-ink: #17181b; --tip-muted: #50545b;
+    --tip-chip: rgba(18, 20, 24, 0.08); --tip-chip-hover: rgba(18, 20, 24, 0.14);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+html, body { height: 100%; }
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.head { display: flex; flex-direction: column; gap: 8px; }
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(26px, 4.4vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.lede { margin: 0; max-width: 60ch; color: var(--muted); text-wrap: pretty; }
+
+/* Stage and pill bar */
+/* No canvas block: the whole page is one flat ground. The stage is everything above the controls. */
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 380px;
+}
+/* The scene is drawn at its natural size and scaled up to suit the window (--k is set in script).
+   It always covers the stage exactly, with the bar dead centre. */
+.scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% / var(--k, 1));
+  height: calc(100% / var(--k, 1));
+  transform: translate(-50%, -50%) scale(var(--k, 1));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 999px;
+  background: var(--bar);
+  box-shadow: var(--bar-shadow);
+  transform-origin: 18% 50%;      /* the bar tips from its far end, so the bell side sinks */
+  will-change: transform;
+}
+.nav-btn {
+  appearance: none;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--icon);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn > svg { display: block; width: 24px; height: 24px; }
+.tip-wrap > .nav-btn, #home, #bell { will-change: transform; }
+.nav-btn:hover,
+.tip-wrap.is-open .nav-btn { background: var(--press); color: var(--ink); }
+.nav-btn.is-current { background: var(--press); color: var(--ink); cursor: default; }
+.icon-stroke { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Bell and badge */
+.swing {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  transform-origin: 50% 10.4%;
+  will-change: transform;
+}
+.swing svg { display: block; width: 28px; height: 28px; overflow: visible; }
+.badge {
+  position: absolute;
+  left: 15px;
+  top: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--badge);
+  color: var(--badge-ink);
+  box-shadow: 0 0 0 2px var(--bar);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.badge.dot { left: 19px; top: -1px; min-width: 0; width: 8px; height: 8px; padding: 0; }
+
+/* Tooltip, hanging below the bar */
+.tip-wrap { position: relative; display: block; }
+.tip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding-top: 20px;            /* hover bridge: bar padding plus the gap */
+  width: max-content;
+  z-index: 2;
+  will-change: opacity;
+}
+.tip-inner { position: relative; transform-origin: 50% 0; will-change: transform; }
+.tip-bg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
+.tip-bg path { fill: var(--tip-bg); }
+.tip-body {
+  position: relative;
+  padding: 8px 13px;
+  color: var(--tip-ink);
+  font-size: 13px;
+  line-height: 1.4;
+  will-change: transform;
+}
+.tip[data-kind="rich"] .tip-body {
+  width: 216px;
+  padding: 14px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tip-title { margin: 0; font-weight: 600; }
+.tip-title, .tip-text, .tip-action, .tip-body { will-change: transform; }
+.tip-text { margin: 0; color: var(--tip-muted); text-wrap: balance; }
+.tip-action {
+  appearance: none;
+  align-self: flex-start;
+  margin-top: 12px;
+  height: 30px;
+  padding: 0 10px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tip-chip);
+  color: var(--tip-ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  transition: background-color 140ms ease;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+.tip-action:hover, .tip-action.is-pressed { background: var(--tip-chip-hover); }
+.tip-action .arrow { display: grid; place-items: center; transition: transform 160ms ease; }
+.tip-action .arrow svg { width: 14px; height: 14px; display: block; }
+.tip-action:hover .arrow { transform: translateX(2px); }
+.tip-action.is-pressed .arrow { transform: translateX(3px); }
+
+/* Panels under the stage */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px;
+}
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+.panel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel-head { display: flex; flex-direction: column; gap: 2px; }
+h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
+.rule { margin: 0; color: var(--muted); font-size: 14px; }
+
+.controls { position: relative; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 8px; padding: 0 16px 28px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--bar); box-shadow: inset 0 0 0 1px var(--line); }
+.btn {
+  appearance: none;
+  min-width: 38px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.btn:hover { background: var(--press); color: var(--ink); }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btn.quiet { height: 42px; padding: 0 16px; background: var(--bar); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font-family: var(--sans); font-size: 14px; }
+.btn.quiet:hover { background: var(--press); }
+.status { margin: 0; min-height: 42px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
+
+:where(.nav-btn, .btn, .tip-action, input):focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.tip-action:focus-visible { outline-color: var(--tip-ink); outline-offset: 2px; }
+
+/* Weight tables */
+.spec { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.spec caption {
+  caption-side: bottom;
+  text-align: left;
+  padding-top: 10px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--muted);
+}
+.spec th, .spec td { text-align: right; padding: 7px 0 7px 10px; border-bottom: 1px solid var(--line); font-weight: 400; white-space: nowrap; }
+.spec th:first-child, .spec td:first-child { text-align: left; padding-left: 0; }
+.spec thead th { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.spec tbody tr { color: var(--muted); transition: color 160ms ease; }
+.spec tbody tr.is-active { color: var(--ink); font-weight: 500; }
+.spec tbody tr.is-active th { font-weight: 500; }
+
+/* Footer */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+.check { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); cursor: pointer; }
+.check:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
+.check input:focus-visible { outline: none; }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); }
+.notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 0 16px 20px; color: var(--muted); font-size: 14px; }
+
+/* Thumbnail mode (page opened with #thumb): no controls, the canvas fills the frame. */
+.thumb .controls, .thumb .notice { display: none; }
+</style>
+</head>
+<body>
+<script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
+<main class="page">
+  <div class="stage">
+    <div class="scene" id="scene">
+    <nav class="bar" id="bar" aria-label="Demo navigation">
+      <button class="nav-btn is-current" type="button" id="home" aria-label="Home" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-stroke" d="M4.5 10.5 12 4l7.5 6.5V18a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path class="icon-stroke" d="M10 16h4"/></svg>
+      </button>
+
+      <div class="tip-wrap" data-kind="plain">
+        <button class="nav-btn" type="button" id="anchor-plain" aria-label="Copy link" aria-describedby="tip-plain">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="icon-stroke" d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/>
+            <path class="icon-stroke" d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>
+          </svg>
+        </button>
+        <div class="tip" id="tip-plain" data-kind="plain" role="tooltip" hidden>
+          <div class="tip-inner">
+            <svg class="tip-bg" aria-hidden="true"><path/></svg>
+            <div class="tip-body">Copy link</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-wrap" data-kind="rich">
+        <button class="nav-btn" type="button" id="anchor-rich" aria-label="Link sharing info" aria-describedby="tip-rich">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="icon-stroke" cx="12" cy="12" r="8.5"/>
+            <path class="icon-stroke" d="M12 11v5"/>
+            <path class="icon-stroke" d="M12 7.8v.01" style="stroke-width:2"/>
+          </svg>
+        </button>
+        <div class="tip" id="tip-rich" data-kind="rich" role="tooltip" hidden>
+          <div class="tip-inner">
+            <svg class="tip-bg" aria-hidden="true"><path/></svg>
+            <div class="tip-body">
+              <p class="tip-title">Your link is public.</p>
+              <p class="tip-text">Anyone with this link can view it.</p>
+              <button class="tip-action" type="button" id="manage"><span>Manage access</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="icon-stroke" style="stroke-width:1.75" d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="nav-btn bell" id="bell" type="button" aria-label="Notifications, 3 unread">
+        <span class="swing" id="swing">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="icon-stroke" d="M12 2.5V4"/>
+            <path class="icon-stroke" d="M6 10a6 6 0 0 1 12 0v5l2 3H4l2-3z"/>
+            <path class="icon-stroke" id="clapper" d="M10 21a2 2 0 0 0 4 0"/>
+          </svg>
+          <span class="badge" id="badge" aria-hidden="true">3</span>
+        </span>
+      </button>
+    </nav>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Badge content">
+      <button class="btn" type="button" id="b-none" data-key="none" aria-pressed="false">None</button>
+      <button class="btn" type="button" id="b-dot" data-key="dot" aria-pressed="false">Dot</button>
+      <button class="btn" type="button" id="b-1" data-key="1" aria-pressed="false">1</button>
+      <button class="btn" type="button" id="b-3" data-key="3" aria-pressed="true">3</button>
+      <button class="btn" type="button" id="b-12" data-key="12" aria-pressed="false">12</button>
+      <button class="btn" type="button" id="b-99" data-key="99+" aria-pressed="false">99+</button>
+    </div>
+    <button class="btn quiet" type="button" id="replay">Replay</button>
+    <button class="btn quiet" type="button" id="reset">Reset</button>
+    <label class="btn quiet check" for="slow"><input type="checkbox" id="slow"> Slow motion</label>
+  </div>
+  <div class="notice" id="rm-notice" hidden>
+    <span>Your system asks for reduced motion, so the physics are off.</span>
+    <button class="btn quiet" type="button" id="rm-override">Play motion anyway</button>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const TAU = Math.PI * 2;
+
+  /* ---------- Shared: one clock, one rule ---------- */
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let motionOverride = false;
+  const reduced = () => mq.matches && !motionOverride;
+  let speed = 1;
+
+  const anims = new Map();
+  function cancel(key) {
+    const a = anims.get(key);
+    if (a) { a.dead = true; cancelAnimationFrame(a.id); anims.delete(key); }
+  }
+  function run(key, dur, frame, done) {
+    cancel(key);
+    const a = { dead: false, id: 0 };
+    let start = null;
+    const tick = now => {
+      if (a.dead) return;
+      if (start === null) start = now;
+      const t = Math.min((now - start) * speed, dur);
+      frame(t);
+      if (t < dur) a.id = requestAnimationFrame(tick);
+      else { anims.delete(key); if (done) done(); }
+    };
+    anims.set(key, a);
+    a.id = requestAnimationFrame(tick);
+  }
+  function peakOf(fn) {
+    let m = 0;
+    for (let i = 0; i <= 500; i++) m = Math.max(m, Math.abs(fn(i / 500)));
+    return m || 1;
+  }
+
+  /* ---------- Badge ---------- */
+  const FALL = 230, SETTLE = 430, HOLD = 40, SNAP = 280, DROP = 96;   // ms x4, px. Same for every weight.
+  const CONTACT = 45, HOP1 = 220, HOP2 = 130;     // ms
+  // swing: bell rotation. tilt: how far the whole bar tips. slide: how far the neighbours skid.
+  // lean: the crooked angle the bell is left at before it snaps straight.
+  const WEIGHTS = {
+    'dot': { label: 'Dot', swing: 2.5, hz: 3.0, bounce: 1.5, squash: 0.05, buzz: 0,   tilt: 0.2, slide: 0,   lean: 0, apex: 96, reach: 46, spin: 320 },
+    '1':   { label: '1',   swing: 6,   hz: 3.4, bounce: 3,   squash: 0.10, buzz: 0,   tilt: 0.5, slide: 0.6, lean: 2, apex: 86, reach: 42, spin: 260 },
+    '3':   { label: '3',   swing: 11,  hz: 3.9, bounce: 5,   squash: 0.16, buzz: 0,   tilt: 1.0, slide: 1.6, lean: 4, apex: 72, reach: 36, spin: 200 },
+    '12':  { label: '12',  swing: 17,  hz: 4.5, bounce: 8,   squash: 0.22, buzz: 0.6, tilt: 1.9, slide: 3.2, lean: 6, apex: 58, reach: 30, spin: 150 },
+    '99+': { label: '99+', swing: 24,  hz: 5.4, bounce: 11,  squash: 0.28, buzz: 1.8, tilt: 3.0, slide: 5.5, lean: 9, apex: 44, reach: 24, spin: 110 }
+  };
+  // Damped swing that always reaches zero at SETTLE, so heavy badges are not slower.
+  const swingShape = (u, hz) => Math.exp(-2.2 * u) * Math.pow(1 - u, 1.4) * Math.sin(TAU * hz * u * SETTLE / 1000);   // keeps wobbling right up to the lean, so there is no dead pause
+  Object.values(WEIGHTS).forEach(w => { w.norm = peakOf(u => swingShape(u, w.hz)); });
+  const swingAt = (tau, w) => (tau <= 0 || tau >= SETTLE) ? 0 : w.swing * swingShape(tau / SETTLE, w.hz) / w.norm;
+  // One slow dip and recovery, used for the bar tipping and the neighbours skidding downhill.
+  const DIP_HZ = 2.1, dipNorm = peakOf(u => swingShape(u, DIP_HZ));
+  const dipAt = tau => (tau <= 0 || tau >= SETTLE) ? 0 : swingShape(tau / SETTLE, DIP_HZ) / dipNorm;
+  // The bell drifts to a crooked angle, rests there briefly, then rights itself: it leans a touch further,
+  // swings back past upright and settles. Eased at both ends so nothing starts or stops abruptly.
+  const B = 1.70158 * 1.525;
+  const backInOut = p => p < 0.5
+    ? (Math.pow(2 * p, 2) * ((B + 1) * 2 * p - B)) / 2
+    : (Math.pow(2 * p - 2, 2) * ((B + 1) * (2 * p - 2) + B) + 2) / 2;
+  function leanAt(tau, w) {
+    if (tau <= 0) return 0;
+    if (tau < SETTLE) { const u = tau / SETTLE; return w.lean * u * u * (3 - 2 * u); }
+    if (tau < SETTLE + HOLD) return w.lean;
+    return w.lean * (1 - backInOut(Math.min(1, (tau - SETTLE - HOLD) / SNAP)));
+  }
+  function hop(tau, b) {
+    if (tau < CONTACT) return 0;
+    const p = (tau - CONTACT) / HOP1;
+    if (p < 1) return 4 * b * p * (1 - p);
+    const q = (tau - CONTACT - HOP1) / HOP2;
+    if (q < 1) return 4 * b * 0.28 * q * (1 - q);
+    return 0;
+  }
+
+  const bell = $('bell'), swing = $('swing'), clapper = $('clapper'), badge = $('badge'), bar = $('bar');
+  const neighbours = [...bar.children].filter(el => el !== bell).reverse();   // nearest the bell first
+  let current = '3', last = '3';
+
+  function setSwing(deg, clapperDeg) {
+    swing.style.transform = deg ? `rotate(${deg.toFixed(3)}deg)` : '';
+    if (clapperDeg) clapper.setAttribute('transform', `rotate(${clapperDeg.toFixed(3)} 12 2.5)`);
+    else clapper.removeAttribute('transform');
+  }
+  let barRot = 0;
+  const pulls = { plain: 0, rich: 0 };   // px the bar is pushed down: by each hanging tooltip, and by a pressed tab
+  function applyBar() {
+    const y = Object.values(pulls).reduce((a, b) => a + b, 0);
+    bar.style.transform = (y || barRot) ? `translateY(${y.toFixed(2)}px) rotate(${barRot.toFixed(3)}deg)` : '';
+  }
+  function setBar(deg, slideAt) {
+    barRot = deg;
+    applyBar();
+    neighbours.forEach((el, i) => {
+      const x = slideAt ? slideAt(i) : 0;
+      el.style.transform = x ? `translateX(${x.toFixed(2)}px)` : '';
+    });
+  }
+  function rest() {
+    killGhost();
+    badge.style.transform = '';
+    badge.style.opacity = '';
+    setSwing(0, 0);
+    setBar(0, null);
+  }
+  function paintBadge(key) {
+    badge.classList.toggle('dot', key === 'dot');
+    badge.textContent = key === 'dot' ? '' : key;
+  }
+  function syncUI() {
+    document.querySelectorAll('.seg .btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === current)));
+    bell.setAttribute('aria-label',
+      current === 'none' ? 'Notifications, none' :
+      current === 'dot' ? 'Notifications, new activity' : `Notifications, ${current} unread`);
+  }
+
+  function drop(key) {
+    const w = WEIGHTS[key];
+    killGhost();
+    paintBadge(key);
+    badge.hidden = false;
+    if (reduced()) {
+      rest();
+      run('badge', 160, t => { badge.style.opacity = t / 160; }, rest);
+      return;
+    }
+    run('badge', FALL + SETTLE + HOLD + SNAP, t => {
+      if (t < FALL) {
+        const p = t / FALL;                                   // gravity: distance grows with t squared
+        badge.style.opacity = Math.min(1, t / 70);
+        badge.style.transform = `translateY(${(-DROP * (1 - p * p)).toFixed(2)}px)`;
+        setSwing(0, 0);
+        setBar(0, null);
+        return;
+      }
+      const tau = t - FALL, u = Math.min(1, tau / SETTLE);
+      const s = w.squash * Math.exp(-tau / 60) * Math.cos(TAU * tau / 190);
+      badge.style.opacity = 1;
+      badge.style.transform =
+        `translateY(${(-hop(tau, w.bounce)).toFixed(2)}px) scale(${(1 + s * 0.6).toFixed(4)}, ${(1 - s).toFixed(4)})`;
+      const buzz = w.buzz * Math.exp(-tau / 130) * Math.sin(TAU * 26 * tau / 1000) * (1 - u);
+      const lean = leanAt(tau, w);
+      setSwing(swingAt(tau, w) + buzz + lean,
+        swingAt(tau - 45, w) * 0.8 - swingAt(tau, w) * 0.25 - lean * 0.6);   // clapper lags the shell and hangs plumb while it leans
+      // The whole bar tips toward the bell, and the other icons skid downhill one after another.
+      setBar(w.tilt * dipAt(tau), i => w.slide * dipAt(tau - 30 - i * 30));
+    }, rest);
+  }
+
+  // Leaving: the bar is a springboard. Its bell end dips (wind-up), snaps up and flicks the badge off,
+  // then rings a few times before it lies flat again. A heavier badge needs a deeper wind-up and shakes the
+  // bar harder, but flies lower and shorter. A dot barely needs a flick and pops high.
+  const WIND = 150, RING = 600, RING_MS = 180, OUT = WIND + RING;     // ms. Same for every weight.
+  const LAUNCH = WIND + RING_MS / 4, FLIGHT = OUT - LAUNCH;            // the badge leaves as the bar passes level on its way up
+  function boardAt(t) {                                                // +1 = fully wound down, negative = kicked up
+    if (t <= 0 || t >= OUT) return 0;
+    if (t < WIND) return Math.sin(Math.PI / 2 * t / WIND);
+    const tau = t - WIND, u = tau / RING;
+    return Math.cos(TAU * tau / RING_MS) * Math.exp(-3.2 * u) * Math.pow(1 - u, 1.2);
+  }
+  const stage = document.querySelector('.stage'), scene = $('scene');
+  // Scale the scene gently with the window: the bar takes about a fifth of the window's width, at most 1.5x,
+  // and always leaves room for the rich tooltip under it. The thumbnail keeps the natural size.
+  let K = 1;
+  function fitScene() {
+    const thumb = document.documentElement.classList.contains('thumb');
+    K = thumb ? 1 : Math.max(1, Math.min((stage.clientHeight / 2 - 12) / 210, stage.clientWidth * 0.2 / 226, 1.5));
+    scene.style.setProperty('--k', K.toFixed(3));
+  }
+  fitScene();
+  addEventListener('resize', fitScene);
+  let ghost = null;                                                    // the badge once it is airborne, free of the bar
+  function killGhost() { if (ghost) { ghost.remove(); ghost = null; } }
+  function clearBadge(fromKey, animated) {
+    killGhost();
+    if (badge.hidden) { cancel('badge'); rest(); return; }
+    const w = WEIGHTS[fromKey] || WEIGHTS['1'];
+    if (!animated || reduced()) { cancel('badge'); badge.hidden = true; rest(); return; }
+    cancel('badge'); rest();
+    const wind = 0.5 + w.tilt * 1.1;                                   // degrees the bar dips before the flick
+    run('badge', OUT, t => {
+      const b = boardAt(t);
+      setBar(wind * b, i => w.slide * 0.8 * boardAt(t - 25 - i * 25));
+      const bellDeg = w.swing * 0.45 * boardAt(t - 30);
+      setSwing(bellDeg, bellDeg * 0.6);
+      if (t < LAUNCH) {                                                // still riding the bar: pressed down, then pushed
+        const sq = w.squash * 0.7 * Math.max(0, b);
+        badge.style.transform = `scale(${(1 + sq * 0.6).toFixed(4)}, ${(1 - sq).toFixed(4)})`;
+        return;
+      }
+      if (!ghost) {
+        const r = badge.getBoundingClientRect(), sr = scene.getBoundingClientRect();   // screen px, so divide by the scene scale
+        const left = (r.left + r.width / 2 - sr.left) / K - badge.offsetWidth / 2;
+        const top = (r.top + r.height / 2 - sr.top) / K - badge.offsetHeight / 2;
+        ghost = badge.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.style.cssText = `left:${left.toFixed(1)}px;top:${top.toFixed(1)}px;box-shadow:none;transform-origin:50% 50%;`;
+        scene.appendChild(ghost);
+        badge.hidden = true;
+        badge.style.transform = '';
+      }
+      const tau = t - LAUNCH, f = tau / FLIGHT, ta = FLIGHT * 0.4, q = (tau - ta) / ta;
+      const y = -w.apex * (1 - q * q);                                 // thrown up, then gravity takes it back down past the bar
+      ghost.style.transform = `translate(${(w.reach * f).toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(w.spin * f).toFixed(1)}deg)`;
+      ghost.style.opacity = f < 0.55 ? 1 : Math.max(0, 1 - (f - 0.55) / 0.45);
+    }, () => { badge.hidden = true; rest(); });
+  }
+
+  // One highlight in the bar. It sits on Home until the bell is opened.
+  const home = $('home');
+  function setTab(tab) {
+    [['home', home], ['bell', bell]].forEach(([name, el]) => {
+      el.classList.toggle('is-current', name === tab);
+      if (name === tab) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current');
+    });
+  }
+  function select(key) {
+    const prev = current;
+    current = key;
+    if (key !== 'none') { last = key; setTab('home'); }   // a new notification arrives while you are on Home
+    syncUI();
+    if (key === 'none') clearBadge(prev, true);
+    else drop(key);
+  }
+
+  document.querySelectorAll('.seg .btn').forEach(b => b.addEventListener('click', () => select(b.dataset.key)));
+  $('replay').addEventListener('click', () => select(current === 'none' ? last : current));
+  $('reset').addEventListener('click', () => {
+    current = 'none';
+    setTab('home');
+    syncUI();
+    clearBadge(null, false);
+  });
+  // Opening the bell moves the highlight off Home and the badge, now read, falls away.
+  // Pressing a tab gives the whole bar a small, simple shake: it dips a touch, rings twice and stills.
+  // The icon rides with the bar; nothing changes size.
+  const PRESS_MS = 360;
+  const pressShape = u => Math.sin(TAU * u * PRESS_MS / 170) * Math.exp(-3.2 * u) * (1 - u);
+  const pressNorm = peakOf(pressShape);
+  function pressTab(el, key) {
+    if (reduced()) return;
+    run('press-' + key, PRESS_MS, t => {
+      pulls['press-' + key] = 1.0 * pressShape(t / PRESS_MS) / pressNorm;
+      applyBar();
+    }, () => { pulls['press-' + key] = 0; applyBar(); });
+  }
+  bell.addEventListener('click', () => { setTab('bell'); pressTab(bell, 'bell'); if (current !== 'none') select('none'); });
+  home.addEventListener('click', () => { setTab('home'); pressTab(home, 'home'); });
+
+  syncUI();
+
+  /* ---------- Tooltip ---------- */
+  // The tooltip moves the way the badge does: a rigid piece that drops under gravity, hits the end of its
+  // travel, takes two small hops and stills. Nothing stretches or squashes. Weight shows in how far it drops,
+  // how hard it lands, how low it hangs, and how much the bar gives. Both tooltips take the same time.
+  const TIPS = {
+    // pointer: length of the triangle that points at the bar. Its tip always sits just under the bar, never behind it.
+    //   plain keeps the small pointer and lands with two small hops (hop).
+    //   rich has a long pointer: it starts short, is drawn out as the box drops, overshoots by `stretch`, and pulls back.
+    // drop: how far it falls. pull: how far it drags the bar.
+    // rattle: how the loose contents are thrown about inside once the box stops (px).
+    //   float  how far up they hang during the fall      floor  how far down they slam before the bottom stops them
+    //   ceil   how far up they bounce before the top stops them      back, last  the two smaller swings that follow
+    plain: { drop: 6, hop: 2, pull: 0.8, pointer: 5, radius: 12,
+             rattle: { float: 3, floor: 6, ceil: 5, back: 2, last: 0.5 },
+             items: [{ sel: '.tip-body', lag: 0, thud: 0.3 }] },
+    rich:  { drop: 13, stretch: 12, pull: 3.2, pointer: 18, radius: 14,
+             rattle: { float: 8, floor: 13, ceil: 13, back: 5, last: 2 },
+             // The button is the heaviest thing inside, so it leads; the text follows a beat behind and piles onto it.
+             items: [{ sel: '.tip-action', lag: 0, thud: 1.5 },
+                     { sel: '.tip-title', lag: 30, extra: 5 },
+                     { sel: '.tip-text', lag: 30, extra: 5 }] }
+  };
+  const T_FALL = 200, T_SETTLE = 600;   // ms
+  const R1 = 80, R2 = 120, R3 = 130, R4 = 110, R5 = 100;            // ms: slam down, bounce to the top, and three settling swings
+  function hops(tau, h) {                                // plain: the same two-hop landing the badge makes
+    if (tau <= 0) return 0;
+    const p = tau / 180;
+    if (p < 1) return 4 * h * p * (1 - p);
+    const q = (tau - 180) / 110;
+    return q < 1 ? 4 * h * 0.3 * q * (1 - q) : 0;
+  }
+  const tugShape = u => Math.sin(TAU * u * T_SETTLE / 300) * Math.exp(-3.2 * u) * (1 - u);
+  const tugNorm = peakOf(tugShape);
+  const tugAt = tau => (tau <= 0 || tau >= T_SETTLE) ? 0 : tugShape(tau / T_SETTLE) / tugNorm;   // the bar gives, then recovers
+  // rich: the weight draws the pointer out past its resting length, it pulls back a little short, and settles.
+  const drawShape = u => Math.sin(TAU * u * T_SETTLE / 270) * Math.exp(-4.2 * u) * (1 - u);
+  const drawNorm = peakOf(drawShape);
+  const drawAt = tau => (tau <= 0 || tau >= T_SETTLE) ? 0 : drawShape(tau / T_SETTLE) / drawNorm;
+  const SHORT = 5;                                       // the small pointer; the box hangs this far plus a gap below the bar
+  // A rounded box with a triangular pointer of length L on top. Only the pointer's length ever changes.
+  function boxPath(W, H, r, L) {
+    const c = W / 2, n = v => v.toFixed(2);
+    return `M${r},0 H${c - 6} L${c},${n(-L)} L${c + 6},0 H${W - r} Q${W},0 ${W},${r} V${H - r} Q${W},${H} ${W - r},${H}` +
+      ` H${r} Q0,${H} 0,${H - r} V${r} Q0,0 ${r},0Z`;
+  }
+
+  const openState = { plain: false, rich: false };
+  const pose = { plain: { y: 0, pull: 0 }, rich: { y: 0, pull: 0 } };
+  const geo = { plain: { W: 0, H: 0 }, rich: { W: 0, H: 0 } };
+  const leaveTimers = {};
+  let lastPointer = 'mouse', pressed = false;
+
+  function parts(kind) {
+    const tip = $('tip-' + kind);
+    return { tip, wrap: tip.parentElement, anchor: $('anchor-' + kind), inner: tip.querySelector('.tip-inner'),
+      bg: tip.querySelector('.tip-bg'), path: tip.querySelector('.tip-bg path'), action: tip.querySelector('.tip-action') };
+  }
+  function measure(kind) {
+    const { inner, bg } = parts(kind), W = inner.offsetWidth, H = inner.offsetHeight;
+    geo[kind] = { W, H };
+    bg.setAttribute('width', W);
+    bg.setAttribute('height', H);
+    placeTip(kind, pose[kind].y, 0, pose[kind].pull);
+  }
+  // y: px below its hanging place. rot: tilt while falling away. pull: px it drags the bar and its icon down.
+  // pointer: length to draw the pointer at. Left out, its tip stays where it is under the bar, so a long pointer
+  // gets longer as the box drops and shorter as it rises; the small one never changes.
+  function placeTip(kind, y, rot, pull, pointer) {
+    const c = TIPS[kind], { inner, anchor, path } = parts(kind), ty = c.pointer - SHORT + y, g = geo[kind];
+    pose[kind].y = y; pose[kind].pull = pull;
+    const L = pointer != null ? pointer : (c.pointer > SHORT ? Math.max(SHORT, c.pointer + y) : SHORT);
+    if (g.W) path.setAttribute('d', boxPath(g.W, g.H, c.radius, L));
+    inner.style.transform = (ty || rot) ? `translateY(${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)` : '';
+    pulls[kind] = pull;
+    anchor.style.transform = pull ? `translateY(${(pull * 1.2).toFixed(2)}px)` : '';
+    applyBar();
+  }
+  // Where a loose item sits, tt ms after the box has stopped. It keeps going down and slams into the floor,
+  // bounces straight up into the ceiling, then swings back and forth a little before lying still.
+  const smooth = p => p * p * (3 - 2 * p);
+  function rattleAt(tt, r) {
+    if (tt <= 0) return -r.float;
+    if (tt < R1) { const p = tt / R1; return -r.float + (r.floor + r.float) * p * p; }                          // accelerating into the floor
+    tt -= R1;
+    if (tt < R2) { const p = tt / R2; return r.floor - (r.floor + r.ceil) * p * (1.6 - 0.6 * p); }              // thrown up, still moving when it hits the top
+    tt -= R2;
+    if (tt < R3) return -r.ceil + (r.ceil + r.back) * smooth(tt / R3);
+    tt -= R3;
+    if (tt < R4) return r.back - (r.back + r.last) * smooth(tt / R4);
+    tt -= R4;
+    if (tt < R5) return -r.last * (1 - smooth(tt / R5));
+    return 0;
+  }
+  // Places every item and returns the jolt the heavy ones give the box and the bar when they hit the floor (+) and the ceiling (-).
+  function placeItems(kind, t) {
+    const { tip } = parts(kind), c = TIPS[kind], r = c.rattle;
+    let jolt = 0;
+    for (const it of c.items) {
+      const el = tip.querySelector(it.sel), tt = t - T_FALL - it.lag;
+      let off = 0, op = 1;
+      if (t !== Infinity) {
+        off = rattleAt(tt, r);
+        if (it.extra && off > 0) off *= 1 + it.extra / r.floor;        // the text piles a little further onto the button
+        if (tt < 0) op = Math.min(1, t / (T_FALL * 0.6));
+        if (it.thud) {
+          const a = tt - R1, bq = tt - R1 - R2;
+          if (a > 0 && a < 110) jolt += it.thud * Math.sin(Math.PI * a / 110);
+          if (bq > 0 && bq < 100) jolt -= it.thud * 0.6 * Math.sin(Math.PI * bq / 100);
+        }
+      }
+      if (el.classList.contains('tip-action') && pressed) off += 1.5;
+      el.style.transform = off ? `translateY(${off.toFixed(2)}px)` : '';
+      el.style.opacity = op < 1 ? op.toFixed(3) : '';
+    }
+    return jolt;
+  }
+  function restTip(kind) { placeTip(kind, 0, 0, 0); placeItems(kind, Infinity); }
+
+  function openTip(kind) {
+    clearTimeout(leaveTimers[kind]);
+    if (openState[kind]) return;
+    openState[kind] = true;
+    const c = TIPS[kind], { tip, wrap } = parts(kind);
+    wrap.classList.add('is-open');
+    tip.hidden = false;
+    tip.style.opacity = '';
+    restTip(kind);
+    measure(kind);
+    if (reduced()) {
+      run('tip-' + kind, 120, t => { tip.style.opacity = t / 120; }, () => { tip.style.opacity = ''; });
+      return;
+    }
+    run('tip-' + kind, T_FALL + T_SETTLE, t => {
+      tip.style.opacity = Math.min(1, t / 70);
+      const jolt = placeItems(kind, t);
+      if (t < T_FALL) {
+        const p = t / T_FALL;                             // gravity: distance grows with t squared
+        placeTip(kind, -c.drop * (1 - p * p), 0, 0);
+      } else {
+        const tau = t - T_FALL;                           // it reaches the end of its travel and yanks the bar;
+        if (c.stretch) {
+          const give = drawAt(tau);                       // the long pointer is drawn out, pulls back, and settles
+          placeTip(kind, c.stretch * give + jolt, 0, c.pull * give + jolt * 0.8);
+        } else {
+          placeTip(kind, -hops(tau, c.hop) + jolt, 0, c.pull * tugAt(tau) + jolt * 0.8);   // the contents knock it again from inside
+        }
+      }
+    }, () => { tip.style.opacity = ''; restTip(kind); });
+  }
+
+  // Leaving: it slips, lets go of the bar and falls away as one piece, tipping as it goes.
+  // Relieved, the bar springs up where it hung. More information, bigger spring.
+  const EXITS = {
+    plain: { strain: 80,  slip: 1.5, fall: 300, dist: 34, tilt: -3, kick: 0.8, ring: 360 },
+    rich:  { strain: 120, slip: 3,   fall: 360, dist: 56, tilt: 2,  kick: 2,   ring: 460 }
+  };
+  const reboundShape = (u, ring) => Math.sin(TAU * u * ring / 190) * Math.exp(-3 * u) * (1 - u);
+  Object.values(EXITS).forEach(e => { e.norm = peakOf(u => reboundShape(u, e.ring)); });
+  function closeTip(kind) {
+    clearTimeout(leaveTimers[kind]);
+    if (!openState[kind]) return;
+    openState[kind] = false;
+    const { tip, wrap } = parts(kind);
+    wrap.classList.remove('is-open');
+    if (kind === 'rich') { pressed = false; $('manage').classList.remove('is-pressed'); }
+    placeItems(kind, Infinity);
+    const finish = () => { tip.hidden = true; tip.style.opacity = ''; restTip(kind); };
+    if (reduced()) {
+      run('tip-' + kind, 120, t => { tip.style.opacity = 1 - t / 120; }, finish);
+      return;
+    }
+    const e = EXITS[kind], y0 = pose[kind].y, pull0 = pose[kind].pull;
+    run('tip-' + kind, e.strain + Math.max(e.fall, e.ring), t => {
+      if (t < e.strain) {                                 // the weight wins: it slips and drags the bar with it
+        const p = Math.sin(Math.PI / 2 * t / e.strain);
+        placeTip(kind, y0 + (e.slip - y0) * p, 0, pull0 + (e.slip * 0.4 - pull0) * p);
+        return;
+      }
+      const tau = t - e.strain, u = Math.min(1, tau / e.ring);
+      const pull = e.slip * 0.4 * Math.max(0, 1 - tau / 40) - e.kick * reboundShape(u, e.ring) / e.norm;   // unloaded, the bar springs up
+      if (tau < e.fall) {
+        const f = tau / e.fall;
+        const held = TIPS[kind].pointer > SHORT ? TIPS[kind].pointer + e.slip : SHORT;   // let go, a long pointer shrinks back to the small one
+        placeTip(kind, e.slip + e.dist * f * f, e.tilt * f, pull, held + (SHORT - held) * Math.min(1, f * 5));   // gravity again
+        tip.style.opacity = f < 0.3 ? 1 : Math.max(0, 1 - (f - 0.3) / 0.7);   // a short drop, gone before it travels far
+      } else {
+        if (!tip.hidden) { tip.hidden = true; tip.style.opacity = ''; }
+        placeTip(kind, 0, 0, pull);
+      }
+    }, finish);
+  }
+
+  document.addEventListener('pointerdown', e => {
+    lastPointer = e.pointerType || 'mouse';
+    Object.keys(TIPS).forEach(kind => {
+      const { wrap } = parts(kind);
+      wrap.dataset.wasOpen = String(openState[kind]);
+      if (!wrap.contains(e.target)) closeTip(kind);
+    });
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') Object.keys(TIPS).forEach(closeTip);
+  });
+
+  Object.keys(TIPS).forEach(kind => {
+    const { wrap, anchor } = parts(kind);
+    wrap.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') openTip(kind); });
+    wrap.addEventListener('pointerleave', e => {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(leaveTimers[kind]);
+      // Stay open only for keyboard focus; a mouse click on the action should not pin the tooltip.
+      leaveTimers[kind] = setTimeout(() => { if (!wrap.querySelector(':focus-visible')) closeTip(kind); }, 90);
+    });
+    wrap.addEventListener('focusin', () => openTip(kind));
+    wrap.addEventListener('focusout', e => {
+      if (!wrap.contains(e.relatedTarget) && !wrap.matches(':hover')) closeTip(kind);
+    });
+    anchor.addEventListener('click', () => {
+      if (lastPointer !== 'mouse' && wrap.dataset.wasOpen === 'true') closeTip(kind);
+      else openTip(kind);
+    });
+  });
+
+  // The action button. A press is weight too: the button goes down, the whole tooltip is pushed a little
+  // lower and the bar gives with it. Letting go, it comes back up with one small hop. Still rigid.
+  const manage = $('manage');
+  const PUSH = 3, PUSH_PULL = 1.2;
+  function pressIn() {
+    if (!openState.rich || reduced()) return;
+    pressed = true;
+    manage.classList.add('is-pressed');
+    const y0 = pose.rich.y, pull0 = pose.rich.pull;
+    run('tip-rich', 90, t => {
+      const p = 1 - Math.pow(1 - t / 90, 2);
+      placeItems('rich', Infinity);
+      placeTip('rich', y0 + (PUSH - y0) * p, 0, pull0 + (PUSH_PULL - pull0) * p);
+    });
+  }
+  function pressOut() {
+    if (!pressed) return;
+    pressed = false;
+    manage.classList.remove('is-pressed');
+    if (!openState.rich) return;
+    const y0 = pose.rich.y, pull0 = pose.rich.pull;
+    run('tip-rich', 240, t => {
+      const p = t / 240, back = (1 - p) * (1 - p);
+      placeItems('rich', Infinity);
+      placeTip('rich', y0 * back - 1.5 * Math.sin(Math.PI * p), 0, pull0 * back);
+    }, () => restTip('rich'));
+  }
+  manage.addEventListener('pointerleave', pressOut);
+  manage.addEventListener('pointerdown', pressIn);
+  manage.addEventListener('pointerup', pressOut);
+  manage.addEventListener('pointercancel', pressOut);
+
+  manage.addEventListener('click', e => {
+    if (e.detail === 0) { pressIn(); setTimeout(pressOut, 120); }   // keyboard: give it the same push
+    manage.dataset.pressed = String((+manage.dataset.pressed || 0) + 1);   // the action is live; count presses
+  });
+
+  /* ---------- Demo controls ---------- */
+  $('slow').addEventListener('change', e => { speed = e.target.checked ? 0.25 : 1; });
+  const notice = $('rm-notice');
+  const syncNotice = () => { notice.hidden = !reduced(); };
+  syncNotice();
+  if (mq.addEventListener) mq.addEventListener('change', syncNotice);
+  $('rm-override').addEventListener('click', () => { motionOverride = true; syncNotice(); select(current === 'none' ? last : current); });
+
+  // Opening beat: the badge that is already resting on the bell drops in once.
+  setTimeout(() => { if (!document.hidden && current === '3') drop('3'); }, 700);
+
+  window.__weight = { drop, select, openTip, closeTip };   // handles for scripted demos
+
+  // In thumbnail mode nobody can click, so the bar demonstrates itself: a badge lands, gets flicked off, a heavier one lands.
+  if (document.documentElement.classList.contains('thumb')) {
+    const loop = ['none', '12', 'none', '99+', 'none', '3'];
+    let step = 0;
+    setInterval(() => { if (!document.hidden) select(loop[step++ % loop.length]); }, 2600);
+  }
+})();
+</script>
+</body>
+</html>

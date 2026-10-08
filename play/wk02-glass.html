@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  html { color-scheme: light; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one screen. A wallpaper fills it, the glass bar floats at its centre, the glass controls float along its foot. */
+  :root {
+    --ground: #ECEFF4;
+    --panel: #F3F5F9;
+    --line: rgba(22, 34, 58, .11);
+    --ctl: #FFFFFF;
+    --ink: #141B2B;
+    --ink-soft: #6A7385;
+    --surface: #FFFFFF;
+    --on-surface: #1A2640;
+    --muted: #A9AFBA;
+    --sel-o: .075;
+    --glass: .52;
+    --liquid: #2F74F4;
+    --on-liquid: #FFFFFF;
+    --shadow: rgba(38, 66, 128, .11);
+    --ui: 'Geist', 'Helvetica Neue', Arial, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0A0F1A; --panel: #0F1626; --line: rgba(230, 237, 248, .13); --ctl: #172033;
+      --ink: #E8EEF8; --ink-soft: #8C98AE; --surface: #F6F9FE; --on-surface: #1A2640; --muted: #A9AFBA; --sel-o: .1; --glass: .8;
+      --liquid: #3F82FF; --on-liquid: #FFFFFF; --shadow: rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0A0F1A; --panel: #0F1626; --line: rgba(230, 237, 248, .13); --ctl: #172033;
+    --ink: #E8EEF8; --ink-soft: #8C98AE; --surface: #F6F9FE; --on-surface: #1A2640; --muted: #A9AFBA; --sel-o: .1; --glass: .8;
+    --liquid: #3F82FF; --on-liquid: #FFFFFF; --shadow: rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.3; -webkit-font-smoothing: antialiased; }
+
+  .page {
+    max-width: 1180px; margin-inline: auto;
+    padding-inline: clamp(16px, 2.4vw, 32px); padding-block: clamp(16px, 2.4vw, 32px);
+    display: grid; gap: clamp(16px, 2.4vw, 26px);
+  }
+  .frame { position: relative; border-radius: clamp(22px, 4vw, 40px); background: #D9E6FB; overflow: hidden; min-width: 0; box-shadow: 0 0 0 1px var(--line); }
+  .frame svg { display: block; width: 100%; height: auto; }
+
+  /* Controls are glass too: they blur and saturate whatever wallpaper sits behind them. */
+  .controls {
+    position: absolute; left: 0; right: 0; bottom: clamp(12px, 3.2%, 26px);
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-inline: 12px;
+  }
+  .seg, .btn, .check {
+    --glass-ink: #14203A;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07));
+    -webkit-backdrop-filter: blur(9px) saturate(1.5); backdrop-filter: blur(9px) saturate(1.5);
+    border: 0; border-radius: 999px; color: var(--glass-ink);
+    box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .55), inset 1px 1.5px .5px -.5px rgba(255, 255, 255, .95), inset -1px -1.5px .5px -.5px rgba(255, 255, 255, .5), inset 0 -6px 8px -6px rgba(16, 37, 92, .1), 0 8px 20px rgba(20, 44, 110, .1);
+    font: 500 15px/1 var(--ui); min-height: 42px;
+  }
+  .seg { display: inline-flex; padding: 3px; gap: 0; }
+  .seg button {
+    font: 400 13.5px/1 var(--mono); color: rgba(20, 32, 58, .62); background: transparent; border: 0; border-radius: 999px;
+    padding: 0 .9em; min-width: 38px; cursor: pointer; transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
+  }
+  .seg button[aria-pressed="true"] {    /* the chosen value sits under a brighter lens */
+    background: rgba(255, 255, 255, .5); color: var(--glass-ink);
+    box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .8), inset 1px 1.5px .5px -.5px #fff, 0 1px 4px rgba(20, 44, 110, .16);
+  }
+  .btn { padding: 0 1.1em; cursor: pointer; transition: background-color .2s ease, opacity .2s ease; }
+  .btn:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .16)); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .check { display: inline-flex; align-items: center; gap: .6em; padding: 0 1.1em 0 .95em; cursor: pointer; }
+  .check input { width: 16px; height: 16px; margin: 0; accent-color: var(--glass-ink); cursor: pointer; }
+  .seg button:focus-visible, .btn:focus-visible, .check:focus-within { outline: 2px solid var(--liquid); outline-offset: 2px; }
+
+  .w  { fill: #fff; }
+  .wl { stroke: #fff; stroke-linecap: round; fill: none; }
+  .b  { fill: var(--liquid); }
+  .bl { stroke: var(--liquid); stroke-linecap: round; fill: none; }
+  #selWrap { pointer-events: none; }
+  .sf { fill: #fff; }
+  .sl { stroke: #fff; stroke-linecap: round; fill: none; }
+  .ico { fill: none; stroke: var(--on-surface); stroke-opacity: .52; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+  .ico .shape, .ico .detail { transition: fill .25s ease, stroke .25s ease; }
+  .ico .shape { fill: transparent; }
+  .ico.on { stroke-opacity: 1; }
+  .ico.on .shape { fill: var(--on-surface); stroke: var(--on-surface); }   /* selected: the outline fills solid */
+  .ico.on .detail { stroke: #fff; }
+  .anchor { cursor: pointer; outline: none; }
+  .ring { fill: none; stroke: var(--liquid); stroke-width: 1.5; opacity: 0; }
+  .anchor:focus-visible .ring { opacity: 1; }
+  .hit { fill: transparent; stroke: none; }
+  #num, .tipText, .rTitle, .rBody, .rAct { font-family: var(--ui); pointer-events: none; stroke: none; }
+  #num { fill: var(--on-liquid); font-weight: 600; font-size: 10.5px; text-anchor: middle; }
+  #badge, #cur, #liq, #blueWrap, #cTipA { pointer-events: none; }
+  #glow { pointer-events: none; }
+  @media (hover: hover) and (pointer: fine) { #stage .ico.anchor { cursor: none; } }   /* inside the bar the pointer is the light itself */
+  .tipText { fill: var(--on-liquid); font-weight: 500; font-size: 12px; text-anchor: middle; }
+  .rTitle { fill: var(--on-surface); font-weight: 600; font-size: 12.5px; }
+  .rBody { fill: var(--on-surface); fill-opacity: .66; font-weight: 400; font-size: 11px; }
+  .rAct { fill: var(--on-liquid); font-weight: 600; font-size: 11px; text-anchor: middle; }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="frame">
+    <svg id="stage" viewBox="0 0 680 430" role="group" aria-label="Navigation bar with a liquid notification badge and liquid tooltips">
+      <defs>
+        <!-- The wallpaper. The glass shows a second, enlarged copy of it, so everything behind the glass is bent. -->
+        <linearGradient id="wBase" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#CFE0FB"/><stop offset=".5" stop-color="#EAF1FF"/><stop offset="1" stop-color="#C9DBFA"/>
+        </linearGradient>
+        <linearGradient id="wA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7DB8FF"/><stop offset="1" stop-color="#2C66EC"/></linearGradient>
+        <linearGradient id="wB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BDB0FF"/><stop offset="1" stop-color="#6657E4"/></linearGradient>
+        <linearGradient id="wC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B4F0F0"/><stop offset="1" stop-color="#3BB4CE"/></linearGradient>
+        <radialGradient id="wD"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <g id="wall">
+          <rect x="-120" y="-120" width="920" height="820" fill="url(#wBase)"/>
+          <circle cx="560" cy="96" r="120" fill="url(#wD)"/>
+          <circle cx="468" cy="262" r="118" fill="url(#wA)"/>
+          <circle cx="232" cy="158" r="84" fill="url(#wB)"/>
+          <circle cx="286" cy="352" r="66" fill="url(#wC)"/>
+        </g>
+
+        <!-- Every piece of glass is drawn once here as a soft union, so pieces that touch merge like liquid. -->
+        <filter id="gooW" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3"/>
+        </filter>
+        <g id="surf" filter="url(#gooW)">
+          <path id="bar" class="w"/>
+          <line id="wNeck" class="wl" stroke-width="0"/>
+          <ellipse id="wDrop" class="w" rx="0" ry="0"/>
+          <line id="wNeckR" class="wl" stroke-width="0"/>
+          <rect id="wTipR" class="w" width="0" height="0"/>
+          <rect id="wTipA" class="w" width="0" height="0"/>
+        </g>
+        <mask id="glassMask" maskUnits="userSpaceOnUse" x="150" y="40" width="380" height="320"><use href="#surf"/></mask>
+        <!-- What is seen through the glass: a little softer and richer than the wallpaper itself. -->
+        <filter id="thru" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feGaussianBlur stdDeviation="3"/>
+          <feColorMatrix type="saturate" values="1.3"/>
+        </filter>
+        <filter id="thruRim" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feGaussianBlur stdDeviation=".7"/>
+          <feColorMatrix type="saturate" values="1.3"/>
+        </filter>
+        <!-- The surface of the glass: a shadow that stops at its edge, light caught on the rim from above-left and below-right, a hairline of brightness. -->
+        <filter id="glassFx" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="sb"/>
+          <feOffset in="sb" dy="8" result="so"/>
+          <feFlood flood-color="#17306E" flood-opacity=".15" result="sc"/>
+          <feComposite in="sc" in2="so" operator="in" result="sh"/>
+          <feComposite in="sh" in2="SourceAlpha" operator="out" result="shOut"/>
+          <!-- thickness: the far inner edge is a little darker, the near inner edge a little lighter -->
+          <feOffset in="SourceAlpha" dx="-1.4" dy="-2" result="o1"/>
+          <feComposite in="SourceAlpha" in2="o1" operator="out" result="e1"/>
+          <feGaussianBlur in="e1" stdDeviation="1.3" result="e1b"/>
+          <feFlood flood-color="#10255C" flood-opacity=".2" result="dk"/>
+          <feComposite in="dk" in2="e1b" operator="in" result="d1"/>
+          <feComposite in="d1" in2="SourceAlpha" operator="in" result="innerShade"/>
+          <feOffset in="SourceAlpha" dx="1.4" dy="2" result="o2"/>
+          <feComposite in="SourceAlpha" in2="o2" operator="out" result="e2"/>
+          <feGaussianBlur in="e2" stdDeviation="1.1" result="e2b"/>
+          <feFlood flood-color="#fff" flood-opacity=".55" result="lt"/>
+          <feComposite in="lt" in2="e2b" operator="in" result="l1"/>
+          <feComposite in="l1" in2="SourceAlpha" operator="in" result="innerLight"/>
+          <!-- glints -->
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="hb"/>
+          <feSpecularLighting in="hb" surfaceScale="3.2" specularConstant="1.7" specularExponent="58" lighting-color="#fff" result="sp1"><feDistantLight azimuth="232" elevation="32"/></feSpecularLighting>
+          <feComposite in="sp1" in2="SourceAlpha" operator="in" result="hi1"/>
+          <feSpecularLighting in="hb" surfaceScale="3.2" specularConstant="1" specularExponent="58" lighting-color="#fff" result="sp2"><feDistantLight azimuth="52" elevation="32"/></feSpecularLighting>
+          <feComposite in="sp2" in2="SourceAlpha" operator="in" result="hi2"/>
+          <feMorphology in="SourceAlpha" operator="erode" radius=".5" result="er"/>
+          <feComposite in="SourceGraphic" in2="er" operator="out" result="rimRaw"/>
+          <feComponentTransfer in="rimRaw" result="rim"><feFuncA type="linear" slope=".4"/></feComponentTransfer>
+          <feMerge><feMergeNode in="shOut"/><feMergeNode in="innerShade"/><feMergeNode in="innerLight"/><feMergeNode in="hi1"/><feMergeNode in="hi2"/><feMergeNode in="rim"/></feMerge>
+        </filter>
+        <!-- The band just inside the rim, where glass bends light hardest. -->
+        <filter id="band" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="erode" radius="4.5" result="in"/>
+          <feGaussianBlur in="in" stdDeviation="2.2" result="inb"/>
+          <feComposite in="SourceGraphic" in2="inb" operator="out"/>
+        </filter>
+        <mask id="rimMask" maskUnits="userSpaceOnUse" x="150" y="40" width="380" height="320"><use href="#surf" filter="url(#band)"/></mask>
+        <!-- Blue liquid: tinted glass. It merges like the rest, lets a little through, and carries its own highlight. -->
+        <filter id="gooB" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="320" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -7" result="g"/>
+          <feGaussianBlur in="g" stdDeviation=".9" result="hb"/>
+          <feSpecularLighting in="hb" surfaceScale="2.6" specularConstant="1.5" specularExponent="50" lighting-color="#fff" result="sp"><feDistantLight azimuth="232" elevation="33"/></feSpecularLighting>
+          <feComposite in="sp" in2="g" operator="in" result="hi"/>
+          <feComponentTransfer in="g" result="body"><feFuncA type="linear" slope=".74"/></feComponentTransfer>
+          <feMerge><feMergeNode in="body"/><feMergeNode in="hi"/></feMerge>
+        </filter>
+        <filter id="gloss" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation=".9" result="hb"/>
+          <feSpecularLighting in="hb" surfaceScale="2.6" specularConstant="1.5" specularExponent="50" lighting-color="#fff" result="sp"><feDistantLight azimuth="232" elevation="33"/></feSpecularLighting>
+          <feComposite in="sp" in2="SourceAlpha" operator="in" result="hi"/>
+          <feComponentTransfer in="SourceGraphic" result="body"><feFuncA type="linear" slope=".74"/></feComponentTransfer>
+          <feMerge><feMergeNode in="body"/><feMergeNode in="hi"/></feMerge>
+        </filter>
+        <!-- The selection is a lens: a brighter bead of the same glass. -->
+        <filter id="gooS" filterUnits="userSpaceOnUse" x="204" y="170" width="272" height="104" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3" result="g"/>
+          <feGaussianBlur in="g" stdDeviation="1.1" result="hb"/>
+          <feSpecularLighting in="hb" surfaceScale="3.2" specularConstant="1.5" specularExponent="58" lighting-color="#fff" result="sp"><feDistantLight azimuth="232" elevation="32"/></feSpecularLighting>
+          <feComposite in="sp" in2="g" operator="in" result="hi"/>
+          <feGaussianBlur in="g" stdDeviation="3" result="ib"/>
+          <feOffset in="ib" dy="2" result="io"/>
+          <feFlood flood-color="#17306E" flood-opacity=".12" result="ic"/>
+          <feComposite in="ic" in2="io" operator="in" result="ish"/>
+          <feComposite in="ish" in2="g" operator="out" result="shOut"/>
+          <feComponentTransfer in="g" result="body"><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+          <feMerge><feMergeNode in="shOut"/><feMergeNode in="body"/><feMergeNode in="hi"/></feMerge>
+        </filter>
+        <filter id="soft" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="310"><feGaussianBlur stdDeviation="3.5"/></filter>
+        <filter id="tintBlur" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="310"><feGaussianBlur stdDeviation="6"/></filter>
+        <filter id="numBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur id="numBlurFe" stdDeviation="0"/></filter>
+        <filter id="fA" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur id="fAe" stdDeviation="0"/></filter>
+        <filter id="fR" filterUnits="userSpaceOnUse" x="150" y="40" width="380" height="310"><feGaussianBlur id="fRe" stdDeviation="0"/></filter>
+        <!-- Liquid is fully visible outside the bar and fades with depth once it passes under the surface. -->
+        <mask id="depth" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="430">
+          <rect width="680" height="430" fill="#fff"/>
+          <rect x="230" y="196" width="220" height="52" rx="16" fill="#000" filter="url(#soft)"/>
+        </mask>
+        <clipPath id="barClip"><rect x="224" y="190" width="232" height="64" rx="22"/></clipPath>
+        <radialGradient id="glowGrad">
+          <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+          <stop offset=".5" stop-color="#fff" stop-opacity=".2"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="numGrad"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>
+        <mask id="numMask" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="430"><circle id="numMaskC" r="0" fill="url(#numGrad)"/></mask>
+        <mask id="mA" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="430"><ellipse id="mAe" rx="0" ry="0" fill="url(#numGrad)"/></mask>
+        <mask id="mR" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="430"><ellipse id="mRe" rx="0" ry="0" fill="url(#numGrad)"/></mask>
+      </defs>
+
+      <use href="#wall"/>
+
+      <!-- inside the glass: the wallpaper again, enlarged about the bar's centre so it reads as bent, under a faint white body -->
+      <g mask="url(#glassMask)">
+        <use href="#wall" transform="translate(340 222) scale(1.07) translate(-340 -222)" filter="url(#thru)"/>
+        <rect x="150" y="40" width="380" height="320" fill="#fff" opacity=".1"/>
+      </g>
+      <g mask="url(#rimMask)">
+        <use href="#wall" transform="translate(340 222) scale(.78) translate(-340 -222)" filter="url(#thruRim)"/>
+      </g>
+      <use href="#surf" filter="url(#glassFx)"/>
+
+      <!-- the pointer, inside the bar only: light gathering in the glass under it -->
+      <g clip-path="url(#barClip)">
+        <circle id="glow" r="20" fill="url(#glowGrad)" opacity="0"/>
+      </g>
+
+      <g clip-path="url(#barClip)">
+        <ellipse id="tint" class="b" rx="17" ry="9" opacity="0" filter="url(#tintBlur)"/>
+      </g>
+
+      <g id="selWrap">
+        <g filter="url(#gooS)">
+          <rect id="selOrg" class="sf" width="0" height="0"/>
+          <line id="selTail" class="sl" stroke-width="0"/>
+          <rect id="selHead" class="sf" width="0" height="0"/>
+        </g>
+      </g>
+
+      <g id="home" class="ico anchor on" data-x="259" role="button" tabindex="0" aria-label="Home" aria-describedby="richTip">
+        <rect class="hit" x="-15" y="-20" width="54" height="64"/>
+        <rect class="ring" x="-9" y="-9" width="42" height="42" rx="14"/>
+        <path class="shape" d="M12 3.7 5 9.2a2.2 2.2 0 0 0-.9 1.8v6.9a2.5 2.5 0 0 0 2.5 2.5h10.8a2.5 2.5 0 0 0 2.5-2.5V11a2.2 2.2 0 0 0-.9-1.8L12 3.7z"/>
+        <path class="detail" d="M10.2 16.2h3.6"/>
+      </g>
+      <g id="msg" class="ico anchor" data-x="313" role="button" tabindex="0" aria-label="Messages">
+        <rect class="hit" x="-15" y="-20" width="54" height="64"/>
+        <rect class="ring" x="-9" y="-9" width="42" height="42" rx="14"/>
+        <path class="shape" d="M12 3.9a8 8 0 1 1-4 14.9l-3.6 1 1-3.5A8 8 0 0 1 12 3.9z"/>
+      </g>
+      <g id="fav" class="ico anchor" data-x="367" role="button" tabindex="0" aria-label="Favorites">
+        <rect class="hit" x="-15" y="-20" width="54" height="64"/>
+        <rect class="ring" x="-9" y="-9" width="42" height="42" rx="14"/>
+        <path class="shape" d="M12 20.1c-.4 0-.8-.1-1.1-.4-3.7-2.5-7.2-5.6-7.2-9.6 0-2.7 2-4.9 4.6-4.9 1.5 0 2.8.8 3.7 2 .9-1.2 2.2-2 3.7-2 2.6 0 4.6 2.2 4.6 4.9 0 4-3.5 7.1-7.2 9.6-.3.3-.7.4-1.1.4z"/>
+        <path class="detail" d="M15.5 8.2c1 .2 1.7 1 1.9 2"/>
+      </g>
+      <g id="prof" class="ico anchor" data-x="421" role="button" tabindex="0" aria-label="Profile">
+        <rect class="hit" x="-15" y="-20" width="54" height="64"/>
+        <rect class="ring" x="-9" y="-9" width="42" height="42" rx="14"/>
+        <circle class="shape" cx="12" cy="7.5" r="3.4"/>
+        <ellipse class="shape" cx="12" cy="17" rx="5.7" ry="3.5"/>
+      </g>
+
+      <!-- rich tooltip: a piece of the white surface; its action is a bead of the blue liquid -->
+      <rect id="richHit" class="hit" x="184" y="80" width="150" height="112" visibility="hidden"/>
+
+      <!-- everything blue that is still liquid: plain tooltip, action bead, a copy of the pointer so they can merge -->
+      <g id="liq" mask="url(#depth)">
+        <g filter="url(#gooB)">
+          <ellipse id="bRootA" class="b" rx="0" ry="0"/><line id="bNeckA" class="bl" stroke-width="0"/><rect id="bTipA" class="b" width="0" height="0"/>
+          <rect id="bAct" class="b" width="0" height="0"/>
+        </g>
+      </g>
+      <rect id="cTipA" class="b" width="0" height="0" filter="url(#gloss)"/>
+      <g mask="url(#mA)"><text id="tA" class="tipText" role="tooltip" visibility="hidden">Messages</text></g>
+
+      <g id="rich" visibility="hidden">
+        <g mask="url(#mR)">
+          <g id="richInner">
+            <g id="richTip" role="tooltip">
+              <text class="rTitle" x="198" y="103">Home</text>
+              <text class="rBody"><tspan x="198" y="119">Updates from the people</tspan><tspan x="198" y="133">you follow.</tspan></text>
+            </g>
+            <g id="act" class="anchor" role="button" tabindex="0" aria-label="Customize Home">
+              <rect class="hit" x="192" y="140" width="92" height="30"/>
+              <rect class="ring" x="193" y="141" width="88" height="28" rx="14"/>
+              <text id="actLabel" class="rAct" x="237" y="158.8">Customize</text>
+            </g>
+          </g>
+        </g>
+      </g>
+
+      <g id="blueWrap">
+        <g filter="url(#gooB)">
+          <ellipse id="bRoot" class="b" rx="0" ry="0"/>
+          <line id="bNeck" class="bl" stroke-width="0"/>
+          <ellipse id="bDrop" class="b" rx="0" ry="0"/>
+        </g>
+      </g>
+
+      <rect id="badge" class="b" width="0" height="0" filter="url(#gloss)"/>
+      <g mask="url(#numMask)"><text id="num" visibility="hidden">3</text></g>
+
+    </svg>
+
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Badge">
+        <button type="button" data-k="none" aria-pressed="true">None</button>
+        <button type="button" data-k="dot" aria-pressed="false">Dot</button>
+        <button type="button" data-k="1" aria-pressed="false">1</button>
+        <button type="button" data-k="3" aria-pressed="false">3</button>
+        <button type="button" data-k="12" aria-pressed="false">12</button>
+        <button type="button" data-k="99+" aria-pressed="false">99+</button>
+      </div>
+      <button class="btn" id="btnReplay" type="button">Replay</button>
+      <button class="btn" id="btnReset" type="button">Reset</button>
+      <label class="check"><input type="checkbox" id="slow">Slow motion</label>
+    </div>
+  </div>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---------- geometry (stage units) ---------- */
+  const X0 = 224, X1 = 456, YT = 190, H = 64, R = 22, W = X1 - X0;
+  const LS = W - 2 * R, VS = H - 2 * R, QA = Math.PI * R / 2, PER = 2 * LS + 2 * VS + 4 * QA, YC = YT + H / 2;
+  const sOfX = x => x - (X0 + R);            // position on the top edge, as distance along the outline
+  const XA = 396, XE = 323.5;                // absorption point, emergence point
+  const NB = { x: 328, y: 209.5 };
+  const mk = (key, text, w) => text == null
+    ? { key, text: null, r: 5, rin: 5.5, w: 10, h: 10, bx: 325.5, by: 211, k: 1, rel: 3.2, T: 2420 }
+    : { key, text, r: 8.5, rin: 7, w, h: 17, bx: NB.x + (w - 17) / 2, by: NB.y, k: 1.22, rel: 4.2, T: 2620 };
+  const MODES = { 'dot': mk('dot', null), '1': mk('1', '1', 17), '3': mk('3', '3', 17), '12': mk('12', '12', 23), '99+': mk('99+', '99+', 30) };
+  const T_OUT = 1960, T_MORPH = 640;
+
+  // Outline of the rounded bar sampled by arc length: point + outward normal.
+  function pt(s) {
+    s = ((s % PER) + PER) % PER; let a;
+    if (s < LS) return { x: X0 + R + s, y: YT, nx: 0, ny: -1 }; s -= LS;
+    if (s < QA) { a = s / R; return { x: X1 - R + R * Math.sin(a), y: YT + R - R * Math.cos(a), nx: Math.sin(a), ny: -Math.cos(a) }; } s -= QA;
+    if (s < VS) return { x: X1, y: YT + R + s, nx: 1, ny: 0 }; s -= VS;
+    if (s < QA) { a = s / R; return { x: X1 - R + R * Math.cos(a), y: YT + H - R + R * Math.sin(a), nx: Math.cos(a), ny: Math.sin(a) }; } s -= QA;
+    if (s < LS) return { x: X1 - R - s, y: YT + H, nx: 0, ny: 1 }; s -= LS;
+    if (s < QA) { a = s / R; return { x: X0 + R - R * Math.sin(a), y: YT + H - R + R * Math.cos(a), nx: -Math.sin(a), ny: Math.cos(a) }; } s -= QA;
+    if (s < VS) return { x: X0, y: YT + H - R - s, nx: -1, ny: 0 }; s -= VS;
+    a = s / R; return { x: X0 + R - R * Math.cos(a), y: YT + R - R * Math.sin(a), nx: -Math.cos(a), ny: -Math.sin(a) };
+  }
+  const N = 220, PTS = [];
+  for (let i = 0; i < N; i++) { const s = i * PER / N; PTS.push(Object.assign({ s }, pt(s))); }
+  const wrap = d => { d = ((d % PER) + PER) % PER; return d > PER / 2 ? d - PER : d; };
+
+  /* ---------- easing + keyframes ---------- */
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const c01 = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const mix = (a, b, p) => a + (b - a) * p;
+  const sine = p => .5 - .5 * Math.cos(Math.PI * p);
+  const io = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  const o3 = p => 1 - Math.pow(1 - p, 3);
+  const i2 = p => p * p;
+  function kf(t, K) {
+    if (t <= K[0][0]) return K[0][1];
+    for (let i = 1; i < K.length; i++) {
+      if (t <= K[i][0]) { const a = K[i - 1], b = K[i]; return a[1] + (b[1] - a[1]) * (b[2] || sine)((t - a[0]) / (b[0] - a[0])); }
+    }
+    return K[K.length - 1][1];
+  }
+
+  /* ---------- surface displacement ---------- */
+  function disp(s, bumps, rips) {
+    let d = 0;
+    for (const b of bumps) { if (!b.A) continue; const ds = wrap(s - b.s); d += b.A * Math.exp(-ds * ds / (2 * b.w * b.w)); }
+    for (const rp of rips) {
+      const age = rp.age; if (age <= 0 || age >= 420) continue;
+      const u = Math.abs(wrap(s - rp.s0)) - .13 * age;
+      d += rp.A * Math.min(1, age / 50) * Math.exp(-age / 240) * (1 - c01(age, 300, 420)) * Math.exp(-u * u / 162) * Math.cos(u * .26);
+    }
+    return d;
+  }
+
+  const blank = () => ({ bumps: [], ripples: [], drop: null, neck: null, root: null, mask: false, tint: null, crisp: 0, num: 0 });
+
+  /* ---------- badge entrance: approach → attract → merge → flow → emerge → separate → heal ---------- */
+  function seqIn(t, m) {
+    const S = blank(), { r, rin, bx, by, k } = m;
+    const sA = sOfX(XA), sE = sOfX(XE);
+
+    const bs = kf(t, [[980, sA], [1500, sE]]);
+    S.bumps.push({
+      s: bs,
+      A: kf(t, [[430, 0], [560, 2.4], [670, -3.8], [860, 1.2], [980, 3.4 * k], [1120, 4.4 * k], [1500, 4.6 * k], [1640, 6.4 * k], [1840, 7 * k], [1900, 5.5 * k], [1990, -1.6], [2100, .5], [2220, 0]]),
+      w: kf(t, [[430, 12], [980, 13], [1150, 15], [1500, 13], [1760, 10 + (r - 5) * .5]])
+    });
+    S.ripples.push({ s0: sA, t0: 900, A: 1.5 }, { s0: sE, t0: 1905, A: 1.5 });
+
+    const P0 = [470, 72], P1 = [408, 114], P2 = [XA, YT - rin - .5];
+    const bez = p => { const q = 1 - p; return [q * q * P0[0] + 2 * q * p * P1[0] + p * p * P2[0], q * q * P0[1] + 2 * q * p * P1[1] + p * p * P2[1]]; };
+
+    if (t < 560) {                                   // arrival, curving in as the surface attracts it
+      const a = bez(sine(c01(t - 10, 0, 560))), b = bez(sine(c01(t + 10, 0, 560))), c = bez(sine(c01(t, 0, 560)));
+      const sp = Math.hypot(b[0] - a[0], b[1] - a[1]) / 20;
+      const st = 1 + .17 * Math.min(1, sp / .36), sc = o3(c01(t, 0, 150));
+      S.drop = { x: c[0], y: c[1], rx: rin * st * sc, ry: rin / Math.sqrt(st) * sc, rot: Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI };
+    } else if (t < 1000) {                           // contact, flatten, then drawn under
+      const sc = kf(t, [[880, 1], [1000, .3]]);
+      S.drop = {
+        x: XA, y: kf(t, [[560, YT - rin - .5], [660, YT - rin + 2.6], [990, YT + rin + 8, i2]]),
+        rx: rin * sc * kf(t, [[560, 1], [660, 1.15], [800, .88], [990, .62]]),
+        ry: rin * sc * kf(t, [[560, 1], [660, .86], [800, 1.12], [990, .8]]), rot: 0
+      };
+    } else if (t >= 1560 && t < 2390) {              // re-emergence, pinch-off, settle
+      const yAp = YT - r - 8;
+      const y = t < 1990 ? kf(t, [[1560, YT + r + 3], [1860, yAp + 2.5], [1990, yAp, o3]]) : kf(t, [[1990, yAp], [2250, by, io]]);
+      const x = kf(t, [[1990, XE], [2250, bx, io]]);
+      const sc = kf(t, [[1560, .5], [1780, 1]]);
+      S.drop = {
+        x, y,
+        rx: mix(r * sc * kf(t, [[1560, 1], [1700, .86], [1860, .9], [1990, 1], [2130, .95], [2215, 1], [2265, 1.06], [2370, 1]]), m.w / 2, c01(t, 2250, 2385)),
+        ry: r * sc * kf(t, [[1560, 1], [1700, 1.22], [1860, 1.14], [1990, 1], [2130, 1.08], [2215, 1], [2265, .93], [2370, 1]]), rot: 0
+      };
+      if (t < 1910) S.neck = { x1: XE, y1: YT + 3, x2: x, y2: y, w: kf(t, [[1560, 1.8 * r], [1700, 1.44 * r], [1830, .72 * r], [1905, 1]]) };
+    }
+    if (t >= 1540 && t < 1990) {
+      const rx = kf(t, [[1540, 3], [1680, r + 4], [1880, r + 3], [1990, 0]]);
+      S.root = { x: XE, y: YT + 3.5, rx, ry: rx * .55 };
+    }
+    S.mask = t < 1940;
+    const tp = pt(bs);
+    S.tint = { x: tp.x, y: tp.y + 8, o: kf(t, [[640, 0], [900, .15], [1500, .16], [1800, 0]]) };
+    S.crisp = kf(t, [[2270, 0], [2390, 1]]);
+    S.num = m.text ? kf(t, [[2260, 0], [2600, 1, o3]]) : 0;
+    return S;
+  }
+
+  /* ---------- badge exit: attract → merge → absorb → flow → emerge → separate → heal ---------- */
+  function seqOut(t, m) {
+    const S = blank(), { r, bx, by, k, rel } = m;
+    const sB = sOfX(bx), sR = -(QA + VS / 2);        // sR: the middle of the bar's left side
+
+    const bs = kf(t, [[830, sB], [1270, sR]]);
+    S.bumps.push({
+      s: bs,
+      A: kf(t, [[110, 0], [380, -3], [480, -3.8], [570, -1], [700, 5.2 * k], [790, 6 * k], [900, 3.3], [1270, 3], [1410, 5.4], [1490, 4.8], [1570, -1.3], [1670, .4], [1780, 0]]),
+      w: kf(t, [[110, 9], [480, 8], [700, 11], [900, 16], [1250, 15], [1410, 11.5]])
+    });
+    S.ripples.push({ s0: sB, t0: 835, A: 1.3 }, { s0: sR, t0: 1530, A: 1.1 });
+
+    if (t < 850) {                                   // badge narrows to a bead, stretches to the surface, is drawn in
+      const y = kf(t, [[110, by], [380, by - 1.4], [520, by - 2.6], [810, YT + 4, i2]]);
+      const sc = kf(t, [[500, 1], [800, .2], [850, 0]]);
+      S.drop = {
+        x: bx, y,
+        rx: kf(t, [[60, m.w / 2], [230, r]]) * sc * kf(t, [[110, 1], [380, .94], [520, .86], [720, .72]]),
+        ry: r * sc * kf(t, [[110, 1], [380, 1.12], [520, 1.24], [720, 1.4], [810, 1.1]]), rot: 0
+      };
+      if (t >= 280 && t < 840) S.neck = { x1: bx, y1: kf(t, [[280, by - r * .85], [470, YT + 3.5]]), x2: bx, y2: y, w: kf(t, [[280, 0], [340, 3.4], [470, 3.8], [620, 5.5], [770, 3.6], [840, 0]]) };
+    } else if (t >= 1300 && t < 1810) {              // excess liquid released from the frame
+      const sc = kf(t, [[1300, .5], [1430, 1], [1600, 1], [1810, 0]]);
+      S.drop = {
+        x: kf(t, [[1300, X0 + 5], [1480, X0 - 8.5], [1550, X0 - 11], [1810, X0 - 15]]),
+        y: kf(t, [[1300, YC], [1480, YC + 1], [1550, YC + 3], [1810, YC + 27, i2]]),
+        rx: rel * sc * kf(t, [[1300, 1], [1440, 1.3], [1550, 1]]),
+        ry: rel * sc * kf(t, [[1300, 1], [1440, .86], [1550, 1], [1700, 1.12]]), rot: 0
+      };
+      if (t < 1510) S.neck = { x1: X0 + 2, y1: YC, x2: S.drop.x, y2: S.drop.y, w: kf(t, [[1300, 2 * rel], [1420, 1.5 * rel], [1505, 0]]) };
+    }
+    if (t >= 1280 && t < 1570) {
+      const ry = kf(t, [[1280, 3], [1400, rel + 4], [1500, rel + 3], [1570, 0]]);
+      S.root = { x: X0 + 3.5, y: YC, rx: ry * .55, ry };
+    }
+    S.mask = t >= 900;
+    const tp = pt(bs);
+    S.tint = { x: tp.x - tp.nx * 8, y: tp.y - tp.ny * 8, o: kf(t, [[560, 0], [760, .17], [1250, .11], [1430, 0]]) };
+    S.crisp = t < 60 ? 1 : 0;
+    S.num = m.text ? kf(t, [[20, 1], [210, 0]]) : 0;
+    return S;
+  }
+
+  /* ---------- badge to badge: the old value sinks, the bead reshapes, the new value surfaces ---------- */
+  function seqMorph(t, a, b) {
+    const S = blank(), e = io(c01(t, 150, 470)), wob = Math.sin(c01(t, 150, 600) * Math.PI) * 1.4;
+    S.crisp = 1;
+    S.shape = { x: mix(a.bx, b.bx, e), y: mix(a.by, b.by, e), w: mix(a.w, b.w, e) + wob, h: mix(a.h, b.h, e) - wob * .5 };
+    if (t < 300) { S.text = a.text; S.num = a.text ? kf(t, [[0, 1], [200, 0]]) : 0; }
+    else { S.text = b.text; S.num = b.text ? kf(t, [[360, 0], [640, 1, o3]]) : 0; }
+    return S;
+  }
+
+  /* ---------- tooltips ---------- */
+  const LABELS = { msg: { x: 313, text: 'Messages', W: 78 }, fav: { x: 367, text: 'Favorites', W: 76 }, prof: { x: 421, text: 'Profile', W: 62 } };
+  const plain = { id: 'A', kind: 'plain', r: 6, W: 76, H: 24, rx: 12, ax: 313, cx: 313, cy: YT - 26, open: 620, close: 460,
+                  key: null, shown: null, swap: 1, x: 313, Wc: 76, v: 0 };
+  const richTip = { id: 'R', kind: 'rich', ax: 259, r: 9, W: 150, H: 96, rx: 16, cx: 259, cy: YT - 62, open: 780, close: 560 };
+  const TIPS = [plain, richTip];
+  for (const tp of TIPS) {
+    Object.assign(tp, { p: 0, want: false, block: false, timer: 0, rips: [] });
+    tp.el = tp.kind === 'plain'
+      ? { b: $('bTipA'), w: $('wTipA'), crisp: $('cTipA'), neck: $('bNeckA'), root: $('bRootA'), text: $('tA'), mask: $('mAe'), fe: $('fAe') }
+      : { w: $('wTipR'), neck: $('wNeckR'), group: $('rich'), hit: $('richHit'), inner: $('richInner'), mask: $('mRe'), fe: $('fRe') };
+  }
+  // The action is a bead of liquid resting in the card. Hovering merges the pointer into it; pressing sends it back into the bar.
+  const ACT = { x: 237, y: 155, w: 82, h: 22, hov: 0, over: false, t: -1, T: 900, dropX: 252 };
+  function measure() {
+    const t = plain.el.text, keep = t.textContent;
+    for (const k in LABELS) { t.textContent = LABELS[k].text; const len = t.getComputedTextLength(); if (len > 0) LABELS[k].W = Math.ceil(len) + 24; }
+    t.textContent = keep;
+    const al = $('actLabel').getComputedTextLength(); if (al > 0) ACT.w = Math.ceil(al) + 26;
+  }
+
+  // The plain tooltip is one body: it glides to the hovered anchor, reshapes to the new label, and the label re-surfaces.
+  function stepPlain(dt) {
+    const tp = plain; if (!tp.key) return false;
+    const L = LABELS[tp.key]; let moving = false;
+    if (tp.p === 0) { tp.x = L.x; tp.Wc = L.W; tp.v = 0; tp.swap = 1; if (tp.shown !== tp.key) { tp.shown = tp.key; tp.el.text.textContent = L.text; } }
+    else if (dt > 0) {
+      const k = 1 - Math.exp(-dt / 110), nx = tp.x + (L.x - tp.x) * k;
+      tp.v = (nx - tp.x) / dt; tp.x = nx;
+      if (Math.abs(L.x - tp.x) > .05) moving = true; else { tp.x = L.x; tp.v = 0; }
+      tp.Wc += (L.W - tp.Wc) * k;
+      if (Math.abs(L.W - tp.Wc) > .05) moving = true; else tp.Wc = L.W;
+      if (tp.shown !== tp.key) {
+        tp.swap = Math.max(0, tp.swap - dt / 110); moving = true;
+        if (tp.swap === 0) { tp.shown = tp.key; tp.el.text.textContent = L.text; }
+      } else if (tp.swap < 1) { tp.swap = Math.min(1, tp.swap + dt / 150); moving = true; }
+    }
+    tp.ax = tp.cx = tp.x; tp.W = tp.Wc + Math.min(12, Math.abs(tp.v) * 45);   // stretches a little while it travels
+    return moving;
+  }
+
+  // One reversible pose per tooltip: p = 0 is a flat surface, p = 1 is the settled tooltip.
+  function tipPose(tp, p) {
+    const r = tp.r, big = tp.kind === 'rich';
+    const bump = {
+      s: sOfX(tp.ax),
+      A: (big ? 1.3 : 1) * kf(p, [[0, 0], [.2, 4.6], [.4, 6.2], [.5, 4.4], [.6, -1.3], [.7, .3], [.78, 0]]),
+      w: kf(p, [[0, 13], [.4, big ? 12 : 10]])
+    };
+    let body = null, neck = null, root = null;
+    if (p > .18) {
+      const yPinch = YT - r - 4;
+      const y = kf(p, [[.18, YT + r + 2], [.46, yPinch], [.54, yPinch - 1.5], [.8, tp.cy, io]]);
+      const x = kf(p, [[.54, tp.ax], [.8, tp.cx, io]]);
+      const sc = kf(p, [[.18, .5], [.4, 1]]), sp = io(c01(p, .54, .9));
+      const w0 = 2 * r * sc * kf(p, [[.18, 1], [.32, .86], [.46, .92], [.54, 1]]);
+      const h0 = 2 * r * sc * kf(p, [[.18, 1], [.32, 1.22], [.46, 1.12], [.54, 1]]);
+      const w = w0 + (tp.W - w0) * sp, h = h0 + (tp.H - h0) * sp;
+      body = { x, y, w, h, rx: Math.min(w, h) / 2 * (1 - sp) + tp.rx * sp };
+      if (p < .5) neck = { x1: tp.ax, y1: YT + 3, x2: x, y2: y, w: kf(p, [[.18, (big ? 2 : 1.8) * r], [.34, 1.4 * r], [.44, (big ? .8 : .66) * r], [.5, big ? 3 : 1]]) };
+    }
+    if (!big && p > .16 && p < .56) { const rx = kf(p, [[.16, 3], [.3, r + 4], [.46, r + 3], [.56, 0]]); root = { x: tp.ax, y: YT + 3.5, rx, ry: rx * .55 }; }
+    return { bump, body, neck, root, q: c01(p, .8, 1) };
+  }
+
+  /* ---------- rendering ---------- */
+  const el = {
+    bar: $('bar'), wDrop: $('wDrop'), wNeck: $('wNeck'), bDrop: $('bDrop'), bNeck: $('bNeck'), bRoot: $('bRoot'),
+    wrap: $('blueWrap'), tint: $('tint'), badge: $('badge'), num: $('num'), numMaskC: $('numMaskC'), numBlurFe: $('numBlurFe'),
+    glow: $('glow'), selOrg: $('selOrg'), selTail: $('selTail'), selHead: $('selHead'), bAct: $('bAct'), actLabel: $('actLabel'),
+    icons: [...document.querySelectorAll('.ico')]
+  };
+  const set = (n, o) => { for (const key in o) n.setAttribute(key, o[key]); };
+  const f = v => v.toFixed(2);
+
+  function ell(n, sh, pad) {
+    if (!sh || sh.rx < .05 || sh.ry < .05) { set(n, { rx: 0, ry: 0 }); return; }
+    set(n, { cx: f(sh.x), cy: f(sh.y), rx: f(sh.rx + pad), ry: f(sh.ry + pad), transform: sh.rot ? `rotate(${f(sh.rot)} ${f(sh.x)} ${f(sh.y)})` : '' });
+  }
+  function line(n, k) {
+    if (!k || k.w < .05) { n.setAttribute('stroke-width', 0); return; }
+    set(n, { x1: f(k.x1), y1: f(k.y1), x2: f(k.x2), y2: f(k.y2), 'stroke-width': f(k.w) });
+  }
+  function rect(n, b, pad) {
+    const w = b ? b.w + 2 * pad : 0, h = b ? b.h + 2 * pad : 0;
+    if (w < .1 || h < .1) { set(n, { width: 0, height: 0 }); return; }
+    set(n, { x: f(b.x - w / 2), y: f(b.y - h / 2), width: f(w), height: f(h), rx: f(clamp(b.rx + pad, 0, Math.min(w, h) / 2)) });
+  }
+
+  // Selection: one fat body of liquid. It leans back, the front lobe flows to the new icon while the rear lobe
+  // drains after it through a thick waist, and it overshoots and settles into the plate on arrival.
+  const SEL_T = 620;
+  const sel = { key: 'home', x: 259, t: -1, fx: 259 };
+  function selPose() {
+    if (sel.t < 0) return { b: { x: sel.x, w: 54, h: 48, rx: 14 }, a: null, neck: null, bump: 0, mid: sel.x };
+    const t = sel.t, tx = +$(sel.key).dataset.x, dir = Math.sign(tx - sel.fx) || 1;
+    const lead = io(c01(t, 90, 330)), trail = io(c01(t, 190, 450));
+    const wind = Math.sin(Math.PI * c01(t, 0, 170));                       // leans away before it lets go
+    const q = c01(t, 420, SEL_T), wob = Math.sin(q * Math.PI * 2) * (1 - q) * (1 - q);   // overshoot, then rest
+    const bx = mix(sel.fx, tx, lead) - dir * 4 * wind * (1 - lead) + dir * 5 * wob;
+    const ax = mix(sel.fx, tx, trail) - dir * 6 * wind * (1 - trail);
+    const sep = Math.abs(bx - ax), k = c01(sep, 0, 34);                     // how far the two lobes have pulled apart
+    const bs = mix(1, .74 + .26 * trail, k), as = mix(1, 1 - .34 * lead, k);
+    const round = Math.max(k, Math.sin(Math.PI * c01(t, 0, SEL_T)) * .8);   // rounds up while it moves, squares off at rest
+    return {
+      b: { x: bx, w: mix(54, 42, k) * bs + 8 * wob + 5 * wind * (1 - k), h: mix(48, 42, k) * bs - 6 * wob - 3 * wind * (1 - k), rx: mix(14, 21, round) },
+      a: k > .02 ? { x: ax, w: mix(54, 42, k) * as, h: mix(48, 42, k) * as, rx: mix(14, 21, round) } : null,
+      neck: k > .02 ? { x1: ax, x2: bx, w: clamp(22 - .07 * sep, 11, 22) * Math.min(1, k * 1.6) } : null,
+      bump: 3.2 * Math.sin(Math.PI * c01(t, 60, 470)), mid: (ax + bx) / 2
+    };
+  }
+  function drawBar(bumps, rips) {
+    let d = '';
+    for (let i = 0; i < N; i++) { const p = PTS[i], v = disp(p.s, bumps, rips); d += (i ? 'L' : 'M') + f(p.x + p.nx * v) + ' ' + f(p.y + p.ny * v); }
+    el.bar.setAttribute('d', d + 'Z');
+    for (const g of el.icons) {                       // icons ride the surface very slightly
+      const x = +g.dataset.x, dy = -.3 * disp(sOfX(x), bumps, rips);
+      g.setAttribute('transform', `translate(${f(x - 12)} ${f(YC - 12 + dy)})`);
+    }
+    const sp = selPose(), yAt = x => YC - .3 * disp(sOfX(x), bumps, rips);
+    rect(el.selHead, { x: sp.b.x, y: yAt(sp.b.x), w: sp.b.w, h: sp.b.h, rx: sp.b.rx }, 0);
+    rect(el.selOrg, sp.a ? { x: sp.a.x, y: yAt(sp.a.x), w: sp.a.w, h: sp.a.h, rx: sp.a.rx } : null, 0);
+    line(el.selTail, sp.neck ? { x1: sp.neck.x1, y1: yAt(sp.neck.x1), x2: sp.neck.x2, y2: yAt(sp.neck.x2), w: sp.neck.w } : null);
+  }
+
+  function drawBadge(S, m) {
+    ell(el.wDrop, S.drop, 0); line(el.wNeck, S.neck);
+    ell(el.bDrop, S.drop, .35); line(el.bNeck, S.neck); ell(el.bRoot, S.root, 0);
+    if (S.mask) el.wrap.setAttribute('mask', 'url(#depth)'); else el.wrap.removeAttribute('mask');
+    if (S.tint && S.tint.o > .002) set(el.tint, { cx: f(S.tint.x), cy: f(S.tint.y), opacity: f(S.tint.o) }); else el.tint.setAttribute('opacity', 0);
+
+    const sh = S.shape || (m ? { x: m.bx, y: m.by, w: m.w, h: m.h } : null);
+    if (sh && S.crisp > 0) { rect(el.badge, { x: sh.x, y: sh.y, w: sh.w, h: sh.h, rx: Math.min(sh.w, sh.h) / 2 }, 0); el.badge.setAttribute('opacity', f(S.crisp)); }
+    else set(el.badge, { width: 0, height: 0 });
+
+    const p = S.num, text = S.text !== undefined ? S.text : (m ? m.text : null);   // the value surfaces through the liquid: soft mask + focus
+    if (sh && text && p > .001) {
+      if (el.num.textContent !== text) el.num.textContent = text;
+      set(el.numMaskC, { cx: f(sh.x), cy: f(sh.y), r: f((sh.w / 2 + 3) / .55 * p) });
+      set(el.num, { x: f(sh.x), y: f(sh.y + 3.7 + 2.2 * (1 - p)), visibility: 'visible' });
+      if (p < .999) { el.numBlurFe.setAttribute('stdDeviation', f(1.8 * (1 - p))); el.num.setAttribute('filter', 'url(#numBlur)'); }
+      else el.num.removeAttribute('filter');
+    } else { el.numMaskC.setAttribute('r', 0); el.num.setAttribute('visibility', 'hidden'); }
+  }
+
+  function drawTip(tp, ps) {
+    const e = tp.el, q = ps.q * (tp.kind === 'plain' ? tp.swap : 1);
+    if (tp.kind === 'plain') {
+      rect(e.b, ps.body, .35); rect(e.w, ps.body, -1.2); line(e.neck, ps.neck); ell(e.root, ps.root, 0);
+      const c = c01(tp.p, .9, 1);                     // liquid resolves into a crisp, conventional tooltip
+      if (c > 0) { rect(e.crisp, ps.body, 0); e.crisp.setAttribute('opacity', f(c)); } else set(e.crisp, { width: 0, height: 0 });
+      if (q > .001) {
+        set(e.mask, { cx: f(tp.cx), cy: f(tp.cy), rx: f(tp.W * .75 * q), ry: f(tp.H * 1.2 * q) });
+        set(e.text, { x: f(tp.cx), y: f(tp.cy + 4.1 + 2 * (1 - q)), visibility: 'visible' });
+        if (q < .999) { e.fe.setAttribute('stdDeviation', f(1.6 * (1 - q))); e.text.setAttribute('filter', 'url(#fA)'); } else e.text.removeAttribute('filter');
+      } else { set(e.mask, { rx: 0, ry: 0 }); e.text.setAttribute('visibility', 'hidden'); }
+    } else {
+      rect(e.w, ps.body, .6); line(e.neck, ps.neck);
+      const vis = tp.p > .6 ? 'visible' : 'hidden';
+      e.group.setAttribute('visibility', vis); e.hit.setAttribute('visibility', vis);
+      set(e.mask, { cx: tp.cx, cy: tp.cy, rx: f(115 * q), ry: f(80 * q) });
+      e.inner.setAttribute('transform', `translate(0 ${f(3 * (1 - q))})`);
+      if (q > .001 && q < .999) { e.fe.setAttribute('stdDeviation', f(2 * (1 - q))); e.inner.setAttribute('filter', 'url(#fR)'); } else e.inner.removeAttribute('filter');
+
+      // action bead
+      let b = null, lab = 1;
+      if (ACT.t >= 0) {
+        const t = ACT.t, k = io(c01(t, 0, 180)), fall = i2(c01(t, 180, 450)), st = Math.sin(fall * Math.PI);
+        lab = 1 - c01(t, 0, 110);
+        if (t < 470) b = { x: mix(ACT.x, ACT.dropX, fall), y: mix(ACT.y, YT + 12, fall), w: mix(ACT.w, 13, k) * (1 - .14 * st), h: mix(ACT.h, 13, k) * (1 + .3 * st), rx: 11 };
+      } else if (q > .001) {
+        const g = io(q);
+        b = { x: ACT.x, y: ACT.y + 3 * (1 - q), w: (ACT.w + 6 * ACT.hov) * g, h: (ACT.h + 3 * ACT.hov) * g, rx: 12 };
+      }
+      rect(el.bAct, b, .35);
+      el.actLabel.setAttribute('opacity', f(lab));
+    }
+  }
+
+  /* ---------- state + one shared frame loop ---------- */
+  let state = 'empty', mode = null, target = 'none', pending = null, last = null, speed = 1, G = 0, running = false, prev = 0;
+  const badge = { anim: false, kind: null, t: 0, T: 0, from: null };
+  const ptr = { on: false, x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, down: false, hot: 0, sc: 0 };   // the pointer, in stage units
+  const hov = { x: 340, amp: 0 };
+  const glow = { x: 340, y: 222, o: 0 };
+  let flow = [];                                                                           // ripples left where the selection pools
+                                                          // the rise in the edge under the pointer
+  const segBtns = [...document.querySelectorAll('.seg button')], btnReplay = $('btnReplay');
+
+  function syncUI() {
+    for (const b of segBtns) b.setAttribute('aria-pressed', String(b.dataset.k === target));
+    btnReplay.disabled = !last;
+    $('msg').setAttribute('aria-label', state === 'badge' && mode ? (mode.text ? `Messages, ${mode.text} new` : 'Messages, new activity') : 'Messages');
+  }
+  function restScene() { const S = blank(); if (state === 'badge') { S.crisp = 1; S.num = mode.text ? 1 : 0; } return S; }
+
+  function draw(S, bt) {
+    const bumps = S.bumps.slice(), rips = S.ripples.map(r => ({ s0: r.s0, age: bt - r.t0, A: r.A }));
+    for (const tp of TIPS) {
+      for (const r of tp.rips) rips.push({ s0: r.s0, age: G - r.t0, A: r.A });
+      const ps = tipPose(tp, tp.p); bumps.push(ps.bump); drawTip(tp, ps);
+    }
+    if (ACT.t >= 0) bumps.push({ s: sOfX(ACT.dropX), A: kf(ACT.t, [[330, 0], [410, 2.2], [470, -2.8], [560, 1.2], [680, 0]]), w: 11 });
+    if (hov.amp > .01) bumps.push({ s: sOfX(hov.x), A: hov.amp, w: 17 });
+    const selP = selPose();                           // while the selection flows, the edge above it swells and travels with it
+    if (selP.bump > .02) bumps.push({ s: sOfX(selP.mid), A: selP.bump, w: 17 });
+    for (const r of flow) rips.push({ s0: r.s0, age: G - r.t0, A: r.A });
+    drawBar(bumps, rips); drawBadge(S, mode);
+
+    set(el.glow, { cx: f(glow.x), cy: f(glow.y), opacity: f(glow.o) });
+  }
+
+  function frame(now) {
+    const rdt = Math.min(50, now - prev), dt = rdt * speed; prev = now; G += dt;
+    let active = false, S = null;
+    const ease = (cur, to, tau) => cur + (to - cur) * (1 - Math.exp(-rdt / tau));
+
+    // pointer: the edge of the bar rises under it
+    if (rdt > 0) {
+      const k = 1 - Math.exp(-rdt / 60);
+      ptr.vx += ((ptr.x - ptr.px) / rdt - ptr.vx) * k; ptr.vy += ((ptr.y - ptr.py) / rdt - ptr.vy) * k;
+      ptr.px = ptr.x; ptr.py = ptr.y;
+    }
+    if (Math.hypot(ptr.vx, ptr.vy) > .004) active = true; else ptr.vx = ptr.vy = 0;
+    const over = ptr.on && ptr.x > X0 - 6 && ptr.x < X1 + 6 && ptr.y > YT - 14 && ptr.y < YT + H + 8;
+    const ta = over ? 4.5 : 0, hx = clamp(ptr.x, X0 + R - 6, X1 - R + 6);
+    if (over) { if (hov.amp < .05) hov.x = hx; hov.x = ease(hov.x, hx, 75); if (Math.abs(hx - hov.x) > .05) active = true; }
+    hov.amp = ease(hov.amp, ta, 140); if (Math.abs(ta - hov.amp) > .02) active = true; else hov.amp = ta;
+
+    // the light sits under the pointer while it is inside the bar, and fades when it leaves
+    const inBar = ptr.on && ptr.x > X0 && ptr.x < X1 && ptr.y > YT && ptr.y < YT + H, tg = inBar ? (ptr.down ? 1.25 : 1) : 0;
+    if (inBar) { if (glow.o < .03) { glow.x = ptr.x; glow.y = ptr.y; } glow.x = ease(glow.x, ptr.x, 45); glow.y = ease(glow.y, ptr.y, 45); if (Math.hypot(ptr.x - glow.x, ptr.y - glow.y) > .2) active = true; }
+    glow.o = ease(glow.o, tg, 150); if (Math.abs(tg - glow.o) > .01) active = true; else glow.o = tg;
+
+    const th = ACT.over ? 1 : 0;
+    ACT.hov = ease(ACT.hov, th, 90); if (Math.abs(th - ACT.hov) > .01) active = true; else ACT.hov = th;
+    if (ACT.t >= 0) {
+      const before = ACT.t; ACT.t += dt; active = true;
+      if (before < 300 && ACT.t >= 300) { richTip.block = true; clearTimeout(richTip.timer); richTip.want = false; }
+      if (before < 470 && ACT.t >= 470) richTip.rips.push({ s0: sOfX(ACT.dropX), t0: G, A: 1.3 });
+      if (ACT.t >= ACT.T) ACT.t = -1;
+    }
+
+    if (sel.t >= 0) {
+      const before = sel.t; sel.t += dt; active = true;
+      if (before < 430 && sel.t >= 430) flow.push({ s0: sOfX(+$(sel.key).dataset.x), t0: G, A: 1.2 });
+      if (sel.t >= SEL_T) { sel.t = -1; sel.x = +$(sel.key).dataset.x; }
+    }
+    flow = flow.filter(r => G - r.t0 < 420); if (flow.length) active = true;
+
+
+    if (badge.anim) {
+      badge.t += dt; active = true;
+      if (badge.t >= badge.T) {
+        badge.anim = false; state = badge.kind === 'out' ? 'empty' : 'badge';
+        if (pending != null) { const k = pending; pending = null; go(k); }
+        syncUI();
+      }
+      if (badge.anim) S = badge.kind === 'in' ? seqIn(badge.t, mode) : badge.kind === 'out' ? seqOut(badge.t, mode) : seqMorph(badge.t, badge.from, mode);
+    }
+    if (!S) S = restScene();
+
+    if (stepPlain(dt)) active = true;
+    for (const tp of TIPS) {
+      const tgt = tp.want && !badge.anim ? 1 : 0;      // the surface is busy during a badge transition
+      if (tp.p !== tgt) {
+        const before = tp.p;
+        tp.p = tgt ? Math.min(1, tp.p + dt / tp.open) : Math.max(0, tp.p - dt / (badge.anim ? tp.close / 2.2 : tp.close));
+        if (tgt && before < .5 && tp.p >= .5) tp.rips.push({ s0: sOfX(tp.ax), t0: G, A: 1.1 });
+        if (!tgt && tp.p === 0) { tp.rips.push({ s0: sOfX(tp.ax), t0: G, A: 1.2 }); tp.block = false; }
+        active = true;
+      }
+      tp.rips = tp.rips.filter(r => G - r.t0 < 420);
+      if (tp.rips.length) active = true;
+    }
+
+    draw(S, badge.t);
+    if (active) requestAnimationFrame(frame); else running = false;
+  }
+  function kick() { if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); } }
+
+  function play(kind, m) {
+    Object.assign(badge, { anim: true, kind, t: 0, T: kind === 'in' ? m.T : kind === 'out' ? T_OUT : T_MORPH, from: mode });
+    if (kind !== 'out') mode = m;
+    last = { kind, m: mode, from: badge.from };
+    kick();
+  }
+  function go(key) {
+    if (key === 'none') { if (state === 'badge') play('out', mode); return; }
+    const m = MODES[key];
+    if (state === 'empty') play('in', m); else if (m !== mode) play('morph', m);
+  }
+  // A request made mid-transition waits for it to finish, so rapid clicks never break the motion.
+  function request(key) { target = key; if (badge.anim) pending = key; else go(key); syncUI(); }
+
+  for (const b of segBtns) b.addEventListener('click', () => request(b.dataset.k));
+  btnReplay.addEventListener('click', () => {
+    if (!last || badge.anim) return;
+    const { kind, m, from } = last;
+    if (kind === 'in') { state = 'empty'; mode = null; } else if (kind === 'out') { state = 'badge'; mode = m; } else { state = 'badge'; mode = from; }
+    pending = null; target = kind === 'out' ? 'none' : m.key;
+    play(kind, m); syncUI();
+  });
+  $('btnReset').addEventListener('click', () => {
+    badge.anim = false; pending = null; state = 'empty'; mode = null; target = 'none'; last = null;
+    for (const tp of TIPS) { clearTimeout(tp.timer); tp.want = false; tp.block = false; tp.p = 0; tp.rips = []; }
+    ACT.t = -1; select('home'); sel.t = -1; sel.x = 259; flow = []; syncUI(); kick();
+  });
+  $('slow').addEventListener('change', e => { speed = e.target.checked ? .25 : 1; });
+
+  /* ---------- nav selection ---------- */
+  function select(key) {
+    if (key !== sel.key) { Object.assign(sel, { fx: selPose().b.x, key, t: 0 }); }   // a new pick mid-flight leaves from wherever the front lobe is
+    for (const g of el.icons) g.classList.toggle('on', g.id === key);
+    kick();
+  }
+  for (const id of ['home', 'msg', 'fav', 'prof']) {
+    const g = $(id), pick = () => { select(id); if (id === 'msg') request('none'); };   // opening Messages clears its badge
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  }
+
+  /* ---------- tooltip triggers: hover, focus, touch ---------- */
+  function want(tp, on, delay) {
+    clearTimeout(tp.timer);
+    if (on) { if (!tp.block) { tp.want = true; kick(); } }
+    else tp.timer = setTimeout(() => { tp.want = false; kick(); }, delay || 0);
+  }
+  for (const [id, tp] of [['msg', plain], ['fav', plain], ['prof', plain], ['home', richTip]]) {
+    const a = $(id), on = () => { if (tp === plain) plain.key = id; want(tp, true); };
+    a.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') { ptr.hot++; on(); } });
+    a.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') { ptr.hot = Math.max(0, ptr.hot - 1); want(tp, false, tp === richTip ? 260 : 90); } });
+    a.addEventListener('focus', () => { if (a.matches(':focus-visible')) on(); });
+    a.addEventListener('blur', () => want(tp, false, tp === richTip ? 140 : 0));
+    a.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'touch') return;
+      const same = tp.want && (tp !== plain || plain.key === id);
+      for (const o of TIPS) if (o !== tp) want(o, false);
+      if (same) want(tp, false); else on();
+    });
+  }
+  const act = $('act'), richHit = $('richHit');
+  for (const n of [richHit, $('rich')]) {
+    n.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') want(richTip, true); });
+    n.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') want(richTip, false, 260); });
+  }
+  act.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') { ACT.over = true; kick(); } });
+  act.addEventListener('pointerleave', () => { ACT.over = false; kick(); });
+  act.addEventListener('focus', () => { want(richTip, true); if (act.matches(':focus-visible')) { ACT.over = true; kick(); } });
+  act.addEventListener('blur', () => { ACT.over = false; want(richTip, false, 140); });
+  function doAction() { if (ACT.t >= 0 || richTip.p < .9) return; ACT.t = 0; ACT.over = false; clearTimeout(richTip.timer); kick(); }
+  act.addEventListener('click', e => { e.stopPropagation(); doAction(); });
+  act.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doAction(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') for (const tp of TIPS) want(tp, false); });
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch' || e.target.closest('.anchor, #rich, #richHit')) return;
+    for (const tp of TIPS) want(tp, false);
+  });
+
+  /* ---------- pointer tracking ---------- */
+  const svg = $('stage');
+  function track(e) {
+    if (e.pointerType === 'touch') return;
+    const m = svg.getScreenCTM(); if (!m) return;
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    ptr.x = q.x; ptr.y = q.y;
+    if (!ptr.on) { ptr.on = true; ptr.px = q.x; ptr.py = q.y; }
+    kick();
+  }
+  svg.addEventListener('pointerenter', track);
+  svg.addEventListener('pointermove', track);
+  svg.addEventListener('pointerleave', () => { ptr.on = false; ptr.hot = 0; ACT.over = false; kick(); });
+  svg.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return;
+    ptr.down = true;
+    kick();
+  });
+  window.addEventListener('pointerup', () => { if (ptr.down) { ptr.down = false; kick(); } });
+
+  // On narrow screens the stage crops in around the bar so it stays a usable size.
+  const narrow = matchMedia('(max-width: 640px)');
+  const fit = () => svg.setAttribute('viewBox', narrow.matches ? '160 40 360 430' : '0 0 680 430');   // narrow: extra room below for the controls
+  narrow.addEventListener('change', fit); fit();
+
+  // Frame-accurate scrubbing, for inspecting a single moment.
+  window.fluid = {
+    seek(kind, key, t, from) { mode = MODES[key]; state = 'badge'; draw(kind === 'in' ? seqIn(t, mode) : kind === 'out' ? seqOut(t, mode) : seqMorph(t, MODES[from], mode), t); },
+    sel(from, to, t) { sel.fx = +$(from).dataset.x; sel.key = to; sel.t = t; for (const g of el.icons) g.classList.toggle('on', g.id === to); draw(restScene(), 0); },
+    tip(id, p, key) { for (const tp of TIPS) tp.p = tp.id === id ? p : 0; if (key) { plain.key = key; plain.p = 0; stepPlain(0); plain.p = p; } state = 'empty'; draw(restScene(), 0); }
+  };
+
+  measure(); syncUI(); draw(restScene(), 0);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); if (!running) draw(restScene(), 0); });
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setTimeout(() => { if (!badge.anim && state === 'empty' && !last && target === 'none' && TIPS.every(tp => !tp.want)) request('3'); }, 800);
+  }
+})();
+</script>
+</body>
+</html>
