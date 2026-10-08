@@ -126,9 +126,10 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
 /* ---------- Companies ---------- */
 .companies { text-align: center; padding-block: 10px 70px; }
-.companies h3 { font-size: 13.5px; font-weight: 500; margin-bottom: 10px; }
-.logos { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 auto; color: var(--faint); font-size: 19px; letter-spacing: -0.04em; }
-.logos .lrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; }
+.companies h3 { font-size: 13.5px; font-weight: 500; margin-bottom: 14px; }
+.tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 560px; margin: 0 auto; }
+.tools .chip { font-size: 14px; padding: 6px 13px; transition: background-color .2s ease, color .2s ease; }
+.tools .chip:hover { background: var(--fg); color: var(--bg); }
 
 /* ---------- How I Work ---------- */
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -498,11 +499,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
     <section class="companies wrap">
       <h3>Tools I work with:</h3>
-      <div class="logos">
-        <div class="lrow"><span>Figma</span><span>Illustrator</span><span>InDesign</span></div>
-        <div class="lrow"><span>Claude Code</span><span>Codex</span><span>GitHub</span></div>
-        <div class="lrow"><span>VS Code</span><span>Midjourney</span><span>Unity</span></div>
-      </div>
+      <div class="tools"><span class="chip">Figma</span><span class="chip">Illustrator</span><span class="chip">InDesign</span><span class="chip">Claude Code</span><span class="chip">Codex</span><span class="chip">GitHub</span><span class="chip">VS Code</span><span class="chip">Midjourney</span><span class="chip">Unity</span></div>
     </section>
 
     <section class="wrap">
