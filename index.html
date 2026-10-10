@@ -486,9 +486,9 @@ html.has-stick .inst { cursor: none; }
     if (!mq("(hover: hover) and (pointer: fine)") || mq("(prefers-reduced-motion: reduce)")) return null;
     const GRIP = 0.65,    // pivot, as a fraction of the stick's length measured from the tip
           TILT = 22,      // how far the stick leans from horizontal when it touches the head
-          REST = 16,      // how far the tip is lifted while waiting (degrees)
+          REST = 12,      // how far the tip is lifted while waiting (degrees)
           DOWN = 0.045,   // seconds for the downstroke
-          BACK = 18;      // how quickly the tip returns to rest (higher = snappier); it eases back with no bounce
+          BACK = 9;       // how quickly the tip returns to rest (higher = snappier); it eases back with no bounce
     const el = document.createElement("div"); el.className = "stick"; el.setAttribute("aria-hidden", "true");
     el.innerHTML = `<img src="${STICK}" alt="">`;
     const st = el.firstChild;
