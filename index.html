@@ -123,10 +123,10 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .inst img { width: 100%; height: auto; display: block; pointer-events: none; }
 .inst img { animation: drum-in .4s cubic-bezier(.22, 1, .36, 1) var(--delay) both; }
 @keyframes drum-in { from { opacity: .001; transform: rotate(var(--r0)) scale(.9); } }
-/* drumstick: appears while the mouse is over a drum, pivots at the butt end */
+/* drumstick: appears while the mouse is over a drum, pivots at the grip (just below its middle) */
 .stick { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 30; pointer-events: none; opacity: 0; transition: opacity .12s ease; }
 .stick.on { opacity: 1; }
-.stick img { position: absolute; right: 0; top: 0; width: var(--len); margin-top: calc(var(--len) * -.02); max-width: none; height: auto; display: block; transform-origin: 100% 50%; will-change: transform; }
+.stick img { position: absolute; right: calc(var(--len) * (var(--grip) - 1)); top: 0; width: var(--len); margin-top: calc(var(--len) * -.02); max-width: none; height: auto; display: block; transform-origin: calc(var(--grip) * 100%) 50%; will-change: transform; }
 .stick .sh { filter: brightness(0) blur(var(--blur, 3px)); opacity: var(--shade, .16); }
 html.has-stick .inst { cursor: none; }
 
@@ -480,30 +480,30 @@ html.has-stick .inst { cursor: none; }
   }
   function hit(el, d, e) { sound(d); shake(el, d, e); }
 
-  // ---------- drumstick (mouse only): the tip follows the pointer, the butt end is the pivot, a click whips the tip down ----------
+  // ---------- drumstick (mouse only): the tip follows the pointer, the grip is the pivot, a click whips the tip down while the butt end kicks up ----------
   const STICK = "data:image/webp;base64,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";
   const stick = (() => {
     const mq = (q) => window.matchMedia && matchMedia(q).matches;
     if (!mq("(hover: hover) and (pointer: fine)") || mq("(prefers-reduced-motion: reduce)")) return null;
-    const TILT = 22,      // how far the stick leans from horizontal when it touches the head
-          REST = 10,      // how far the tip is lifted while waiting (degrees)
+    const GRIP = 0.65,    // pivot, as a fraction of the stick's length measured from the tip
+          TILT = 22,      // how far the stick leans from horizontal when it touches the head
+          REST = 16,      // how far the tip is lifted while waiting (degrees)
           DOWN = 0.045,   // seconds for the downstroke
-          KICK = 340,     // rebound speed off the head (degrees / second)
+          KICK = 540,     // rebound speed off the head (degrees / second)
           K = 320, C = 15; // spring that carries the tip back up and lets it settle
     const el = document.createElement("div"); el.className = "stick"; el.setAttribute("aria-hidden", "true");
     el.innerHTML = `<img class="sh" src="${STICK}" alt=""><img class="st" src="${STICK}" alt="">`;
     const sh = el.firstChild, st = el.lastChild;
     document.body.appendChild(el); document.documentElement.classList.add("has-stick");
-    let on = false, raf = 0, last = 0, hideT = 0, side = 1, len = 170;
+    let on = false, raf = 0, last = 0, hideT = 0, len = 100;
     let tx = 0, ty = 0, x = 0, y = 0, vx = 0;          // pointer target, smoothed tip position, sideways speed
     let a = REST, v = 0, phase = "free", t0 = 0, a0 = 0, land = null;
     function draw() {
-      const rad = TILT * Math.PI / 180, reach = len * 0.985;
-      el.style.transform = `translate(${x + side * reach * Math.cos(rad)}px, ${y + reach * Math.sin(rad)}px)`;
+      const rad = TILT * Math.PI / 180, reach = len * (GRIP - 0.015);
+      el.style.transform = `translate(${x + reach * Math.cos(rad)}px, ${y + reach * Math.sin(rad)}px)`;   // the stick always comes in from the right
       const lift = Math.max(0, a), sway = Math.max(-5, Math.min(5, vx * 0.006)) * Math.min(1, lift / REST);
-      const rot = (deg) => side > 0 ? deg : 180 - deg;
-      st.style.transform = `perspective(520px) rotate(${rot(TILT + lift) + sway}deg) rotateY(${lift * 2}deg)`;
-      sh.style.transform = `translateY(${2 + lift * 0.4}px) rotate(${rot(TILT + lift * 0.18)}deg)`;
+      st.style.transform = `perspective(520px) rotate(${TILT + lift + sway}deg) rotateY(${lift * 0.9}deg)`;
+      sh.style.transform = `translateY(${2 + lift * 0.4}px) rotate(${TILT + lift * 0.18}deg)`;
       sh.style.setProperty("--blur", (1 + lift * 0.25).toFixed(2) + "px");
       sh.style.setProperty("--shade", (0.26 - Math.min(lift, 20) * 0.007).toFixed(3));
     }
@@ -531,12 +531,10 @@ html.has-stick .inst { cursor: none; }
       get on() { return on; },
       show(btn, e) {
         clearTimeout(hideT);
-        const r = btn.getBoundingClientRect();
-        side = r.left + r.width / 2 < innerWidth / 2 ? 1 : -1;   // the butt end always points back toward the middle of the page
-        len = Math.max(96, Math.min(150, r.width * 1.3));
-        el.style.setProperty("--len", len + "px");
+        len = btn.offsetWidth < 80 ? 64 : 100;
+        el.style.setProperty("--len", len + "px"); el.style.setProperty("--grip", GRIP);
         tx = e.clientX; ty = e.clientY;
-        if (!on) { x = tx; y = ty; vx = 0; a = REST + 7; v = 0; phase = "free"; addEventListener("pointermove", onMove); addEventListener("scroll", off, { passive: true }); }
+        if (!on) { x = tx; y = ty; vx = 0; a = REST + 10; v = 0; phase = "free"; addEventListener("pointermove", onMove); addEventListener("scroll", off, { passive: true }); }
         on = true; el.classList.add("on"); draw(); run();
       },
       hide(now) { clearTimeout(hideT); if (now) off(); else hideT = setTimeout(off, 70); },
