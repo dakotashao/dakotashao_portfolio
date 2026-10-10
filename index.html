@@ -133,10 +133,57 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
 /* ---------- How I Work ---------- */
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.work { background: var(--card); border-radius: 20px; padding: 40px; min-height: 288px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-width: 0; }
-.work h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px; }
-.work p { font-size: 14.5px; color: var(--muted); line-height: 1.3; }
-.work .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.hw { display: flex; flex-direction: column; gap: 8px; }
+.hw:focus-visible { outline-offset: 6px; border-radius: 20px; }
+.hw-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px; cursor: pointer;
+  --c-bg: var(--card); --c-fg: var(--fg); --c-mu: var(--muted); --c-chip: var(--chip); --c-btn: var(--btn); --c-btnf: var(--btn-fg); --c-ln: var(--faint); }
+.hw-row.on { --c-bg: var(--btn); --c-fg: var(--btn-fg); --c-mu: color-mix(in srgb, var(--btn-fg) 62%, transparent); --c-chip: color-mix(in srgb, var(--btn-fg) 16%, transparent); --c-btn: var(--btn-fg); --c-btnf: var(--btn); --c-ln: color-mix(in srgb, var(--btn-fg) 45%, transparent); }
+.hw-rail, .hw-card { background: var(--c-bg); color: var(--c-fg); transition: background-color .35s ease, color .35s ease; }
+.hw-rail { border-radius: 14px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 14px 0; font-size: 12px; color: var(--c-mu); }
+.hw-rail i { display: block; width: 8px; height: 1.5px; background: var(--c-ln); margin-top: 2.5px; transition: width .35s ease, background-color .35s ease; }
+.hw-row.on .hw-rail i { width: 12px; background: var(--c-fg); }
+.hw-card { position: relative; border-radius: 20px; padding: 32px 40px; min-height: 190px; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr; gap: 16px 24px; }
+.hw-demo { grid-column: 1; grid-row: 1; height: 40px; display: flex; align-items: center; gap: 8px; color: var(--c-ln); transition: color .35s ease; }
+.hw-row.play .hw-demo { color: var(--c-fg); }
+.hw-text { grid-column: 1; grid-row: 2; align-self: end; }
+.hw-text h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px; }
+.hw-text p { font-size: 14.5px; color: var(--c-mu); line-height: 1.3; transition: color .35s ease; }
+.hw-about { position: absolute; top: 24px; right: 24px; height: 38px; min-width: 38px; padding: 0 12.5px; border-radius: 38px; background: var(--c-btn); color: var(--c-btnf); display: flex; align-items: center; justify-content: center; font-size: 14.5px; transition: background-color .35s ease, color .35s ease; }
+.hw-about span { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; transition: max-width .4s cubic-bezier(.2, .8, .2, 1), opacity .2s ease, margin .4s cubic-bezier(.2, .8, .2, 1); }
+.hw-about svg { width: 13px; height: 11px; flex: none; transform: rotate(-45deg); transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+.hw-about:focus-visible { opacity: 1; transform: none; pointer-events: auto; border-radius: 38px; }
+.hw-about:focus-visible span { max-width: 80px; opacity: 1; margin-right: 8px; }
+.hw-about:focus-visible svg { transform: none; }
+@media (hover: hover) {
+  .hw-row:hover .hw-about span { max-width: 80px; opacity: 1; margin-right: 8px; transition-delay: .12s; }
+  .hw-row:hover .hw-about svg { transform: none; transition-delay: .3s; }
+}
+@media (hover: none) {
+  .hw-row.on .hw-about span { max-width: 80px; opacity: 1; margin-right: 8px; transition-delay: .12s; }
+  .hw-row.on .hw-about svg { transform: none; transition-delay: .3s; }
+}
+.hw-toggle { width: 50px; height: 28px; border-radius: 28px; border: 1.5px dashed var(--c-ln); position: relative; transition: background-color .35s ease, border-color .35s ease; }
+.hw-toggle b { position: absolute; top: 3px; left: 3.5px; width: 19px; height: 19px; border-radius: 50%; border: 1.5px dashed var(--c-ln); transition: left .35s cubic-bezier(.2, .8, .2, 1), background-color .35s ease, border-color .35s ease; }
+.hw-row.play .hw-toggle { background: var(--c-fg); border: 1.5px solid var(--c-fg); }
+.hw-row.play .hw-toggle b { left: 24.5px; background: var(--c-bg); border-color: var(--c-bg); }
+.hw-why b { font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
+.hw-map line { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .5s ease; }
+.hw-row.play .hw-map line { stroke-dashoffset: 0; }
+.hw-row.play .hw-map line:nth-of-type(2) { transition-delay: .15s; }
+.hw-row.play .hw-map line:nth-of-type(3) { transition-delay: .3s; }
+@media (max-width: 760px) {
+  .hw-row { grid-template-columns: 24px minmax(0, 1fr); gap: 5px; }
+  .hw-card { padding: 24px; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .hw-about { top: 18px; right: 18px; height: 34px; min-width: 34px; padding: 0 11px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .hw-row *, .hw-row { transition: none !important; } }
+
+.hw-text h3 { color: inherit; }
+.hw-why { display: flex; align-items: center; gap: 8px; }
+.hw-why b { color: var(--c-ln); transition: color .3s ease; }
+.hw-row.play .hw-why b { color: var(--c-fg); }
+.hw-row.play .hw-why b:nth-child(2) { transition-delay: .2s; }
+.hw-row.play .hw-why b:nth-child(3) { transition-delay: .4s; }
 
 /* ---------- Projects ---------- */
 .projects { padding-block: 150px 60px; scroll-margin-top: -60px; }
@@ -376,7 +423,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 @media (max-width: 760px) {
   :root { --pad: 16px; }
   .trio, .testi-row { grid-template-columns: 1fr; }
-  .work, .think { min-height: 220px; padding: 30px; }
+  .think { min-height: 220px; padding: 30px; }
   .inst { width: 64px !important; }
   .cols { grid-template-columns: 1fr; }
   .exp .date { padding: 0 0 4px; }
@@ -505,13 +552,25 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
     <section class="wrap">
       <p class="label">How I Work</p>
-      <div class="trio">
-        <div class="work"><div><h3>Build to believe it.</h3><p>My sharpest tool is a working prototype.</p></div>
-</div>
-        <div class="work"><div><h3>Ask why first</h3><p>The clarity isn't from speed. It's from purpose.</p></div>
-</div>
-        <div class="work"><div><h3>Mapping.<br>Structuring.<br>Deifining.</h3><p>Before I design screens, I define relationships.</p></div>
-</div>
+      <div class="hw" tabindex="0" aria-label="How I work: three principles">
+        <div class="hw-row on">
+          <div class="hw-rail"><span>/01</span><span aria-hidden="true"><i></i><i></i><i></i></span></div>
+          <div class="hw-card"><div class="hw-demo" aria-hidden="true"><span class="hw-toggle"><b></b></span></div>
+            <div class="hw-text"><h3>Build to believe it.</h3><p>My sharpest tool is a working prototype.</p></div>
+            <a class="hw-about" href="#about" aria-label="About me"><span>About me</span><svg viewBox="0 0 18 15" aria-hidden="true"><path d="M10.5 0 18 7.5M18 7.5 10.5 15M18 7.5H0" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a></div>
+        </div>
+        <div class="hw-row">
+          <div class="hw-rail"><span>/02</span><span aria-hidden="true"><i></i><i></i><i></i></span></div>
+          <div class="hw-card"><div class="hw-demo" aria-hidden="true"><span class="hw-why"><b style="font-size:13px">Why?</b><b style="font-size:18px">Why?</b><b style="font-size:24px">Why.</b></span></div>
+            <div class="hw-text"><h3>Ask why first</h3><p>The clarity isn't from speed. It's from purpose.</p></div>
+            <a class="hw-about" href="#about" aria-label="About me"><span>About me</span><svg viewBox="0 0 18 15" aria-hidden="true"><path d="M10.5 0 18 7.5M18 7.5 10.5 15M18 7.5H0" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a></div>
+        </div>
+        <div class="hw-row">
+          <div class="hw-rail"><span>/03</span><span aria-hidden="true"><i></i><i></i><i></i></span></div>
+          <div class="hw-card"><div class="hw-demo" aria-hidden="true"><svg class="hw-map" width="92" height="40" viewBox="0 0 92 40" aria-hidden="true"><line x1="9" y1="32" x2="44" y2="8" pathLength="1" stroke="currentColor" stroke-width="1.5"/><line x1="44" y1="8" x2="83" y2="27" pathLength="1" stroke="currentColor" stroke-width="1.5"/><line x1="83" y1="27" x2="9" y2="32" pathLength="1" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="32" r="5" fill="currentColor"/><circle cx="44" cy="8" r="5" fill="currentColor"/><circle cx="83" cy="27" r="5" fill="currentColor"/></svg></div>
+            <div class="hw-text"><h3>Mapping. Structuring. Defining.</h3><p>Before I design screens, I define relationships.</p></div>
+            <a class="hw-about" href="#about" aria-label="About me"><span>About me</span><svg viewBox="0 0 18 15" aria-hidden="true"><path d="M10.5 0 18 7.5M18 7.5 10.5 15M18 7.5H0" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a></div>
+        </div>
       </div>
     </section>
 
@@ -712,8 +771,8 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
   // ---------- router ----------
   const app = document.getElementById("app");
   const nav = document.querySelectorAll(".links [data-k]");
-  let spy = null;
-  addEventListener("scroll", () => spy && spy(), { passive: true });
+  let spy = null, hwPick = null;
+  addEventListener("scroll", () => { if (spy) spy(); if (hwPick) hwPick(); }, { passive: true });
   function render() {
     const h = location.hash.slice(1) || "home";
     const isAbout = h === "about";
@@ -749,7 +808,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
       const size = () => { const k = card.clientWidth / vw; f.style.width = vw + "px"; f.style.height = card.clientHeight / k + "px"; f.style.transform = `scale(${k})`; };
       size(); new ResizeObserver(size).observe(card);
     });
-    const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .pitem, .cs-hero, .cs-img, .monitor");
+    const rvTargets = app.querySelectorAll(".proj, .hw-row, .qa, .tcard, .companies, .exp, .books, .pitem, .cs-hero, .cs-img, .monitor");
     if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
       rvTargets.forEach((el) => { el.classList.add("rv"); io.observe(el); });
@@ -757,6 +816,48 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
     app.querySelectorAll(".cs-video").forEach((v) => v.querySelector(".cs-play").addEventListener("click", () => {
       v.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${v.dataset.yt}?autoplay=1&rel=0&playsinline=1" title="${v.dataset.title}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
     }));
+    // How I Work: stacked cards with a numbered rail. Wheel, click or ↑ ↓ steps through them.
+    const hw = app.querySelector(".hw");
+    hwPick = null;
+    if (hw) {
+      const rows = [...hw.querySelectorAll(".hw-row")];
+      let cur = 0, lock = 0;
+      const setHW = (i) => { cur = Math.max(0, Math.min(rows.length - 1, i)); rows.forEach((r, k) => r.classList.toggle("on", k === cur)); };
+      rows.forEach((r, i) => {
+        r.addEventListener("click", (e) => { if (!e.target.closest(".hw-about")) setHW(i); });
+        r.addEventListener("mouseenter", () => r.classList.add("play"));
+        r.addEventListener("mouseleave", () => r.classList.remove("play"));
+      });
+      // one card per wheel gesture: a trackpad flick sends a burst of events, so wait for the burst to end (or a clearly new push) before stepping again
+      let armed = true, quiet = 0, lastAbs = 0, lastStep = 0;
+      hw.addEventListener("wheel", (e) => {
+        if (e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+        const b = hw.getBoundingClientRect();
+        if (b.top < -40 || b.bottom > innerHeight + 40) return; // only take the wheel while the whole stack is on screen
+        const abs = Math.abs(e.deltaY), now = performance.now();
+        clearTimeout(quiet); quiet = setTimeout(() => { armed = true; lastAbs = 0; }, 170);
+        if (!armed && now - lastStep > 350 && abs > 40 && abs > lastAbs * 2.5) armed = true;
+        lastAbs = abs;
+        const d = e.deltaY > 0 ? 1 : -1;
+        if (cur + d < 0 || cur + d >= rows.length) return; // at either end the page scrolls on
+        e.preventDefault();
+        if (!armed) return;
+        armed = false; lastStep = now; setHW(cur + d);
+      }, { passive: false });
+      hw.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" && cur < rows.length - 1) { e.preventDefault(); setHW(cur + 1); }
+        if (e.key === "ArrowUp" && cur > 0) { e.preventDefault(); setHW(cur - 1); }
+      });
+      if (matchMedia("(hover: none)").matches) {
+        // touch: the card nearest the middle of the screen becomes the current one
+        hwPick = () => {
+          const mid = innerHeight / 2; let best = cur, bd = Infinity;
+          rows.forEach((r, k) => { const q = r.getBoundingClientRect(), d = Math.abs((q.top + q.bottom) / 2 - mid); if (d < bd) { bd = d; best = k; } });
+          if (best !== cur) setHW(best);
+        };
+      }
+      setHW(0);
+    }
     app.querySelectorAll("[data-scroll]").forEach((a) => a.addEventListener("click", (e) => {
       const t = document.getElementById(a.dataset.scroll); if (!t) return;
       e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" });
