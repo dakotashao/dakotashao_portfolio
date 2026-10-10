@@ -127,7 +127,6 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .stick { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 30; pointer-events: none; opacity: 0; transition: opacity .12s ease; }
 .stick.on { opacity: 1; }
 .stick img { position: absolute; right: calc(var(--len) * (var(--grip) - 1)); top: 0; width: var(--len); margin-top: calc(var(--len) * -.02); max-width: none; height: auto; display: block; transform-origin: calc(var(--grip) * 100%) 50%; will-change: transform; }
-.stick .sh { filter: brightness(0) blur(var(--blur, 3px)); opacity: var(--shade, .16); }
 html.has-stick .inst { cursor: none; }
 
 /* ---------- Companies ---------- */
@@ -489,53 +488,46 @@ html.has-stick .inst { cursor: none; }
           TILT = 22,      // how far the stick leans from horizontal when it touches the head
           REST = 16,      // how far the tip is lifted while waiting (degrees)
           DOWN = 0.045,   // seconds for the downstroke
-          KICK = 540,     // rebound speed off the head (degrees / second)
-          K = 320, C = 15; // spring that carries the tip back up and lets it settle
+          BACK = 18;      // how quickly the tip returns to rest (higher = snappier); it eases back with no bounce
     const el = document.createElement("div"); el.className = "stick"; el.setAttribute("aria-hidden", "true");
-    el.innerHTML = `<img class="sh" src="${STICK}" alt=""><img class="st" src="${STICK}" alt="">`;
-    const sh = el.firstChild, st = el.lastChild;
+    el.innerHTML = `<img src="${STICK}" alt="">`;
+    const st = el.firstChild;
     document.body.appendChild(el); document.documentElement.classList.add("has-stick");
-    let on = false, raf = 0, last = 0, hideT = 0, len = 100;
-    let tx = 0, ty = 0, x = 0, y = 0, vx = 0;          // pointer target, smoothed tip position, sideways speed
-    let a = REST, v = 0, phase = "free", t0 = 0, a0 = 0, land = null;
+    let on = false, raf = 0, last = 0, hideT = 0, len = 120;
+    let x = 0, y = 0;                                   // where the tip lands
+    let a = REST, phase = "free", t0 = 0, a0 = 0, land = null;
+    // flat on purpose: a plain 2D turn around the grip, so it reads as a photo cut-out like the drums
     function draw() {
       const rad = TILT * Math.PI / 180, reach = len * (GRIP - 0.015);
       el.style.transform = `translate(${x + reach * Math.cos(rad)}px, ${y + reach * Math.sin(rad)}px)`;   // the stick always comes in from the right
-      const lift = Math.max(0, a), sway = Math.max(-5, Math.min(5, vx * 0.006)) * Math.min(1, lift / REST);
-      st.style.transform = `perspective(520px) rotate(${TILT + lift + sway}deg) rotateY(${lift * 0.9}deg)`;
-      sh.style.transform = `translateY(${2 + lift * 0.4}px) rotate(${TILT + lift * 0.18}deg)`;
-      sh.style.setProperty("--blur", (1 + lift * 0.25).toFixed(2) + "px");
-      sh.style.setProperty("--shade", (0.26 - Math.min(lift, 20) * 0.007).toFixed(3));
+      st.style.transform = `rotate(${TILT + a}deg)`;
     }
     function frame(now) {
       const dt = Math.min(0.034, (now - last) / 1000) || 0.016; last = now;
-      const k = 1 - Math.exp(-dt * 30), px = x;
-      x += (tx - x) * k; y += (ty - y) * k; vx += ((x - px) / dt - vx) * (1 - Math.exp(-dt * 18));
       if (phase === "down") {
         if (!t0) t0 = now - dt * 1000;   // count from the first frame that is actually drawn, so a busy main thread can't swallow the stroke
         const p = Math.max(0, Math.min(1, (now - t0) / 1000 / DOWN));
         a = a0 * (1 - p * p);
-        if (p >= 1) { a = 0; v = KICK; phase = "free"; const f = land; land = null; if (f) f(); }
+        if (p >= 1) { a = 0; phase = "free"; const f = land; land = null; if (f) f(); }
       } else {
-        for (let i = 0; i < 4; i++) { const h = dt / 4; v += (-K * (a - REST) - C * v) * h; a += v * h; }
-        if (a < 0) { a = 0; v = Math.abs(v) * 0.3; }
+        a += (REST - a) * (1 - Math.exp(-dt * BACK));
+        if (Math.abs(REST - a) < 0.05) a = REST;
       }
       draw();
-      const still = phase === "free" && Math.abs(a - REST) < 0.05 && Math.abs(v) < 0.5 && Math.abs(tx - x) + Math.abs(ty - y) < 0.1;
-      raf = still ? 0 : requestAnimationFrame(frame);
+      raf = phase === "free" && a === REST ? 0 : requestAnimationFrame(frame);
     }
     const run = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } };
-    const onMove = (e) => { tx = e.clientX; ty = e.clientY; run(); };
+    const onMove = (e) => { x = e.clientX; y = e.clientY; if (!raf) draw(); };
     const off = () => { on = false; el.classList.remove("on"); removeEventListener("pointermove", onMove); removeEventListener("scroll", off); };
     return {
       get on() { return on; },
       show(btn, e) {
         clearTimeout(hideT);
-        len = btn.offsetWidth < 80 ? 64 : 100;
+        len = btn.offsetWidth < 80 ? 76 : 120;
         el.style.setProperty("--len", len + "px"); el.style.setProperty("--grip", GRIP);
-        tx = e.clientX; ty = e.clientY;
-        if (!on) { x = tx; y = ty; vx = 0; a = REST + 10; v = 0; phase = "free"; addEventListener("pointermove", onMove); addEventListener("scroll", off, { passive: true }); }
-        on = true; el.classList.add("on"); draw(); run();
+        x = e.clientX; y = e.clientY;
+        if (!on) { a = REST; phase = "free"; land = null; addEventListener("pointermove", onMove); addEventListener("scroll", off, { passive: true }); }
+        on = true; el.classList.add("on"); draw();
       },
       hide(now) { clearTimeout(hideT); if (now) off(); else hideT = setTimeout(off, 70); },
       // start the downstroke; `fn` runs on the frame the tip lands
