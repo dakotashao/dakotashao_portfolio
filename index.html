@@ -629,9 +629,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
   const exp = (date, title, cls, paras, role) => `
     <div class="cols exp"><p class="date">${date}</p><div><h3 class="${cls}">${title}</h3>${role ? `<p class="role">${role}</p>` : ""}${paras.map((p) => `<p>${p}</p>`).join("")}</div></div>`;
-  const hhc = ["Contributed the end-to-end design of a self-service family portal, transforming phone call-based care coordination into a more accessible and transparent digital experience for families managing home care services.",
-    "Designed scalable UI solutions by integrating Salesforce Lightning components with newly defined family-facing workflows.",
-    "Project IP was subsequently purchased by 24 Hour Home Care."];
+  const hhc = ["Designed a self-service family portal that improves transparency, accessibility, and care coordination for families managing care for loved ones with disabilities. The project IP was later acquired by 24 Hour Home Care."];
   const books = [["dk","Steve Jobs"],["gy",""],["tn","Dieter Rams"],["bl","Design of the 20th Century"],["tn","Helvetica forever"],["dk","The Design Book"],["or","dieter rams"],["",""]];
   const writings = [["Mapping. Structuring. Defining.", "Before I design screens, I define relationships."], ["Learning to Remove", "Early in my design journey, I believed improvement came from adding more. More sections, more interactions, more visual elements. Each new idea felt like progress. Over time, I realised that the opposite was often true. The projects that felt the strongest weren’t the busiest—they were the most focused."], ["Designing Beyond Trends", "Every year introduces a new collection of visual trends. Some disappear within months, while others become so widespread that they begin to define an era of digital design."], ["The Quiet Details Matter Most", "When people talk about memorable websites, they often point to bold visuals or impressive animations. Those moments certainly have their place, but they rarely define an experience on their own."], ["Why Simplicity Is Harder Than It Looks", "Simplicity is often mistaken for the absence of effort. A clean interface, a restrained color palette, or a layout with generous whitespace can appear effortless at first glance."]];
 
@@ -648,13 +646,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 
       <section>
         <div class="cols"><h2 class="sec-h" style="font-weight:400">Experience</h2></div>
-        ${exp("Jan 2026 – Apr 2026", "24 Hour Home Care", "", hhc)}
-        ${exp("May 2025 – Aug 2025", '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="6" cy="9" rx="2.2" ry="3"/><ellipse cx="10" cy="5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5" rx="2.2" ry="3"/><ellipse cx="18.5" cy="9" rx="2.2" ry="3"/><path d="M12 11c3 0 6.5 4.5 6.5 7.2 0 2-1.6 2.8-3.2 2.4-1.2-.3-2.1-.8-3.3-.8s-2.1.5-3.3.8c-1.6.4-3.2-.4-3.2-2.4C5.5 15.5 9 11 12 11z"/></svg>Baidu', "", ["Assisted in product design and feature iteration for enterprise healthcare systems developed for hospital research and data management."])}
-        ${exp("Sep 2024 – Dec 2024", "Arroyos &amp; Foothills Conservancy", "sans", [
-          "Designed a gamified interactive experience combining wildlife data visualization and storytelling to promote awareness of urban wildlife corridors and habitat connectivity in the Los Angeles region.",
-          "Conducted iterative user testing to refine puzzle interactions and improve engagement for teenage audiences.",
-          "Featured in Union Station’s Designing Wildlife Coexistence exhibition, showcasing solutions for wildlife movement and coexistence in LA."
-        ], 'Product Designer <span>(Apprenticeship)</span>')}
+        ${exp("Jan 2026 – Apr 2026", "24 Hour Home Care", "", hhc, 'User Experience Designer <span>(Apprenticeship)</span>')}
+        ${exp("May 2025 – Aug 2025", '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="6" cy="9" rx="2.2" ry="3"/><ellipse cx="10" cy="5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5" rx="2.2" ry="3"/><ellipse cx="18.5" cy="9" rx="2.2" ry="3"/><path d="M12 11c3 0 6.5 4.5 6.5 7.2 0 2-1.6 2.8-3.2 2.4-1.2-.3-2.1-.8-3.3-.8s-2.1.5-3.3.8c-1.6.4-3.2-.4-3.2-2.4C5.5 15.5 9 11 12 11z"/></svg>Baidu', "", ["Assisted in product design and feature iteration for enterprise healthcare systems developed for hospital research and data management."], 'User Experience Designer <span>(Internship)</span>')}
+        ${exp("Sep 2024 – Dec 2024", "Arroyos &amp; Foothills Conservancy", "sans", ["Designed a gamified interactive experience combining wildlife data visualization and storytelling to promote awareness of urban wildlife corridors and habitat connectivity in the Los Angeles region."], 'Interaction Designer <span>(Apprenticeship)</span>')}
       </section>
       <div class="spacer"></div>
 
