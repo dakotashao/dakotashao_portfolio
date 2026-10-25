@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sleep Timer Slider</title>
+<style>
+  :root {
+    --ink: #141B2B; --ink-soft: #6A7385; --surface: #FFFFFF; --muted: #A9AFBA;
+    --liquid: #2F74F4; --on-liquid: #FFFFFF; --shadow: rgba(38, 66, 128, .11);
+    --ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  #stage, #stage *, #stage *::before, #stage *::after { box-sizing: border-box; }
+  #stage { color: var(--ink); font: 400 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; }
+  svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .w { fill: var(--surface); } .b { fill: var(--liquid); } .bl { stroke: var(--liquid); stroke-linecap: round; fill: none; }
+  .mark { stroke: var(--liquid); stroke-width: 3.2; stroke-linejoin: round; }
+  .hair { stroke: var(--ink-soft); stroke-width: 1; pointer-events: none; }
+  .wl { stroke: var(--surface); stroke-linecap: round; fill: none; }
+  .dot { fill: var(--muted); } .dot.on { fill: var(--liquid); }
+  .cap { display: none; }
+  .word { font: 400 11px var(--ui); fill: var(--muted); text-anchor: middle; transition: fill .25s ease; }
+  .word.on { fill: var(--ink); }
+  .val { font: 600 11px var(--ui); font-variant-numeric: tabular-nums; fill: var(--on-liquid); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .slider { cursor: grab; outline: none; }
+  .slider.drag { cursor: grabbing; }
+  @media (hover: hover) and (pointer: fine) { .slider, .slider.drag { cursor: none; } }   /* inside the bar the pointer is the light itself */
+  .hit { fill: transparent; }
+  .ring { fill: none; stroke: var(--liquid); stroke-width: 1.5; opacity: 0; }
+  .slider:focus-visible .ring { opacity: 1; }
+  .liq, .skin, .txt { pointer-events: none; }
+
+  /* one row per slider, the same 520 box the original card used (8 card padding + 52 row padding around a 400 bar) */
+  .ls { position: absolute; left: -30px; width: 520px; padding: 8px; }
+  .srow { padding: 22px 52px 22px; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; height: 24px; }
+  .label { font: 400 16px/24px var(--ui); letter-spacing: -.005em; }
+  .unit { font: 400 12px/16px var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .slot { height: 40px; margin-top: 16px; }
+  .slot.words { margin-bottom: 26px; }
+  .ls > svg { position: absolute; left: 0; top: 0; width: 520px; overflow: visible; pointer-events: none; }
+  .ls > svg .slider .hit { pointer-events: all; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="300">
+  <div class="ls" style="top: 80px">
+    <div class="srow"><div class="head"><span class="label">Sleep timer</span><span class="unit" data-for="s4"></span></div><div class="slot"></div></div>
+    <svg id="stage4" viewBox="0 0 520 166" aria-label="Liquid sliders">
+      <defs>
+        <filter id="d_gooW" filterUnits="userSpaceOnUse" x="-60" y="-90" width="640" height="460" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3" result="g"/>
+          <feGaussianBlur in="g" stdDeviation="5.5" result="sb"/><feOffset in="sb" dy="4" result="so"/>
+          <feGaussianBlur in="g" stdDeviation="1.1" result="tb"/><feOffset in="tb" dy="1" result="to"/>
+          <feFlood style="flood-color: var(--shadow)" result="sc"/>
+          <feComposite in="sc" in2="so" operator="in" result="sh1"/><feComposite in="sc" in2="to" operator="in" result="sh2"/>
+          <feMerge result="sh"><feMergeNode in="sh1"/><feMergeNode in="sh2"/></feMerge>
+          <feComposite in="sh" in2="g" operator="out" result="shOut"/>
+          <feMorphology in="g" operator="erode" radius=".7" result="er"/>
+          <feComposite in="g" in2="er" operator="out" result="rimRaw"/>
+          <feComponentTransfer in="rimRaw" result="rim"><feFuncA type="linear" slope=".9"/></feComponentTransfer>
+          <feComponentTransfer in="g" result="glass"><feFuncA type="linear" slope=".52"/></feComponentTransfer>
+          <feMerge><feMergeNode in="shOut"/><feMergeNode in="glass"/><feMergeNode in="rim"/></feMerge>
+        </filter>
+        <filter id="d_gooB" filterUnits="userSpaceOnUse" x="-60" y="-90" width="640" height="460" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4.2" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3"/>
+        </filter>
+        <radialGradient id="d_glowGrad">
+          <stop offset="0" style="stop-color: var(--liquid)" stop-opacity=".13"/>
+          <stop offset=".5" style="stop-color: var(--liquid)" stop-opacity=".05"/>
+          <stop offset="1" style="stop-color: var(--liquid)" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  let speed = 1, base = 0, t0 = performance.now();
+  window.CLOCK = () => base + (performance.now() - t0) * speed;
+  window.setSpeed = s => { base = CLOCK(); t0 = performance.now(); speed = s; };
+})();
+</script>
+<script>
+
+(() => { const ONLY = 'pc';
+  const NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('stage4'), defs = svg.querySelector('defs');
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; };
+  const f = n => (+n).toFixed(2), clamp = (v, a, b) => Math.min(b, Math.max(a, v)), mix = (a, b, t) => a + (b - a) * t;
+  const c01 = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
+  const sine = u => (1 - Math.cos(Math.PI * u)) / 2, io = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  const kf = (t, K) => {                       // keyframes [[t, v, ease]]; the ease shapes the segment arriving at that key
+    if (t <= K[0][0]) return K[0][1];
+    for (let i = 1; i < K.length; i++) if (t <= K[i][0]) { const u = (t - K[i - 1][0]) / (K[i][0] - K[i - 1][0]); return mix(K[i - 1][1], K[i][1], (K[i][2] || sine)(u)); }
+    return K[K.length - 1][1];
+  };
+  const gauss = (x, c, w) => Math.exp(-Math.pow((x - c) / w, 2));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const X0 = 60, X1 = 460, H = 40, R = 20;   // card px: 8 card padding + 52 row padding; 400 × 40 full pill
+  const spring = (x, k, z) => ({ x, v: 0, k, c: 2 * z * Math.sqrt(k) });
+  const stepS = (s, target, dt) => { const a = s.k * (target - s.x) - s.c * s.v; s.v += a * dt; s.x += s.v * dt; };
+
+  function barPath(yc, disp) {
+    const top = yc - H / 2, bot = yc + H / 2, P = [];
+    for (let x = X0 + R; x <= X1 - R; x += 4) P.push([x, top - disp(x)]);
+    for (let a = -90; a <= 90; a += 15) { const r = a * Math.PI / 180; P.push([X1 - R + R * Math.cos(r), (a < 0 ? top + R : bot - R) + R * Math.sin(r)]); }
+    for (let x = X1 - R; x >= X0 + R; x -= 4) P.push([x, bot + .25 * disp(x)]);
+    for (let a = 90; a <= 270; a += 15) { const r = a * Math.PI / 180; P.push([X0 + R + R * Math.cos(r), (a < 180 ? bot - R : top + R) + R * Math.sin(r)]); }
+    return 'M' + P.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+  }
+  function rippleAt(list, x, now) {
+    let d = 0;
+    for (const r of list) {
+      const age = (now - r.t0) / 1000, dx = Math.abs(x - r.x);
+      if (dx > 300 * age) continue;
+      d += r.a * Math.exp(-age / .45) * Math.exp(-dx / 150) * Math.sin(.2 * dx - 15 * age);
+    }
+    return d;
+  }
+  const rect = (e, s, pad) => { if (!s || s.w + 2 * pad <= .5 || s.h + 2 * pad <= .5) { e.setAttribute('width', 0); return; } const w = s.w + 2 * pad, h = s.h + 2 * pad; e.setAttribute('x', f(s.x - w / 2)); e.setAttribute('y', f(s.y - h / 2)); e.setAttribute('width', f(w)); e.setAttribute('height', f(h)); e.setAttribute('rx', f(Math.max(0, Math.min(s.rx + pad, w / 2, h / 2)))); };
+  const line = (e, k) => { if (!k || k.w < .05) { e.setAttribute('stroke-width', 0); return; } e.setAttribute('x1', f(k.x1)); e.setAttribute('y1', f(k.y1)); e.setAttribute('x2', f(k.x2)); e.setAttribute('y2', f(k.y2)); e.setAttribute('stroke-width', f(k.w)); };
+  const ell = (e, s) => { if (!s || s.rx < .05) { e.setAttribute('rx', 0); e.setAttribute('ry', 0); return; } e.setAttribute('cx', f(s.x)); e.setAttribute('cy', f(s.y)); e.setAttribute('rx', f(s.rx)); e.setAttribute('ry', f(s.ry)); };
+
+  /* ── tooltip: the same reversible pose as the nav tooltip. p = 0 flat surface, p = 1 settled pill ── */
+  const TIP_H = 24, TIP_GAP = 24;
+  function tipPose(tp, YT) {
+    const p = tp.p, r = 9, ax = tp.x, cy = YT - TIP_GAP;
+    const bumpA = kf(p, [[0, 0], [.2, 4.6], [.4, 6.2], [.5, 4.4], [.6, -1.3], [.7, .3], [.78, 0]]);
+    let body = null, neck = null, root = null;
+    if (p > .18) {
+      const yPinch = YT - r - 4;
+      const y = kf(p, [[.18, YT + r + 2], [.46, yPinch], [.54, yPinch - 1.5], [.8, cy, io]]);
+      const sc = kf(p, [[.18, .5], [.4, 1]]), sp = io(c01(p, .54, .9));
+      const w0 = 2 * r * sc * kf(p, [[.18, 1], [.32, .86], [.46, .92], [.54, 1]]);
+      const h0 = 2 * r * sc * kf(p, [[.18, 1], [.32, 1.22], [.46, 1.12], [.54, 1]]);
+      const w = w0 + (tp.W - w0) * sp, h = h0 + (TIP_H - h0) * sp;
+      body = { x: ax, y, w, h, rx: Math.min(w, h) / 2 * (1 - sp) + 12 * sp };
+      if (p < .5) neck = { x1: ax, y1: YT + 3, x2: ax, y2: y, w: kf(p, [[.18, 1.8 * r], [.34, 1.4 * r], [.44, .66 * r], [.5, 1]]) };
+    }
+    if (p > .16 && p < .56) { const rx = kf(p, [[.16, 3], [.3, r + 4], [.46, r + 3], [.56, 0]]); root = { x: ax, y: YT + 3.5, rx, ry: rx * .55 }; }
+    return { bumpA, body, neck, root, q: c01(p, .8, 1) };
+  }
+
+  let fid = 0;
+  function scaffold(yc, label, aria) {
+    mk('text', { class: 'cap', x: X0 + 4, y: yc - H / 2 - 50 }).textContent = label;
+    const g = mk('g', { class: 'slider', tabindex: 0, role: 'slider', 'aria-label': aria });
+    mk('rect', { class: 'ring', x: X0 - 6, y: yc - H / 2 - 6, width: X1 - X0 + 12, height: H + 12, rx: R + 6 }, g);
+    const skin = mk('g', { class: 'skin', filter: 'url(#d_gooW)' }, g);
+    const bar = mk('path', { class: 'w' }, skin);
+    const cid = 'd_bc' + fid; mk('rect', { x: X0, y: yc - H / 2, width: X1 - X0, height: H, rx: R }, mk('clipPath', { id: cid }, defs));
+    const glow = mk('circle', { r: 16, fill: 'url(#d_glowGrad)', opacity: 0 }, mk('g', { class: 'liq', 'clip-path': `url(#${cid})` }, g));   // the pointer's light, inside the bar only
+    const under = mk('g', { class: 'liq' }, g);
+    const liq = mk('g', { class: 'liq', filter: 'url(#d_gooB)' }, g);
+    const txt = mk('g', { class: 'txt' }, g);
+    mk('rect', { class: 'hit', x: X0 - 10, y: yc - H / 2 - 14, width: X1 - X0 + 20, height: H + 28 }, g);
+    // tooltip parts: glass skin, liquid body/neck/root, a crisp pill it resolves into, and the label
+    const id = 'd_tb' + fid++, flt = mk('filter', { id, x: '-60%', y: '-60%', width: '220%', height: '220%' }, defs);
+    const tip = {
+      w: mk('rect', { class: 'w' }, skin), b: mk('rect', { class: 'b' }, liq), neck: mk('line', { class: 'bl' }, liq), root: mk('ellipse', { class: 'b' }, liq),
+      crisp: mk('rect', { class: 'b' }, txt), text: mk('text', { class: 'val' }, txt), fe: mk('feGaussianBlur', { stdDeviation: 0 }, flt), fid: id,
+      p: 0, x: 0, W: 40, Wc: 40, dw: 7
+    };
+    tip.text.setAttribute('visibility', 'hidden'); tip.lt = liquidText(txt, 3); tip.wf = wordFlow(txt);
+    return { g, skin, bar, under, liq, txt, tip, glow, top: yc - H / 2, yc };
+  }
+  const toP = e => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }, toX = e => toP(e).x;
+
+  function wire(S) {
+    const g = S.el.g;
+    g.addEventListener('pointermove', e => { S.hy = toP(e).y; S.hx = toX(e); S.hover = true; if (S.drag) S.move(S.hx); });
+    g.addEventListener('pointerleave', () => { if (!S.drag) { S.hover = false; S.leftT = CLOCK(); } });
+    g.addEventListener('pointerdown', e => { S.hy = toP(e).y; g.setPointerCapture(e.pointerId); S.drag = true; S.hover = true; S.hx = toX(e); g.classList.add('drag'); S.press && S.press(S.hx); S.move(S.hx); e.preventDefault(); });
+    const up = e => { if (!S.drag) return; S.drag = false; g.classList.remove('drag'); S.release(); const x = toX(e); S.hover = x > X0 && x < X1 && e.pointerType !== 'touch'; };
+    g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    g.addEventListener('blur', () => S.keyT = -1e9);
+    g.addEventListener('keydown', e => {
+      const k = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 3, PageDown: -3, Home: -999, End: 999 }[e.key];
+      if (k) { S.nudge(k); e.preventDefault(); }
+    });
+  }
+  // hover: the skin lifts under the hand; on the thumb it lifts more and the reading surfaces
+  function stepCommon(S, thumbX, dt, now) {
+    const near = S.hover && Math.abs(S.hx - thumbX) < 30;
+    S.near = near;
+    stepS(S.lift, S.hover ? 1 : 0, dt);
+    S.hxS += (S.hx - S.hxS) * (1 - Math.exp(-dt / .075));
+    // light under the pointer while it is inside the bar (same values as the nav bar: 45 ms follow, 150 ms fade, brighter when pressed)
+    const G = S.gl, inBar = S.hover && S.hx > X0 && S.hx < X1 && Math.abs(S.hy - S.el.yc) < H / 2, tg = inBar ? (S.drag ? 1.25 : 1) : 0;
+    if (inBar) { if (G.o < .03) { G.x = S.hx; G.y = S.hy; } const k = 1 - Math.exp(-dt / .045); G.x += (S.hx - G.x) * k; G.y += (S.hy - G.y) * k; }
+    G.o += (tg - G.o) * (1 - Math.exp(-dt / .15));
+    const want = S.drag || S.hover || now - S.keyT < 1200 || now - S.leftT < 90;   // hovering anywhere on the bar shows the reading there
+    const tp = S.el.tip, before = tp.p;                            // same timing as the nav tooltip: 620 ms out, 460 ms back
+    tp.p = clamp(tp.p + (want ? dt / .62 : -dt / .46), 0, 1);
+    if (want && before < .5 && tp.p >= .5) S.ripples.push({ x: tp.x, t0: now, a: 1.1 });
+    if (!want && before > 0 && tp.p === 0) S.ripples.push({ x: tp.x, t0: now, a: 1.2 });
+    if (tp.tx !== undefined) tp.x = tp.p === 0 ? tp.tx : tp.x + (tp.tx - tp.x) * (1 - Math.exp(-dt / .11));
+    if (reduce) S.el.tip.p = want ? 1 : 0;
+  }
+  /* Readings change like something surfacing through water: only the characters that change move.
+     The old one sinks and blurs away, the new one rises out of the liquid and sharpens. Going up rises, going down sinks. */
+  let lid = 0;
+  function liquidText(parent, n) {
+    const cid = 'd_lc' + lid++, clip = mk('rect', {}, mk('clipPath', { id: cid }, defs));
+    const g = mk('g', { 'clip-path': `url(#${cid})` }, parent);
+    const el = () => { const id = 'd_lt' + lid++, fe = mk('feGaussianBlur', { stdDeviation: 0 }, mk('filter', { id, x: '-80%', y: '-80%', width: '260%', height: '260%' }, defs)); return { t: mk('text', { class: 'val', filter: `url(#${id})` }, g), fe }; };
+    const slots = Array.from({ length: n }, () => ({ cur: '', prev: '', t0: -1e9, dir: 1, a: el(), b: el() }));
+    return { clip, slots, L: 0 };
+  }
+  function drawLiquidText(lt, chars, dir, now, body, q, dw) {
+    if (!body || q < .001) { lt.slots.forEach((s, i) => { s.a.t.setAttribute('opacity', 0); s.b.t.setAttribute('opacity', 0); s.cur = chars[i] || ''; s.prev = ''; }); return; }
+    rect(lt.clip, body, 0);
+    lt.L += (chars.length - lt.L) * .2;                                       // re-centres smoothly when a digit is added or lost
+    lt.slots.forEach((s, i) => {
+      const want = chars[i] || '';
+      if (want !== s.cur && now - s.t0 > 110) { s.prev = s.cur; s.cur = want; s.t0 = now; s.dir = dir; }
+      const u = io(c01(now - s.t0, 0, 300)), x = dw ? body.x + (lt.L / 2 - i - .5) * dw : body.x;
+      const put = (e, ch, y, o, bl) => { e.t.textContent = ch; e.t.setAttribute('x', f(x)); e.t.setAttribute('y', f(y)); e.t.setAttribute('opacity', f(o)); e.fe.setAttribute('stdDeviation', f(bl)); };
+      put(s.a, s.cur, body.y + s.dir * 8 * (1 - u) + 2 * (1 - q), q * u, 1.9 * (1 - u) + 1.6 * (1 - q));
+      put(s.b, s.prev, body.y - s.dir * 8 * u, q * (1 - u), 1.9 * u);
+    });
+  }
+
+  /* Step names travel with the current: letters leave one by one in the direction you are moving
+     and the next name flows in behind them on a small crest, instead of flipping up/down. */
+  const OFFS = new Map();
+  function offsets(word, meter) {
+    if (OFFS.has(word)) return OFFS.get(word);
+    meter.textContent = word; const o = [];
+    let ok = true;
+    for (let i = 0; i <= word.length; i++) { try { o.push(i ? meter.getSubStringLength(0, i) : 0); } catch (e) { ok = false; o.push(i * 6.6); } }
+    const r = { o, w: o[word.length] };
+    if (ok && r.w > 0) OFFS.set(word, r);
+    return r;
+  }
+  function wordFlow(parent) {
+    const cid = 'd_wc' + lid++, clip = mk('rect', {}, mk('clipPath', { id: cid }, defs));
+    const g = mk('g', { 'clip-path': `url(#${cid})` }, parent);
+    const el = () => { const id = 'd_wf' + lid++, fe = mk('feGaussianBlur', { stdDeviation: 0 }, mk('filter', { id, x: '-100%', y: '-80%', width: '300%', height: '260%' }, defs)); return { t: mk('text', { class: 'val', filter: `url(#${id})`, style: 'text-anchor: start' }, g), fe }; };
+    return { clip, A: Array.from({ length: 9 }, el), B: Array.from({ length: 9 }, el), cur: '', prev: '', t0: -1e9, dir: 1 };
+  }
+  function drawWordFlow(wf, word, dir, now, body, q, meter) {
+    const hide = arr => arr.forEach(e => e.t.setAttribute('opacity', 0));
+    if (!body || q < .001) { hide(wf.A); hide(wf.B); wf.cur = word; wf.prev = ''; return; }   // nothing to animate while it is still liquid
+    rect(wf.clip, body, 0);
+    if (word !== wf.cur && now - wf.t0 > 90) { wf.prev = wf.cur; wf.cur = word; wf.t0 = now; wf.dir = dir; }
+    const D = wf.dir, age = now - wf.t0;
+    const lay = (arr, w, incoming) => {
+      const m = offsets(w, meter), n = w.length, x0 = body.x - m.w / 2, gap = Math.min(38, 150 / Math.max(1, n));
+      arr.forEach((e, i) => {
+        if (i >= n) { e.t.setAttribute('opacity', 0); return; }
+        const order = D > 0 ? n - 1 - i : i;                      // the letters nearest the direction of travel go first
+        const u = io(c01(age - order * gap * (incoming ? .8 : .6) - (incoming ? 70 : 0), 0, 300));
+        const x = x0 + m.o[i] + (incoming ? -D * 9 * (1 - u) : D * 9 * u);
+        const y = body.y + (incoming ? 3 * (1 - u) - 2.6 * Math.sin(Math.PI * u) : -3 * u - 1.6 * Math.sin(Math.PI * u)) + 2 * (1 - q);
+        const o = incoming ? u : 1 - u, bl = incoming ? 1.8 * (1 - u) : 1.8 * u;
+        e.t.textContent = w[i]; e.t.setAttribute('x', f(x)); e.t.setAttribute('y', f(y));
+        e.t.setAttribute('opacity', f(q * o)); e.fe.setAttribute('stdDeviation', f(bl + 1.6 * (1 - q)));
+      });
+    };
+    lay(wf.A, wf.cur, true); if (wf.prev && age < 900) lay(wf.B, wf.prev, false); else hide(wf.B);
+  }
+  function drawTip(S, text, W, tx, val, now) {
+    const tp = S.el.tip, YT = S.tipY !== undefined ? S.tipY : S.el.top;
+    if (tp.p === 0) { tp.x = tx; tp.Wc = W; } tp.tx = tx;               // glides from reading to reading (110 ms), like the nav tooltip
+    tp.Wc += (W - tp.Wc) * .18; tp.W = tp.Wc + Math.min(12, Math.abs(tx - tp.x) * .4);
+    if (val !== tp.val) { tp.dir = val > tp.val ? 1 : -1; tp.val = val; }
+    const ps = tipPose(tp, YT);
+    rect(tp.b, ps.body, .35); rect(tp.w, ps.body, -1.2); line(tp.neck, ps.neck); ell(tp.root, ps.root);
+    const c = c01(tp.p, .9, 1);
+    if (c > 0) { rect(tp.crisp, ps.body, 0); tp.crisp.setAttribute('opacity', f(c)); } else tp.crisp.setAttribute('width', 0);
+    if (S.digits) {
+      const chars = [...text].reverse();                                         // digits: slot 0 is the units
+      if (tp.p === 0) tp.lt.slots.forEach((s, i) => { s.cur = chars[i] || ''; s.prev = ''; s.t0 = -1e9; });
+      drawLiquidText(tp.lt, chars, tp.dir || 1, now, ps.body, ps.q, tp.dw);
+    } else {
+      if (tp.p === 0) { tp.wf.cur = text; tp.wf.prev = ''; tp.wf.t0 = -1e9; }
+      drawWordFlow(tp.wf, text, tp.dir || 1, now, ps.body, ps.q, tp.text);
+    }
+    return ps.bumpA;
+  }
+  const surface = (S, bumpA, now, rest) => x =>
+    rest * gauss(x, S.front.x, 26) + 4.5 * S.lift.x * gauss(x, S.hxS, 24) + (S.near || S.drag ? 2.2 : 0) * S.lift.x * gauss(x, S.front.x, 20)
+    + bumpA * gauss(x, S.el.tip.x, 13);                                       // no ripples: the surface only moves where something is acting on it
+
+
+  /* ── shared shape: a capsule whose half-height follows rounded ends, minus any waists, with its top skin displaced ── */
+  function capsule(a, b, yc, half, Ra, Rb, waist, dTop, step) {
+    const hAt = x => {
+      let h = half;
+      const da = x - a, db = b - x;
+      if (da < Ra) h -= Ra - Math.sqrt(Math.max(0, Ra * Ra - (Ra - da) * (Ra - da)));
+      if (db < Rb) h -= Rb - Math.sqrt(Math.max(0, Rb * Rb - (Rb - db) * (Rb - db)));
+      return Math.max(0, h - (waist ? waist(x) : 0));
+    };
+    if (b - a < 1) return '';
+    const n = Math.max(2, Math.ceil((b - a) / (step || 2))), T = [], B = [];
+    for (let i = 0; i <= n; i++) {
+      // denser near the ends so the round caps stay round
+      const u = i / n, x = a + (b - a) * (u < .5 ? .5 - .5 * Math.cos(Math.PI * u) : .5 + .5 * -Math.cos(Math.PI * u)) ;
+      const h = hAt(x), d = dTop ? dTop(x) * c01(h, 0, 6) : 0;
+      T.push(f(x) + ' ' + f(yc - h - d)); B.push(f(x) + ' ' + f(yc + h + .25 * d));
+    }
+    return 'M' + T.join('L') + 'L' + B.reverse().join('L') + 'Z';
+  }
+  const base = (yc, label, aria, extra) => Object.assign({
+    el: scaffold(yc, label, aria), hover: false, drag: false, ripples: [], keyT: -1e9, leftT: -1e9, hy: 0, hx: 0, hxS: 0,
+    gl: { x: 0, y: 0, o: 0 }, lift: spring(0, 300, .8), front: { x: 0, v: 0 }
+  }, extra);
+  const setFront = (S, x, dt) => { if (dt > 0) S.front.v = (x - S.front.x) / dt; S.front.x = x; };
+  const hair = (yc) => mk('line', { class: 'hair', y1: yc - 30, y2: yc + 30 }, svg);
+  const words = (list, xs, yc) => list.map((w, i) => { const t = mk('text', { class: 'word', x: xs[i], y: yc + H / 2 + 24 }, svg); t.textContent = w; return t; });
+  const measureWords = (S, list) => { const t = S.el.tip.text; S.W = list.map(w => { t.textContent = w; const l = t.getComputedTextLength(); return l > 0 ? Math.ceil(l) + 24 : 50; }); };
+
+  /* ───────── PARTING — the glass parts where the value is; the gap is the thumb ─────────
+     Three states, never confused: a NECK (hover: about to part, not parted), a CUT (the value), a HEAL (the cut you left). */
+  const PA = X0 + 40, PB = X1 - 40;
+  function makeParting(Y, label, aria, opt) {
+    const steps = opt.words || null, xs = steps ? steps.map((_, i) => mix(PA, PB, i / (steps.length - 1))) : null;
+    const MAX = opt.max || 100, pos = v => steps ? xs[v] : mix(PA, PB, v / MAX);
+    const nearest = x => xs.reduce((b, v, i) => Math.abs(v - x) < Math.abs(xs[b] - x) ? i : b, 0);
+    const v0 = opt.start, x0 = pos(v0);
+    const S = base(Y, label, aria, {
+      v: v0, cut: spring(x0, 900, .85), lag: spring(x0, 110, .5), head: spring(x0, 1600, .8), gap: spring(16, 260, .6),
+      pp: spring(0, 260, .8), px: x0, heal: [], orphan: null, digits: !steps, W: [], tipY: Y - H / 2 - 9
+    });
+    S.body = mk('path', { class: 'b' }, S.el.liq); S.neckW = mk('line', { class: 'bl' }, S.el.liq); S.headW = mk('path', { class: 'b' }, S.el.liq);
+    S.orph = mk('path', { class: 'b' }, S.el.liq);
+    S.ghost = mk('path', { class: 'b' }, S.el.under);                    // water it would gain, pale
+    S.drain = mk('path', { class: 'w' }, S.el.txt);                      // water it would lose, washed out
+    S.hair = mk('line', { class: 'hair', y1: Y - H / 2 - 4, y2: Y + H / 2 + 9 }, svg);
+    S.mark = mk('path', { class: 'b mark' }, S.el.under);
+    svg.querySelectorAll('.cap').forEach(c => { if (c.textContent === label) c.setAttribute('y', Y - H / 2 - 66); });
+    if (steps) S.words = steps.map((w, i) => { const t = mk('text', { class: 'word', x: xs[i], y: Y + H / 2 + 18 }, svg); t.textContent = w; return t; });
+    else [].forEach((w, i) => { const t = mk('text', { class: 'word', x: i ? X1 - 4 : X0 + 4, y: Y + H / 2 + 18 }, svg); t.style.textAnchor = i ? 'end' : 'start'; t.textContent = w; });
+
+    // part the glass somewhere new: the old cut heals, water past the new cut beads up and is gone
+    S.jump = x => {
+      S.heal.push({ x: S.cut.x, g: spring(S.gap.x, 220, .9) });
+      const wEnd = Math.min(S.cut.x - S.gap.x / 2 - 6, S.lag.x - S.gap.x / 2 - 6);
+      if (x + 14 < wEnd) { S.orphan = { a: x + 8, b: wEnd, t0: CLOCK() }; S.lag.x = S.head.x = x; S.lag.v = S.head.v = 0; }
+      S.cut.x = x; S.cut.v = 0; S.gap.x = 2; S.gap.v = 0;
+      S.ripples.push({ x, t0: CLOCK(), a: 2 });
+    };
+    if (steps) {
+      const go = i => { if (i === S.v) return; S.v = i; S.jump(xs[i]); sync(); };
+      S.press = x => go(nearest(x));
+      S.move = x => go(nearest(x));                                    // the cut never slides; it snaps seam to seam
+      S.nudge = k => { go(clamp(S.v + Math.sign(k) * (Math.abs(k) > 99 ? 99 : Math.abs(k) > 1 ? 2 : 1), 0, steps.length - 1)); S.keyT = CLOCK(); };
+    } else {
+      S.press = x => { if (Math.abs(x - S.cut.x) >= 22) S.jump(clamp(x, PA, PB)); };
+      S.move = x => { S.v = Math.round(c01(x, PA, PB) * MAX); sync(); };
+      S.nudge = k => { S.v = clamp(S.v + (Math.abs(k) > 99 ? Math.sign(k) * MAX : Math.abs(k) > 1 ? k / 3 * 5 : k), 0, MAX); S.keyT = CLOCK(); sync(); };
+    }
+    S.release = () => S.ripples.push({ x: pos(S.v), t0: CLOCK(), a: 2.2 });
+    S.text = v => steps ? steps[v] : String(v);
+    S.width = v => steps ? (S.W[v] || 50) : 18 + String(v).length * S.el.tip.dw;
+    wire(S);
+
+    S.step = (h, now) => {
+      const tgt = pos(S.v);
+      stepS(S.cut, tgt, h); stepS(S.lag, tgt, h);
+      if (S.drag && !steps) { S.head.x = S.cut.x; S.head.v = S.cut.v; } else stepS(S.head, S.cut.x, h);
+      const near = S.hover && Math.abs(S.hx - S.cut.x) < 26, inBar = S.hover && Math.abs(S.hy - Y) < H / 2 + 4;
+      stepS(S.gap, S.drag && !steps ? 16 + Math.min(8, Math.abs(S.cut.v) * .012) : near ? 18 : 16, h);
+      // where the neck forms, and how deep
+      let want = 0, tx = S.px;
+      if (steps) {
+        const d = S.hx - S.cut.x, j = clamp(S.v + Math.sign(d), 0, steps.length - 1), half = (xs[1] - xs[0]) / 2;
+        if (S.drag && j !== S.v) { want = c01(Math.abs(d) / half, .15, 1); tx = xs[j]; }              // pulling builds tension at the next seam
+        else if (!S.drag && inBar) { const i = nearest(S.hx); if (i !== S.v) { want = 1; tx = xs[i]; } }
+      } else if (!S.drag && inBar && !near && S.hx > PA - 6 && S.hx < PB + 6) { want = 1; tx = clamp(S.hx, PA, PB); }
+      stepS(S.pp, want, h); S.previewing = want > .5 && !S.drag;
+      S.px = S.pp.x < .03 ? tx : S.px + (tx - S.px) * (1 - Math.exp(-h / (steps ? .07 : .05)));
+      for (const hl of S.heal) stepS(hl.g, -10, h);
+      S.heal = S.heal.filter(hl => hl.g.x > -8);
+      if (reduce) { S.cut.x = S.lag.x = S.head.x = tgt; }
+    };
+
+    S.draw = (now, dt) => {
+      const cx = S.cut.x, G = Math.max(0, S.gap.x), pp = clamp(S.pp.x, 0, 1.2), px = S.px;
+      setFront(S, cx, dt);
+      const preview = !!S.previewing;
+      const pvv = steps ? nearest(px) : Math.round(c01(px, PA, PB) * MAX), hv = preview ? pvv : S.v;
+      S.tipY = mix(Y - H / 2 - 9, Y - H / 2 + 3, preview ? clamp(pp, 0, 1) : 0);
+      const bumpA = drawTip(S, S.text(hv), S.width(hv), preview ? px : cx, hv, now);
+      const cuts = [{ x: cx, G }, ...S.heal.map(h => ({ x: h.x, G: h.g.x }))].filter(c => c.G > .3).sort((m, n) => m.x - n.x);
+      const nearCut = x => cuts.reduce((m, c) => Math.min(m, Math.abs(x - c.x) - c.G / 2), 1e9);
+      const disp0 = surface(S, bumpA, now, 0);
+      const disp = x => (disp0(x) - Math.min(1, pp) * 4.5 * S.lift.x * gauss(x, S.hxS, 24)) * c01(nearCut(x), 10, 34);
+      const wall = cx - G / 2 - 6, press = clamp((S.lag.x - G / 2 - 6 - wall) / 50, 0, 1);
+      const seams = () => 0;
+      const waist = x => 8.5 * pp * gauss(x, px, 9) + seams(x) - 2.2 * press * gauss(x, wall, 26);
+      const wWaist = x => waist(x) - seams(x) - 1.8 * press * gauss(x, wall, 26);   // seams mark the glass only, never the water
+      let d = '', a = X0, ra = 22;
+      for (const c of cuts) { d += capsule(a, c.x - c.G / 2, Y, H / 2, ra, 7, waist, disp); a = c.x + c.G / 2; ra = 7; }
+      S.el.bar.setAttribute('d', d + capsule(a, X1, Y, H / 2, ra, 22, waist, disp));
+      // water: the bulk lags, the leading end keeps to the glass face, a neck stretches between them and tears
+      const wEnd = Math.min(wall, S.lag.x - G / 2 - 6), hEnd = Math.min(wall, S.head.x - G / 2 - 6) - (S.drag && !steps ? Math.min(6, Math.max(0, S.cut.v) * .006) : 0);
+      const sep = hEnd - wEnd, k = c01(sep, 0, 40);
+      S.body.setAttribute('d', capsule(X0 + 6, Math.max(X0 + 30, wEnd), Y, (H / 2 - 6) * (1 - .12 * k), 16, mix(4, 12, k), wWaist, disp));
+      if (sep > 2 && hEnd > X0 + 40) {
+        const hw = mix(30, 22, k), hh = mix(16, 12, k);
+        S.headW.setAttribute('d', capsule(hEnd - hw, hEnd, Y, hh, mix(4, 11, k), 4, null, disp));
+        line(S.neckW, { x1: wEnd - 8, y1: Y, x2: hEnd - hw + 6, y2: Y, w: clamp(20 - .19 * sep, 0, 20) });
+      } else { S.headW.setAttribute('d', ''); line(S.neckW, null); }
+      const pq = Math.min(1, pp);
+      if (pp > .02 && px > cx) { S.ghost.setAttribute('d', capsule(cx + G / 2 + 6, px - 3, Y, H / 2 - 6, 4, 4, wWaist, disp)); S.ghost.setAttribute('opacity', f(.26 * pq)); }
+      else S.ghost.setAttribute('d', '');
+      if (pp > .02 && px < wEnd) { S.drain.setAttribute('d', capsule(px + 3, wEnd, Y, H / 2 - 6, 4, 4, wWaist, disp)); S.drain.setAttribute('opacity', f(.62 * pq)); }
+      else S.drain.setAttribute('d', '');
+      if (S.orphan) {
+        const o = S.orphan, u = c01(now - o.t0, 0, 520), kk = io(u), mid = (o.a + o.b) / 2 + 10 * kk, half = (o.b - o.a) / 2 * (1 - kk);
+        S.orph.setAttribute('d', u < 1 ? capsule(mid - half - 4 * (1 - kk), mid + half + 4 * (1 - kk), Y, (H / 2 - 6) * (1 - .75 * kk), 4 + 12 * kk, 4 + 12 * kk, null, null) : '');
+        if (u >= 1) S.orphan = null;
+      }
+      S.hair.setAttribute('x1', f(cx)); S.hair.setAttribute('x2', f(cx));
+      S.hair.setAttribute('opacity', f(.55 * c01(G, 1, 8)));
+      const m = c01(G, 1, 10) * (1 + .15 * S.lift.x * (S.near || S.drag ? 1 : .4)), my = Y - H / 2 - 9, mw = 4.6 * m, mh = 4 * m;
+      S.mark.setAttribute('d', m > .05 ? `M${f(cx - mw)} ${f(my - mh)}L${f(cx + mw)} ${f(my - mh)}L${f(cx)} ${f(my + mh)}Z` : '');
+      if (S.words) S.words.forEach((w, i) => w.classList.toggle('on', i === S.v));
+    };
+    S.aria = () => { const g = S.el.g; g.setAttribute('aria-valuemin', 0); g.setAttribute('aria-valuemax', steps ? steps.length - 1 : MAX); g.setAttribute('aria-valuenow', S.v); if (steps) g.setAttribute('aria-valuetext', steps[S.v]); };
+    S.measure = () => { const t = S.el.tip.text; t.textContent = '0'; const d = t.getComputedTextLength(); if (d > 0) S.el.tip.dw = d + .6; if (steps) measureWords(S, steps); };
+    return S;
+  }
+
+  const pc = makeParting(90, '01  CONTINUOUS', 'Sleep timer, continuous, minutes', { start: 25, max: 60 });
+  const ps = makeParting(90, '02  STEPPED', 'Fade out, stepped', { start: 2, words: ['Off', '15s', '30s', '1m', '2m'] });
+  const ALL = [ONLY === 'pc' ? pc : ps]; (ONLY === 'pc' ? [ps.el.g, ...ps.words, ps.hair] : [pc.el.g, pc.hair]).forEach(e => e.style.display = 'none');
+  function sync() { ALL.forEach(S => S.aria && S.aria()); }
+  function measure() { ALL.forEach(S => S.measure()); }
+  ALL.forEach(S => S.hxS = S.cut.x);
+  sync(); measure(); document.fonts && document.fonts.ready.then(measure);
+
+  let last = CLOCK();
+  function tick(now) {
+    let dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
+    const n = Math.max(1, Math.ceil(dt / .004)), h = dt / n;
+    for (let i = 0; i < n; i++) for (const S of ALL) { S.step(h, now); stepCommon(S, S.cut.x, h, now); }
+    for (const S of ALL) { S.ripples = S.ripples.filter(r => now - r.t0 < 2500); S.draw(now, dt); }
+    for (const S of ALL) { const e = S.el.glow; e.setAttribute('cx', f(S.gl.x)); e.setAttribute('cy', f(S.gl.y)); e.setAttribute('opacity', f(S.gl.o)); }
+    requestAnimationFrame(() => tick(CLOCK()));
+  }
+  requestAnimationFrame(() => tick(CLOCK()));
+  window.liquid_d = { pc, ps, tick };
+})();
+
+</script>
+<script>
+(() => {
+  // the value in the row head reads straight from its slider
+  const g = [...document.querySelectorAll('#stage4 .slider')].find(n => n.style.display !== 'none');
+  const out = document.querySelector('.unit[data-for="s4"]'), stepped = /stepped/.test(g.getAttribute('aria-label'));
+  const minutes = /minutes/.test(g.getAttribute('aria-label'));
+  const show = () => out.textContent = stepped ? g.getAttribute('aria-valuetext') : g.getAttribute('aria-valuenow') + (minutes ? ' min' : ' %');
+  new MutationObserver(show).observe(g, { attributes: true, attributeFilter: ['aria-valuenow', 'aria-valuetext'] }); show();
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const hit = '#stage4 .slider:not([style*="none"]) .hit';
+  const [x0, y] = c.at(hit, 0, .5), P = m => x0 + 10 + 40 + 320 * m / 60;
+  // part the glass somewhere new, then carry the cut
+  await c.move(P(38), y + 26, 900);
+  await c.move(P(38), y, 400);
+  await c.wait(700);
+  await c.down();
+  await c.wait(200);
+  await c.drag(P(50), y, 900);
+  await c.wait(120);
+  await c.up();
+  await c.wait(800);
+  await c.leave();
+  await c.wait(300);
+}, { tint: '#2F74F4', reset() {
+  const d = window.liquid_d; if (d) { d.pc.v = 25; d.pc.aria(); }
+} });
+</script>
+</body></html>

@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rain Slider</title>
+<style>
+  :root {
+    --ink: #141B2B; --ink-soft: #6A7385; --surface: #FFFFFF; --muted: #A9AFBA;
+    --liquid: #2F74F4; --on-liquid: #FFFFFF; --shadow: rgba(38, 66, 128, .11);
+    --ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  #stage, #stage *, #stage *::before, #stage *::after { box-sizing: border-box; }
+  #stage { color: var(--ink); font: 400 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; }
+  svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .w { fill: var(--surface); } .b { fill: var(--liquid); } .bl { stroke: var(--liquid); stroke-linecap: round; fill: none; }
+  .mark { stroke: var(--liquid); stroke-width: 3.2; stroke-linejoin: round; }
+  .hair { stroke: var(--ink-soft); stroke-width: 1; pointer-events: none; }
+  .wl { stroke: var(--surface); stroke-linecap: round; fill: none; }
+  .dot { fill: var(--muted); } .dot.on { fill: var(--liquid); }
+  .cap { display: none; }
+  .word { font: 400 11px var(--ui); fill: var(--muted); text-anchor: middle; transition: fill .25s ease; }
+  .word.on { fill: var(--ink); }
+  .val { font: 600 11px var(--ui); font-variant-numeric: tabular-nums; fill: var(--on-liquid); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .slider { cursor: grab; outline: none; }
+  .slider.drag { cursor: grabbing; }
+  @media (hover: hover) and (pointer: fine) { .slider, .slider.drag { cursor: none; } }   /* inside the bar the pointer is the light itself */
+  .hit { fill: transparent; }
+  .ring { fill: none; stroke: var(--liquid); stroke-width: 1.5; opacity: 0; }
+  .slider:focus-visible .ring { opacity: 1; }
+  .liq, .skin, .txt { pointer-events: none; }
+
+  /* one row per slider, the same 520 box the original card used (8 card padding + 52 row padding around a 400 bar) */
+  .ls { position: absolute; left: -30px; width: 520px; padding: 8px; }
+  .srow { padding: 22px 52px 22px; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; height: 24px; }
+  .label { font: 400 16px/24px var(--ui); letter-spacing: -.005em; }
+  .unit { font: 400 12px/16px var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .slot { height: 40px; margin-top: 16px; }
+  .slot.words { margin-bottom: 26px; }
+  .ls > svg { position: absolute; left: 0; top: 0; width: 520px; overflow: visible; pointer-events: none; }
+  .ls > svg .slider .hit { pointer-events: all; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="300">
+  <div class="ls" style="top: 70px">
+    <div class="srow"><div class="head"><span class="label">Rain</span><span class="unit" data-for="s1"></span></div><div class="slot words"></div></div>
+    <svg id="stage1" viewBox="0 0 520 166" aria-label="Liquid sliders">
+      <defs>
+        <filter id="a_gooW" filterUnits="userSpaceOnUse" x="-60" y="-90" width="640" height="460" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3" result="g"/>
+          <feGaussianBlur in="g" stdDeviation="5.5" result="sb"/><feOffset in="sb" dy="4" result="so"/>
+          <feGaussianBlur in="g" stdDeviation="1.1" result="tb"/><feOffset in="tb" dy="1" result="to"/>
+          <feFlood style="flood-color: var(--shadow)" result="sc"/>
+          <feComposite in="sc" in2="so" operator="in" result="sh1"/><feComposite in="sc" in2="to" operator="in" result="sh2"/>
+          <feMerge result="sh"><feMergeNode in="sh1"/><feMergeNode in="sh2"/></feMerge>
+          <feComposite in="sh" in2="g" operator="out" result="shOut"/>
+          <feMorphology in="g" operator="erode" radius=".7" result="er"/>
+          <feComposite in="g" in2="er" operator="out" result="rimRaw"/>
+          <feComponentTransfer in="rimRaw" result="rim"><feFuncA type="linear" slope=".9"/></feComponentTransfer>
+          <feComponentTransfer in="g" result="glass"><feFuncA type="linear" slope=".52"/></feComponentTransfer>
+          <feMerge><feMergeNode in="shOut"/><feMergeNode in="glass"/><feMergeNode in="rim"/></feMerge>
+        </filter>
+        <filter id="a_gooB" filterUnits="userSpaceOnUse" x="-60" y="-90" width="640" height="460" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4.2" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.3"/>
+        </filter>
+        <radialGradient id="a_glowGrad">
+          <stop offset="0" style="stop-color: var(--liquid)" stop-opacity=".13"/>
+          <stop offset=".5" style="stop-color: var(--liquid)" stop-opacity=".05"/>
+          <stop offset="1" style="stop-color: var(--liquid)" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  let speed = 1, base = 0, t0 = performance.now();
+  window.CLOCK = () => base + (performance.now() - t0) * speed;
+  window.setSpeed = s => { base = CLOCK(); t0 = performance.now(); speed = s; };
+})();
+</script>
+<script>
+
+(() => { const ONLY = 'st';
+  const NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('stage1'), defs = svg.querySelector('defs');
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; };
+  const f = n => (+n).toFixed(2), clamp = (v, a, b) => Math.min(b, Math.max(a, v)), mix = (a, b, t) => a + (b - a) * t;
+  const c01 = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
+  const sine = u => (1 - Math.cos(Math.PI * u)) / 2, io = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  const kf = (t, K) => {                       // keyframes [[t, v, ease]]; the ease shapes the segment arriving at that key
+    if (t <= K[0][0]) return K[0][1];
+    for (let i = 1; i < K.length; i++) if (t <= K[i][0]) { const u = (t - K[i - 1][0]) / (K[i][0] - K[i - 1][0]); return mix(K[i - 1][1], K[i][1], (K[i][2] || sine)(u)); }
+    return K[K.length - 1][1];
+  };
+  const gauss = (x, c, w) => Math.exp(-Math.pow((x - c) / w, 2));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const X0 = 60, X1 = 460, H = 40, R = 20;   // card px: 8 card padding + 52 row padding; 400 × 40 full pill
+  const spring = (x, k, z) => ({ x, v: 0, k, c: 2 * z * Math.sqrt(k) });
+  const stepS = (s, target, dt) => { const a = s.k * (target - s.x) - s.c * s.v; s.v += a * dt; s.x += s.v * dt; };
+
+  function barPath(yc, disp) {
+    const top = yc - H / 2, bot = yc + H / 2, P = [];
+    for (let x = X0 + R; x <= X1 - R; x += 4) P.push([x, top - disp(x)]);
+    for (let a = -90; a <= 90; a += 15) { const r = a * Math.PI / 180; P.push([X1 - R + R * Math.cos(r), (a < 0 ? top + R : bot - R) + R * Math.sin(r)]); }
+    for (let x = X1 - R; x >= X0 + R; x -= 4) P.push([x, bot + .25 * disp(x)]);
+    for (let a = 90; a <= 270; a += 15) { const r = a * Math.PI / 180; P.push([X0 + R + R * Math.cos(r), (a < 180 ? bot - R : top + R) + R * Math.sin(r)]); }
+    return 'M' + P.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+  }
+  function rippleAt(list, x, now) {
+    let d = 0;
+    for (const r of list) {
+      const age = (now - r.t0) / 1000, dx = Math.abs(x - r.x);
+      if (dx > 300 * age) continue;
+      d += r.a * Math.exp(-age / .45) * Math.exp(-dx / 150) * Math.sin(.2 * dx - 15 * age);
+    }
+    return d;
+  }
+  const rect = (e, s, pad) => { if (!s || s.w + 2 * pad <= .5 || s.h + 2 * pad <= .5) { e.setAttribute('width', 0); return; } const w = s.w + 2 * pad, h = s.h + 2 * pad; e.setAttribute('x', f(s.x - w / 2)); e.setAttribute('y', f(s.y - h / 2)); e.setAttribute('width', f(w)); e.setAttribute('height', f(h)); e.setAttribute('rx', f(Math.max(0, Math.min(s.rx + pad, w / 2, h / 2)))); };
+  const line = (e, k) => { if (!k || k.w < .05) { e.setAttribute('stroke-width', 0); return; } e.setAttribute('x1', f(k.x1)); e.setAttribute('y1', f(k.y1)); e.setAttribute('x2', f(k.x2)); e.setAttribute('y2', f(k.y2)); e.setAttribute('stroke-width', f(k.w)); };
+  const ell = (e, s) => { if (!s || s.rx < .05) { e.setAttribute('rx', 0); e.setAttribute('ry', 0); return; } e.setAttribute('cx', f(s.x)); e.setAttribute('cy', f(s.y)); e.setAttribute('rx', f(s.rx)); e.setAttribute('ry', f(s.ry)); };
+
+  /* ── tooltip: the same reversible pose as the nav tooltip. p = 0 flat surface, p = 1 settled pill ── */
+  const TIP_H = 24, TIP_GAP = 24;
+  function tipPose(tp, YT) {
+    const p = tp.p, r = 9, ax = tp.x, cy = YT - TIP_GAP;
+    const bumpA = kf(p, [[0, 0], [.2, 4.6], [.4, 6.2], [.5, 4.4], [.6, -1.3], [.7, .3], [.78, 0]]);
+    let body = null, neck = null, root = null;
+    if (p > .18) {
+      const yPinch = YT - r - 4;
+      const y = kf(p, [[.18, YT + r + 2], [.46, yPinch], [.54, yPinch - 1.5], [.8, cy, io]]);
+      const sc = kf(p, [[.18, .5], [.4, 1]]), sp = io(c01(p, .54, .9));
+      const w0 = 2 * r * sc * kf(p, [[.18, 1], [.32, .86], [.46, .92], [.54, 1]]);
+      const h0 = 2 * r * sc * kf(p, [[.18, 1], [.32, 1.22], [.46, 1.12], [.54, 1]]);
+      const w = w0 + (tp.W - w0) * sp, h = h0 + (TIP_H - h0) * sp;
+      body = { x: ax, y, w, h, rx: Math.min(w, h) / 2 * (1 - sp) + 12 * sp };
+      if (p < .5) neck = { x1: ax, y1: YT + 3, x2: ax, y2: y, w: kf(p, [[.18, 1.8 * r], [.34, 1.4 * r], [.44, .66 * r], [.5, 1]]) };
+    }
+    if (p > .16 && p < .56) { const rx = kf(p, [[.16, 3], [.3, r + 4], [.46, r + 3], [.56, 0]]); root = { x: ax, y: YT + 3.5, rx, ry: rx * .55 }; }
+    return { bumpA, body, neck, root, q: c01(p, .8, 1) };
+  }
+
+  let fid = 0;
+  function scaffold(yc, label, aria) {
+    mk('text', { class: 'cap', x: X0 + 4, y: yc - H / 2 - 50 }).textContent = label;
+    const g = mk('g', { class: 'slider', tabindex: 0, role: 'slider', 'aria-label': aria });
+    mk('rect', { class: 'ring', x: X0 - 6, y: yc - H / 2 - 6, width: X1 - X0 + 12, height: H + 12, rx: R + 6 }, g);
+    const skin = mk('g', { class: 'skin', filter: 'url(#a_gooW)' }, g);
+    const bar = mk('path', { class: 'w' }, skin);
+    const cid = 'a_bc' + fid; mk('rect', { x: X0, y: yc - H / 2, width: X1 - X0, height: H, rx: R }, mk('clipPath', { id: cid }, defs));
+    const glow = mk('circle', { r: 16, fill: 'url(#a_glowGrad)', opacity: 0 }, mk('g', { class: 'liq', 'clip-path': `url(#${cid})` }, g));   // the pointer's light, inside the bar only
+    const under = mk('g', { class: 'liq' }, g);
+    const liq = mk('g', { class: 'liq', filter: 'url(#a_gooB)' }, g);
+    const txt = mk('g', { class: 'txt' }, g);
+    mk('rect', { class: 'hit', x: X0 - 10, y: yc - H / 2 - 14, width: X1 - X0 + 20, height: H + 28 }, g);
+    // tooltip parts: glass skin, liquid body/neck/root, a crisp pill it resolves into, and the label
+    const id = 'a_tb' + fid++, flt = mk('filter', { id, x: '-60%', y: '-60%', width: '220%', height: '220%' }, defs);
+    const tip = {
+      w: mk('rect', { class: 'w' }, skin), b: mk('rect', { class: 'b' }, liq), neck: mk('line', { class: 'bl' }, liq), root: mk('ellipse', { class: 'b' }, liq),
+      crisp: mk('rect', { class: 'b' }, txt), text: mk('text', { class: 'val' }, txt), fe: mk('feGaussianBlur', { stdDeviation: 0 }, flt), fid: id,
+      p: 0, x: 0, W: 40, Wc: 40, dw: 7
+    };
+    tip.text.setAttribute('visibility', 'hidden'); tip.lt = liquidText(txt, 3); tip.wf = wordFlow(txt);
+    return { g, skin, bar, under, liq, txt, tip, glow, top: yc - H / 2, yc };
+  }
+  const toP = e => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }, toX = e => toP(e).x;
+
+  function wire(S) {
+    const g = S.el.g;
+    g.addEventListener('pointermove', e => { S.hy = toP(e).y; S.hx = toX(e); S.hover = true; if (S.drag) S.move(S.hx); });
+    g.addEventListener('pointerleave', () => { if (!S.drag) { S.hover = false; S.leftT = CLOCK(); } });
+    g.addEventListener('pointerdown', e => { S.hy = toP(e).y; g.setPointerCapture(e.pointerId); S.drag = true; S.hover = true; S.hx = toX(e); g.classList.add('drag'); S.move(S.hx); e.preventDefault(); });
+    const up = e => { if (!S.drag) return; S.drag = false; g.classList.remove('drag'); S.release(); const x = toX(e); S.hover = x > X0 && x < X1 && e.pointerType !== 'touch'; };
+    g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    g.addEventListener('blur', () => S.keyT = -1e9);
+    g.addEventListener('keydown', e => {
+      const k = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 3, PageDown: -3, Home: -999, End: 999 }[e.key];
+      if (k) { S.nudge(k); e.preventDefault(); }
+    });
+  }
+  // hover: the skin lifts under the hand; on the thumb it lifts more and the reading surfaces
+  function stepCommon(S, thumbX, dt, now) {
+    const near = S.hover && Math.abs(S.hx - thumbX) < 30;
+    S.near = near;
+    stepS(S.lift, S.hover ? 1 : 0, dt);
+    S.hxS += (S.hx - S.hxS) * (1 - Math.exp(-dt / .075));
+    // light under the pointer while it is inside the bar (same values as the nav bar: 45 ms follow, 150 ms fade, brighter when pressed)
+    const G = S.gl, inBar = S.hover && S.hx > X0 && S.hx < X1 && Math.abs(S.hy - S.el.yc) < H / 2, tg = inBar ? (S.drag ? 1.25 : 1) : 0;
+    if (inBar) { if (G.o < .03) { G.x = S.hx; G.y = S.hy; } const k = 1 - Math.exp(-dt / .045); G.x += (S.hx - G.x) * k; G.y += (S.hy - G.y) * k; }
+    G.o += (tg - G.o) * (1 - Math.exp(-dt / .15));
+    const want = S.drag || S.hover || now - S.keyT < 1200 || now - S.leftT < 90;   // hovering anywhere on the bar shows the reading there
+    const tp = S.el.tip, before = tp.p;                            // same timing as the nav tooltip: 620 ms out, 460 ms back
+    tp.p = clamp(tp.p + (want ? dt / .62 : -dt / .46), 0, 1);
+    if (want && before < .5 && tp.p >= .5) S.ripples.push({ x: tp.x, t0: now, a: 1.1 });
+    if (!want && before > 0 && tp.p === 0) S.ripples.push({ x: tp.x, t0: now, a: 1.2 });
+    if (tp.tx !== undefined) tp.x = tp.p === 0 ? tp.tx : tp.x + (tp.tx - tp.x) * (1 - Math.exp(-dt / .11));
+    if (reduce) S.el.tip.p = want ? 1 : 0;
+  }
+  /* Readings change like something surfacing through water: only the characters that change move.
+     The old one sinks and blurs away, the new one rises out of the liquid and sharpens. Going up rises, going down sinks. */
+  let lid = 0;
+  function liquidText(parent, n) {
+    const cid = 'a_lc' + lid++, clip = mk('rect', {}, mk('clipPath', { id: cid }, defs));
+    const g = mk('g', { 'clip-path': `url(#${cid})` }, parent);
+    const el = () => { const id = 'a_lt' + lid++, fe = mk('feGaussianBlur', { stdDeviation: 0 }, mk('filter', { id, x: '-80%', y: '-80%', width: '260%', height: '260%' }, defs)); return { t: mk('text', { class: 'val', filter: `url(#${id})` }, g), fe }; };
+    const slots = Array.from({ length: n }, () => ({ cur: '', prev: '', t0: -1e9, dir: 1, a: el(), b: el() }));
+    return { clip, slots, L: 0 };
+  }
+  function drawLiquidText(lt, chars, dir, now, body, q, dw) {
+    if (!body || q < .001) { lt.slots.forEach((s, i) => { s.a.t.setAttribute('opacity', 0); s.b.t.setAttribute('opacity', 0); s.cur = chars[i] || ''; s.prev = ''; }); return; }
+    rect(lt.clip, body, 0);
+    lt.L += (chars.length - lt.L) * .2;                                       // re-centres smoothly when a digit is added or lost
+    lt.slots.forEach((s, i) => {
+      const want = chars[i] || '';
+      if (want !== s.cur && now - s.t0 > 110) { s.prev = s.cur; s.cur = want; s.t0 = now; s.dir = dir; }
+      const u = io(c01(now - s.t0, 0, 300)), x = dw ? body.x + (lt.L / 2 - i - .5) * dw : body.x;
+      const put = (e, ch, y, o, bl) => { e.t.textContent = ch; e.t.setAttribute('x', f(x)); e.t.setAttribute('y', f(y)); e.t.setAttribute('opacity', f(o)); e.fe.setAttribute('stdDeviation', f(bl)); };
+      put(s.a, s.cur, body.y + s.dir * 8 * (1 - u) + 2 * (1 - q), q * u, 1.9 * (1 - u) + 1.6 * (1 - q));
+      put(s.b, s.prev, body.y - s.dir * 8 * u, q * (1 - u), 1.9 * u);
+    });
+  }
+
+  /* Step names travel with the current: letters leave one by one in the direction you are moving
+     and the next name flows in behind them on a small crest, instead of flipping up/down. */
+  const OFFS = new Map();
+  function offsets(word, meter) {
+    if (OFFS.has(word)) return OFFS.get(word);
+    meter.textContent = word; const o = [];
+    let ok = true;
+    for (let i = 0; i <= word.length; i++) { try { o.push(i ? meter.getSubStringLength(0, i) : 0); } catch (e) { ok = false; o.push(i * 6.6); } }
+    const r = { o, w: o[word.length] };
+    if (ok && r.w > 0) OFFS.set(word, r);
+    return r;
+  }
+  function wordFlow(parent) {
+    const cid = 'a_wc' + lid++, clip = mk('rect', {}, mk('clipPath', { id: cid }, defs));
+    const g = mk('g', { 'clip-path': `url(#${cid})` }, parent);
+    const el = () => { const id = 'a_wf' + lid++, fe = mk('feGaussianBlur', { stdDeviation: 0 }, mk('filter', { id, x: '-100%', y: '-80%', width: '300%', height: '260%' }, defs)); return { t: mk('text', { class: 'val', filter: `url(#${id})`, style: 'text-anchor: start' }, g), fe }; };
+    return { clip, A: Array.from({ length: 9 }, el), B: Array.from({ length: 9 }, el), cur: '', prev: '', t0: -1e9, dir: 1 };
+  }
+  function drawWordFlow(wf, word, dir, now, body, q, meter) {
+    const hide = arr => arr.forEach(e => e.t.setAttribute('opacity', 0));
+    if (!body || q < .001) { hide(wf.A); hide(wf.B); wf.cur = word; wf.prev = ''; return; }   // nothing to animate while it is still liquid
+    rect(wf.clip, body, 0);
+    if (word !== wf.cur && now - wf.t0 > 90) { wf.prev = wf.cur; wf.cur = word; wf.t0 = now; wf.dir = dir; }
+    const D = wf.dir, age = now - wf.t0;
+    const lay = (arr, w, incoming) => {
+      const m = offsets(w, meter), n = w.length, x0 = body.x - m.w / 2, gap = Math.min(38, 150 / Math.max(1, n));
+      arr.forEach((e, i) => {
+        if (i >= n) { e.t.setAttribute('opacity', 0); return; }
+        const order = D > 0 ? n - 1 - i : i;                      // the letters nearest the direction of travel go first
+        const u = io(c01(age - order * gap * (incoming ? .8 : .6) - (incoming ? 70 : 0), 0, 300));
+        const x = x0 + m.o[i] + (incoming ? -D * 9 * (1 - u) : D * 9 * u);
+        const y = body.y + (incoming ? 3 * (1 - u) - 2.6 * Math.sin(Math.PI * u) : -3 * u - 1.6 * Math.sin(Math.PI * u)) + 2 * (1 - q);
+        const o = incoming ? u : 1 - u, bl = incoming ? 1.8 * (1 - u) : 1.8 * u;
+        e.t.textContent = w[i]; e.t.setAttribute('x', f(x)); e.t.setAttribute('y', f(y));
+        e.t.setAttribute('opacity', f(q * o)); e.fe.setAttribute('stdDeviation', f(bl + 1.6 * (1 - q)));
+      });
+    };
+    lay(wf.A, wf.cur, true); if (wf.prev && age < 900) lay(wf.B, wf.prev, false); else hide(wf.B);
+  }
+  function drawTip(S, text, W, tx, val, now) {
+    const tp = S.el.tip, YT = S.el.top;
+    if (tp.p === 0) { tp.x = tx; tp.Wc = W; } tp.tx = tx;               // glides from reading to reading (110 ms), like the nav tooltip
+    tp.Wc += (W - tp.Wc) * .18; tp.W = tp.Wc + Math.min(12, Math.abs(tx - tp.x) * .4);
+    if (val !== tp.val) { tp.dir = val > tp.val ? 1 : -1; tp.val = val; }
+    const ps = tipPose(tp, YT);
+    rect(tp.b, ps.body, .35); rect(tp.w, ps.body, -1.2); line(tp.neck, ps.neck); ell(tp.root, ps.root);
+    const c = c01(tp.p, .9, 1);
+    if (c > 0) { rect(tp.crisp, ps.body, 0); tp.crisp.setAttribute('opacity', f(c)); } else tp.crisp.setAttribute('width', 0);
+    if (S.digits) {
+      const chars = [...text].reverse();                                         // digits: slot 0 is the units
+      if (tp.p === 0) tp.lt.slots.forEach((s, i) => { s.cur = chars[i] || ''; s.prev = ''; s.t0 = -1e9; });
+      drawLiquidText(tp.lt, chars, tp.dir || 1, now, ps.body, ps.q, tp.dw);
+    } else {
+      if (tp.p === 0) { tp.wf.cur = text; tp.wf.prev = ''; tp.wf.t0 = -1e9; }
+      drawWordFlow(tp.wf, text, tp.dir || 1, now, ps.body, ps.q, tp.text);
+    }
+    return ps.bumpA;
+  }
+  const surface = (S, bumpA, now, rest) => x =>
+    rest * gauss(x, S.front.x, 26) + 4.5 * S.lift.x * gauss(x, S.hxS, 24) + (S.near || S.drag ? 2.2 : 0) * S.lift.x * gauss(x, S.front.x, 20)
+    + bumpA * gauss(x, S.el.tip.x, 13);                                       // no ripples: the surface only moves where something is acting on it
+
+  function capsule(a, b, yc, half, Ra, Rb, waist, dTop, step) {
+    const hAt = x => {
+      let h = half;
+      const da = x - a, db = b - x;
+      if (da < Ra) h -= Ra - Math.sqrt(Math.max(0, Ra * Ra - (Ra - da) * (Ra - da)));
+      if (db < Rb) h -= Rb - Math.sqrt(Math.max(0, Rb * Rb - (Rb - db) * (Rb - db)));
+      return Math.max(0, h - (waist ? waist(x) : 0));
+    };
+    if (b - a < 1) return '';
+    const n = Math.max(2, Math.ceil((b - a) / (step || 2))), T = [], B = [];
+    for (let i = 0; i <= n; i++) {
+      // denser near the ends so the round caps stay round
+      const u = i / n, x = a + (b - a) * (u < .5 ? .5 - .5 * Math.cos(Math.PI * u) : .5 + .5 * -Math.cos(Math.PI * u)) ;
+      const h = hAt(x), d = dTop ? dTop(x) * c01(h, 0, 6) : 0;
+      T.push(f(x) + ' ' + f(yc - h - d)); B.push(f(x) + ' ' + f(yc + h + .25 * d));
+    }
+    return 'M' + T.join('L') + 'L' + B.reverse().join('L') + 'Z';
+  }
+  const blob = (e, s, disp) => e.setAttribute('d', s ? capsule(s.x - s.w / 2, s.x + s.w / 2, s.y, s.h / 2, Math.min(s.rx, s.w / 2), Math.min(s.rx, s.w / 2), null, disp, 1.5) : '');
+
+  /* ───────── 01 · STEPPED ───────── */
+  const WORDS = ['Off', 'Drizzle', 'Light', 'Steady', 'Heavy'];
+  const YS = 90, XS = WORDS.map((_, i) => X0 + 46 + i * (X1 - X0 - 92) / (WORDS.length - 1)), HALF = (XS[1] - XS[0]) / 2;
+  const st = { el: scaffold(YS, '01  STEPPED', 'Rain, stepped'), idx: 2, p: XS[2], hover: false, drag: false, ripples: [], keyT: -1e9, leftT: -1e9, hy: 0, gl: { x: 0, y: 0, o: 0 }, hx: 0, hxS: XS[2], W: {} };
+  st.front = spring(XS[2], 1500, .72); st.rear = spring(XS[2], 300, .42); st.lift = spring(0, 300, .8);
+  st.dots = XS.map(x => mk('circle', { class: 'dot', cx: x, cy: YS, r: 2 }, st.el.under));
+  st.words = XS.map((x, i) => { const t = mk('text', { class: 'word', x, y: YS + H / 2 + 18 }, svg); t.textContent = WORDS[i]; return t; });
+  st.lobeA = mk('path', { class: 'b' }, st.el.liq); st.neck = mk('line', { class: 'bl' }, st.el.liq); st.lobeB = mk('path', { class: 'b' }, st.el.liq);
+  const nearest = x => XS.reduce((b, v, i) => Math.abs(v - x) < Math.abs(XS[b] - x) ? i : b, 0);
+  const magnet = x => { const i = nearest(x), d = x - XS[i]; return XS[i] + Math.sign(d) * HALF * Math.pow(Math.abs(d) / HALF, 1.7); };
+  st.commit = i => { if (i === st.idx) return; st.idx = i; st.ripples.push({ x: XS[i], t0: CLOCK(), a: 1.6 }); sync(); };
+  st.move = x => { st.p = clamp(x, XS[0] - 14, XS[XS.length - 1] + 14); st.commit(nearest(st.p)); };
+  st.release = () => { st.p = XS[st.idx]; st.ripples.push({ x: XS[st.idx], t0: CLOCK(), a: 2.6 }); };
+  st.nudge = k => { st.commit(clamp(st.idx + Math.sign(k) * Math.min(Math.abs(k) > 99 ? 99 : Math.abs(k) > 1 ? 2 : 1, 99), 0, XS.length - 1)); st.p = XS[st.idx]; st.keyT = CLOCK(); };
+  wire(st);
+
+  function drawStepped(now) {
+    const fx = st.front.x, rx = st.rear.x, sep = Math.abs(fx - rx), k = c01(sep, 0, 44);
+    const hi = st.hover && !st.drag ? nearest(st.hx) : st.idx;   // under the hand: the step you would land on
+    const bumpA = drawTip(st, WORDS[hi], st.W[hi] || 50, st.drag ? fx : XS[hi], hi, now);
+    const disp = surface(st, bumpA, now, 1.2);
+    st.el.bar.setAttribute('d', barPath(YS, disp));
+    const up = (st.near || st.drag ? 1.5 : 0) * st.lift.x;
+    blob(st.lobeA, { x: fx, y: YS, w: mix(46, 36, k) + up, h: mix(28, 24, k) + up, rx: mix(14, 12, k) }, disp);
+    blob(st.lobeB, { x: rx, y: YS, w: mix(46, 30, k) * (1 - .25 * c01(sep, 50, 90)), h: mix(28, 20, k), rx: mix(14, 10, k) }, disp);
+    line(st.neck, sep > 2 ? { x1: rx, y1: YS, x2: fx, y2: YS, w: clamp(22 - .22 * sep, 0, 22) } : null);
+    st.dots.forEach((d, i) => d.classList.toggle('on', i < st.idx));
+  }
+
+  /* ───────── 02 · CONTINUOUS ───────── */
+  const YC = 90, CA = X0 + 24, CB = X1 - 24;
+  const ct = { el: scaffold(YC, '02  CONTINUOUS', 'Volume, continuous'), v: 42, hover: false, drag: false, ripples: [], keyT: -1e9, leftT: -1e9, hy: 0, gl: { x: 0, y: 0, o: 0 }, hx: 0, hxS: 0, live: true, digits: true };
+  const vx = v => mix(CA, CB, v / 100);
+  ct.hxS = vx(42);
+  ct.front = spring(vx(42), 1700, .8); ct.rear = spring(vx(42), 220, .78); ct.lift = spring(0, 300, .8);
+  ct.fill = mk('path', { class: 'b' }, ct.el.liq); ct.neckL = mk('line', { class: 'bl' }, ct.el.liq); ct.head = mk('path', { class: 'b' }, ct.el.liq);
+  ct.ends = [].map((w, i) => { const t = mk('text', { class: 'word', x: i ? X1 - 4 : X0 + 4, y: YC + H / 2 + 24 }, svg); t.style.textAnchor = i ? 'end' : 'start'; t.textContent = w; return t; });
+  ct.move = x => { ct.v = Math.round(c01(x, CA, CB) * 100); sync(); };
+  ct.release = () => ct.ripples.push({ x: vx(ct.v), t0: CLOCK(), a: 2.6 });
+  ct.nudge = k => { ct.v = clamp(ct.v + (Math.abs(k) > 99 ? Math.sign(k) * 100 : Math.abs(k) > 1 ? k / 3 * 10 : k), 0, 100); ct.keyT = CLOCK(); sync(); };
+  wire(ct);
+
+  (ONLY === 'st' ? [ct.el.g] : [st.el.g, ...st.words]).forEach(e => e.style.display = 'none');   // this card shows one slider
+
+  function drawCont(now) {
+    const fx = ct.front.x, rx = ct.rear.x;
+    const hv = ct.hover && !ct.drag ? Math.round(c01(ct.hx, CA, CB) * 100) : ct.v;
+    const bumpA = drawTip(ct, String(hv), 18 + String(hv).length * ct.el.tip.dw, ct.drag ? fx : vx(hv), hv, now);
+    const disp = surface(ct, bumpA, now, 1);
+    ct.el.bar.setAttribute('d', barPath(YC, disp));
+    // same behaviour as the stepped body: the head follows the hand, the bulk holds back, the neck thins and tears, then the bulk catches up
+    const sep = Math.abs(fx - rx), k = c01(sep, 0, 44), up = (ct.near || ct.drag ? 1.5 : 0) * ct.lift.x;
+    const L = X0 + 6, end = Math.max(L + 30, rx + 15 * (1 - .25 * c01(sep, 50, 90)));       // fill is the bar's own shape, inset 6
+    blob(ct.fill, { x: (L + end) / 2, y: YC, w: end - L, h: mix(28, 22, k * c01(end - L, 30, 90)), rx: 14 }, disp);
+    line(ct.neckL, sep > 2 ? { x1: rx, y1: YC, x2: fx, y2: YC, w: clamp(22 - .22 * sep, 0, 22) } : null);
+    blob(ct.head, { x: fx, y: YC, w: mix(30, 28, k) + up, h: mix(28, 24, k) + up, rx: mix(14, 12, k) }, disp);
+  }
+
+  function sync() {
+    const a = (g, o) => { for (const k in o) g.setAttribute(k, o[k]); };
+    a(st.el.g, { 'aria-valuemin': 0, 'aria-valuemax': 4, 'aria-valuenow': st.idx, 'aria-valuetext': WORDS[st.idx] });
+    a(ct.el.g, { 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': ct.v });
+    st.words.forEach((w, i) => w.classList.toggle('on', i === st.idx));
+  }
+  function measure() {
+    const t = st.el.tip.text, keep = t.textContent;
+    t.textContent = '0'; const d = t.getComputedTextLength(); if (d > 0) ct.el.tip.dw = d + .6;
+    WORDS.forEach((w, i) => { t.textContent = w; const len = t.getComputedTextLength(); st.W[i] = len > 0 ? Math.ceil(len) + 24 : 50; });
+    t.textContent = keep;
+  }
+  sync(); measure(); document.fonts && document.fonts.ready.then(measure);
+
+  let last = CLOCK();
+  function tick(now) {
+    let dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
+    const n = Math.max(1, Math.ceil(dt / .004)), h = dt / n;
+    for (let i = 0; i < n; i++) {
+      stepS(st.front, st.drag ? magnet(st.p) : XS[st.idx], h); stepS(st.rear, XS[st.idx], h);
+      stepS(ct.front, vx(ct.v), h); stepS(ct.rear, vx(ct.v), h);
+      stepCommon(st, st.front.x, h, now); stepCommon(ct, ct.front.x, h, now);
+    }
+    if (reduce) { st.front.x = st.drag ? magnet(st.p) : XS[st.idx]; st.rear.x = XS[st.idx]; ct.front.x = ct.rear.x = vx(ct.v); }
+    for (const S of [st, ct]) S.ripples = S.ripples.filter(r => now - r.t0 < 2500);
+    drawStepped(now); drawCont(now);
+    for (const S of [st, ct]) { const e = S.el.glow; e.setAttribute('cx', f(S.gl.x)); e.setAttribute('cy', f(S.gl.y)); e.setAttribute('opacity', f(S.gl.o)); }
+    requestAnimationFrame(() => tick(CLOCK()));
+  }
+  requestAnimationFrame(() => tick(CLOCK()));
+  window.liquid_a = { st, ct, tick };
+})();
+
+</script>
+<script>
+(() => {
+  // the value in the row head reads straight from its slider
+  const g = [...document.querySelectorAll('#stage1 .slider')].find(n => n.style.display !== 'none');
+  const out = document.querySelector('.unit[data-for="s1"]'), stepped = /stepped/.test(g.getAttribute('aria-label'));
+  const minutes = /minutes/.test(g.getAttribute('aria-label'));
+  const show = () => out.textContent = stepped ? g.getAttribute('aria-valuetext') : g.getAttribute('aria-valuenow') + (minutes ? ' min' : ' %');
+  new MutationObserver(show).observe(g, { attributes: true, attributeFilter: ['aria-valuenow', 'aria-valuetext'] }); show();
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const hit = '#stage1 .slider:not([style*="none"]) .hit';
+  const [x0, y] = c.at(hit, 0, .5), X = i => x0 + 10 + 46 + i * 77;
+  // glide along the glass: the reading rises from the step under the hand
+  await c.move(X(3) + 4, y + 26, 900);
+  await c.move(X(3), y, 420);
+  await c.wait(650);
+  await c.move(X(2), y, 420);
+  await c.wait(250);
+  await c.down();
+  await c.wait(160);
+  await c.drag(X(4) + 8, y, 1100);
+  await c.wait(150);
+  await c.up();
+  await c.wait(800);
+  await c.leave();
+  await c.wait(300);
+}, { tint: '#2F74F4', reset() {
+  const a = window.liquid_a; if (a) { a.st.commit(2); a.st.release(); }
+} });
+</script>
+</body></html>

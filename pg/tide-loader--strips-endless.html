@@ -1,61 +1,19 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tide Strips Endless</title>
-<meta name="description" content="An endless ASCII ocean loader in thin horizontal strips: waves wash in and out, with sunlight flashing on the crests.">
-<meta property="og:title" content="Tide Strips Endless">
-<meta property="og:description" content="An endless ASCII ocean loader in thin horizontal strips: waves wash in and out, with sunlight flashing on the crests.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://dakotashao.github.io/tide-loader/strips-endless/">
-<meta property="og:image" content="https://dakotashao.github.io/tide-loader/strips-endless/preview.png">
-<meta property="og:image:width" content="800">
-<meta property="og:image:height" content="800">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://dakotashao.github.io/tide-loader/strips-endless/preview.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-:root{
-  --ground:#eef1f6; --ink:#12204a; --muted:#6b7596; --line:#d5dbe8; --accent:#1238e8;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --ground:#0b0f1c; --ink:#e4e9f7; --muted:#8791b0; --line:#232b44; --accent:#6f8fff; color-scheme:dark; }
-}
-:root[data-theme="dark"]{ --ground:#0b0f1c; --ink:#e4e9f7; --muted:#8791b0; --line:#232b44; --accent:#6f8fff; color-scheme:dark; }
-
-html,body{height:100%; margin:0}
-body{
-  background:var(--ground); color:var(--ink);
-  font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  display:grid; place-items:center; padding-inline:16px; padding-block:24px; box-sizing:border-box;
-}
-.wrap{display:flex; flex-direction:column; gap:14px; width:100vmax}
-canvas{display:block; width:100%; aspect-ratio:1; max-width:100%; background:#fff}
-.meta{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-variant-numeric:tabular-nums}
-.meta b{color:var(--ink); font-weight:500}
-.bar{height:2px; background:var(--line); position:relative; overflow:hidden}
-.bar i{position:absolute; inset:0 auto 0 0; width:0; background:var(--accent)}
-.controls{display:flex; gap:8px; flex-wrap:wrap}
-button{
-  font:inherit; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
-  background:transparent; color:var(--ink); border:1px solid var(--line); padding:7px 12px; cursor:pointer;
-}
-button:hover{border-color:var(--accent); color:var(--accent)}
-button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
-/* embedded in the portfolio card: square fills the whole frame */
-body{padding:0 !important; overflow:hidden; display:grid; place-items:center}
-canvas{width:100vmax !important; height:100vmax !important}
+/* the white square is the component: 300px, centred in the stage */
+#sea{position:absolute;left:80px;top:60px;display:block;width:300px;height:300px;background:#fff}
 </style>
-</head>
-<body>
-
-<div class="wrap">
+</head><body>
+<div id="stage" data-w="460" data-h="420">
   <canvas id="sea" role="img" aria-label="ASCII ocean loader: blue waves flood a white square from left to right"></canvas>
 </div>
-
+<script src="kit.js"></script>
 <script>
 (() => {
   const cv = document.getElementById('sea'), ctx = cv.getContext('2d');
@@ -97,8 +55,8 @@ canvas{width:100vmax !important; height:100vmax !important}
   const noise1 = x => { const i = Math.floor(x), f = x - i, u = f*f*(3-2*f); return hash(i)*(1-u) + hash(i+1)*u; };
 
   function resize(){
-    const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio||1, 2);
-    size = r.width; cv.width = cv.height = Math.round(size*dpr);
+    const dpr = Math.min(devicePixelRatio||1, 2);   // design size, not the scaled card size
+    size = cv.offsetWidth; cv.width = cv.height = Math.round(size*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
     cell = size/COLS;
     ctx.font = `500 ${cell*1.02}px "IBM Plex Mono", ui-monospace, monospace`;
@@ -255,5 +213,4 @@ canvas{width:100vmax !important; height:100vmax !important}
   requestAnimationFrame(frame);
 })();
 </script>
-</body>
-</html>
+</body></html>

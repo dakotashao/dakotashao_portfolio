@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominoes List · Rows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap">
+<style>
+/* Photo editor Adjust list built from the Dominoes Drag slider. Collapsed rows: a 1 × 14 domino, the name, the value.
+   Drag a row sideways: it becomes the Dominoes slider. Reset all stands them back up, top to bottom. */
+:root {
+  --bg: #f6f6f6; --card: #ffffff; --ink: #17181b; --muted: #62666d; --line: #dfe0e4; --press: #eeeef1;
+  --rail: #eeeef1; --rail-hover: #e8e8ec; --rail-press: #e3e3e7; --rail-limit: #d6d7dc; --stop: #b9bcc2; --solid: #1b1c20;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+#stage, #stage * { box-sizing: border-box; }
+#stage { color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.list { position: absolute; left: 70px; top: 58px; width: 320px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--card-shadow); will-change: transform; }
+.lhead { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 8px 0 16px; }
+.ltitle { flex: 1; margin: 0; font: 600 15px/20px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; letter-spacing: -0.01em; }
+/* Hold the title to see the original: the edited rows' dominoes stand back up while you hold. */
+.cmp { display: inline-flex; align-items: baseline; gap: 8px; margin: 0 0 0 -8px; padding: 6px 8px; border: 0; border-radius: 12px; background: none; color: var(--ink); font: inherit; letter-spacing: inherit; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; }
+.cmp:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; }
+.cmp .hint { font: 400 13px/16px var(--sans); letter-spacing: 0; color: var(--muted); opacity: 0; transition: opacity 160ms ease; }
+.cmp:hover .hint, .cmp:focus-visible .hint, .cmp.on .hint { opacity: 1; }
+.cmp.on .hint { color: var(--ink); }
+.label { font: 400 16px/24px var(--sans); letter-spacing: -0.005em; }
+.unit { font: 400 13px/16px var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+.r-reset { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: none; color: var(--ink); cursor: pointer; transition: background-color 140ms ease, opacity 140ms ease; }
+.r-reset:hover { background: rgba(23, 24, 27, 0.06); }
+.r-reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.r-reset svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Reset all: words, so it can't be mistaken for the pill's own reset. Only there when something is edited. */
+.all-reset { height: 32px; padding: 0 12px; border: 0; border-radius: 16px; background: none; color: var(--muted); font: 400 14px/1 var(--sans); cursor: pointer; transition: background-color 140ms ease, color 140ms ease, opacity 160ms ease, visibility 0s; }
+.all-reset:hover { background: rgba(23, 24, 27, 0.06); color: var(--ink); }
+.all-reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.all-reset[hidden] { display: block; opacity: 0; visibility: hidden; transition: opacity 160ms ease, visibility 0s 160ms; }
+
+/* Rows are the sliders. 48 tall; press and drag a row sideways and it turns into the grey pill right where it is.
+   Grey only ever means "you can drag this". Click a row to keep it selected (keys, trackpad); click away to let go. */
+.arow { position: relative; height: 48px; border-radius: 24px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; }
+.arow.drag { cursor: grabbing; }
+.arow:focus-visible { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.arow .bg { position: absolute; inset: 0; border-radius: 24px; background: var(--rail); opacity: 0; pointer-events: none; transition: background-color 140ms ease; }
+.arow.drag .bg { background: var(--rail-press); }
+/* at the end of its range (−100 / 0 / +100) the pill goes a step darker: nothing more this way */
+.arow.limit .bg { background: var(--rail-limit); }
+.arow .ico { position: absolute; left: 16px; top: 16px; }
+.arow .label { position: absolute; left: 44px; top: 12px; white-space: nowrap; pointer-events: none; }
+.arow .win { position: absolute; left: 134px; right: 94px; top: 0; height: 48px; overflow: hidden; pointer-events: none; opacity: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.arow .win svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.arow .rod { position: absolute; top: 0; width: 1px; height: 48px; margin-left: -0.5px; background: var(--ink); transform-origin: 50% 0; pointer-events: none; opacity: 0; }
+.ico { width: 16px; height: 16px; flex: none; color: var(--muted); fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; transition: color 160ms ease; }
+.ico .f { fill: currentColor; stroke: none; }
+.ico.on { color: var(--ink); }
+.aval { position: absolute; right: 16px; top: 12px; font: 400 16px/24px var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); pointer-events: none; transition: color 160ms ease; }
+.aval.on { color: var(--ink); }
+.aval .d { display: inline-block; }
+/* Back to 0: only on a row that has been edited, while you're on it (hover, dragging, selected). The value makes room. */
+.q-reset { position: absolute; right: 8px; top: 8px; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: none; color: var(--ink); cursor: pointer; opacity: 0; visibility: hidden; transition: background-color 140ms ease; }
+.q-reset:hover { background: var(--rail-press); }
+.q-reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.q-reset svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Ruler: exactly the Dominoes Drag pill. 272 × 46, value 18 from the left, tape window 160 centred on 136. */
+.ruler { position: relative; width: 272px; max-width: calc(100% - 32px); height: 46px; margin: 0 16px; border-radius: 23px; background: var(--rail); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; outline: none; transition: background-color 140ms ease; }
+.ruler.is-hover { background: var(--rail-hover); }
+.ruler.is-press, .ruler.is-drag { background: var(--rail-press); }
+.ruler.is-drag { cursor: grabbing; }
+.ruler:focus-visible { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.r-val { position: absolute; left: 18px; top: 13px; font: 400 16px/20px var(--sans); font-variant-numeric: tabular-nums; pointer-events: none; }
+.r-val .d { display: inline-block; will-change: transform; }
+.r-window { position: absolute; left: 56px; width: 160px; top: 0; height: 46px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.r-window svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.tk { stroke: var(--stop); stroke-width: 1; stroke-linecap: round; }
+.tk.on { stroke: var(--muted); stroke-width: 1.25; }
+.r-rod { position: absolute; left: 136px; top: 0; width: 1px; height: 46px; margin-left: -0.5px; background: var(--ink); transform-origin: 50% 0; pointer-events: none; will-change: transform; }
+.r-reset { position: absolute; right: 8px; top: 7px; }
+
+.cmp[data-kit-hover] .hint { opacity: 1; }
+.r-reset[data-kit-hover], .all-reset[data-kit-hover] { background: rgba(23, 24, 27, 0.06); }
+.all-reset[data-kit-hover] { color: var(--ink); }
+.q-reset[data-kit-hover] { background: var(--rail-press); }
+#stage[data-demo] :focus-visible { box-shadow: none; outline: none; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="420">
+    <div class="list" id="card">
+      <div class="lhead">
+        <h2 class="ltitle"><button class="cmp" type="button" id="cmp" aria-describedby="cmp-hint"><span id="list-label">Adjust</span><span class="hint" id="cmp-hint">Hold to compare</span></button></h2>
+        <button class="all-reset" type="button" id="all-reset" hidden>Reset all</button>
+      </div>
+      <div id="rows" role="group" aria-labelledby="list-label"></div>
+    </div>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const PX = 1.33, STEP = 5, H = 14, FOOT = 30, CX = 80, GAP = STEP * PX - 3, CAP = 76;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const deg = (r) => r * 180 / Math.PI, rad = (d) => d * Math.PI / 180;
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.append(e); return e; };
+  const sp = (s, t, k, c, dt) => { if (REDUCE) { s.x = t; s.v = 0; return; } s.v += (-k * (s.x - t) - c * s.v) * dt; s.x += s.v * dt; };
+  const fmt = (v) => v > 0 ? '+' + v : v < 0 ? '−' + (-v) : '0';
+  const KMS = 360, kShape = (u) => Math.sin(2 * Math.PI * u * KMS / 170) * Math.exp(-3.2 * u) * (1 - u);
+  const kNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(kShape(i / 200))); return m; })();
+  const RESET_SVG = '<svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.05-4.95"/><path d="M5 4.5v3.5h3.5"/><circle cx="12" cy="12" r="1.75" fill="currentColor" stroke="none"/></svg>';
+  let speed = 1;
+
+  // name, min, max, start. Default is 0 for all of them.
+  const DEFS = [['Exposure', -100, 100, 12], ['Contrast', -100, 100, 0], ['Highlights', -100, 100, -30], ['Shadows', -100, 100, 18],
+    ['Saturation', -100, 100, 0]];
+  const ICONS = {
+    Exposure: '<path d="M12 4v8M8 8h8M8 18.5h8"/>',
+    Contrast: '<circle cx="12" cy="12" r="8.5"/><path class="f" d="M12 3.5a8.5 8.5 0 0 1 0 17z"/>',
+    Highlights: '<circle cx="12" cy="12" r="3.5"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    Shadows: '<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7z"/>',
+    Saturation: '<path d="M12 3.5s6 6.3 6 10.6a6 6 0 0 1-12 0c0-4.3 6-10.6 6-10.6z"/>'
+  };
+  const card = document.getElementById('card'), rowsEl = document.getElementById('rows'), allBtn = document.getElementById('all-reset');
+  const cardSt = { dip: { x: 0, v: 0 }, rot: { x: 0, v: 0 }, knock: null, free: false };
+
+  const rowEls = [];
+  function makeRow([name, MIN, MAX, start], idx) {
+    const HOME = 0, FOOT_R = 31;
+    const el = document.createElement('div'); el.className = 'arow'; el.tabIndex = 0;
+    el.setAttribute('role', 'slider'); el.setAttribute('aria-label', name); el.setAttribute('aria-valuemin', MIN); el.setAttribute('aria-valuemax', MAX);
+    el.innerHTML = `<span class="bg"></span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg><span class="label" aria-hidden="true">${name}</span><div class="win" aria-hidden="true"><svg height="48"></svg></div><span class="rod" aria-hidden="true"></span><span class="aval" aria-hidden="true"></span><button class="q-reset" type="button" tabindex="-1" aria-label="Reset ${name.toLowerCase()} to 0">${RESET_SVG}</button>`;
+    rowsEl.append(el);
+    const bg = el.querySelector('.bg'), ico = el.querySelector('.ico'), label = el.querySelector('.label'), win = el.querySelector('.win'), tape = win.querySelector('svg'), rod = el.querySelector('.rod'), aval = el.querySelector('.aval'), resetB = el.querySelector('.q-reset');
+
+    const ticks = [];
+    for (let u = MIN; u <= MAX; u += STEP) { const x = (u - MIN) * PX; ticks.push({ u, x, i: ticks.length, a: 0, v: 0, l: mk('line', { class: 'tk', x1: x, x2: x, y1: FOOT_R - H, y2: FOOT_R }, tape) }); }
+    const st = { value: start, prev: start, tapeV: 0, vel: 0, sv: 0, target: null, snapping: true, settled: true, time: 0,
+      dragging: false, moved: false, hover: false, focused: false, wasFocused: false, kbd: false, startX: 0, startY: 0, startV: 0, lastX: 0, lastT: 0, wheelUntil: 0,
+      knock: null, nFallen: -1, dip: { x: 0, v: 0 }, prot: { x: 0, v: 0 }, swing: { x: 0, v: 0 }, act: { x: 0, v: 0 }, rs: { x: 0, v: 0 }, lift: { x: 0, v: 0 }, digits: [], dtxt: '',
+      cmp: { x: 0, v: 0 }, cmpOn: false, cmpAt: 0, cv: { x: 0, v: 0 }, homing: false, hv: 0, onHome: null, hit: { x: 0, v: 0 } };
+    // what the row shows: the value, or (comparing) the value easing back to 0. Dominoes, tape, number and weight follow it.
+    const V = () => st.value + (HOME - st.value) * clamp(st.cmp.x, 0, 1);
+    const load = () => { const v = clamp(V(), MIN, MAX); return v >= HOME ? (MAX > HOME ? (v - HOME) / (MAX - HOME) : 0) : -(HOME - v) / (HOME - MIN); };
+    const winW = () => Math.max(40, (el.offsetWidth || 304) - 134 - 94);
+    const offX = () => winW() / 2 - (V() - MIN) * PX;
+    const shown = () => Math.round(clamp(st.value, MIN, MAX));
+    const engaged = () => (st.dragging && st.moved) || st.focused || st.time < st.wheelUntil;
+
+    function setDigits(text) {
+      if (st.dtxt === text) return;
+      const old = st.digits; aval.textContent = '';
+      st.digits = [...text].map((ch, i) => { const s = document.createElement('span'); s.className = 'd'; s.textContent = ch; aval.append(s); return { el: s, x: old[i] ? old[i].x : 0, v: old[i] ? old[i].v : 0 }; });
+      st.dtxt = text;
+    }
+    // Between 0 and the value the dominoes are down, leaning the way the line pushed them: right above 0, left below.
+    function targets() {
+      const tg = ticks.map(() => 0), v = V();
+      if (v > HOME) {
+        let f = -1; for (const t of ticks) if (t.u >= HOME && (v - t.u) * PX > 0.01) f = t.i;
+        if (f < 0) return tg;
+        let a = deg(Math.asin(clamp((v - ticks[f].u) * PX, 0, GAP) / H)); tg[f] = a;
+        for (let k = f - 1; k >= 0 && ticks[k].u >= HOME; k--) { a = Math.min(CAP, a + deg(Math.asin((GAP / H) * Math.cos(rad(a))))); tg[k] = a; }
+      } else if (v < HOME) {
+        let f = -1; for (let k = ticks.length - 1; k >= 0; k--) if (ticks[k].u <= HOME && (ticks[k].u - v) * PX > 0.01) f = k;
+        if (f < 0) return tg;
+        let a = deg(Math.asin(clamp((ticks[f].u - v) * PX, 0, GAP) / H)); tg[f] = -a;
+        for (let k = f + 1; k < ticks.length && ticks[k].u <= HOME; k++) { a = Math.min(CAP, a + deg(Math.asin((GAP / H) * Math.cos(rad(a))))); tg[k] = -a; }
+      }
+      return tg;
+    }
+    const nDown = () => { const v = V(); return ticks.filter((t) => v > HOME ? t.u >= HOME && (v - t.u) * PX > 0.01 : v < HOME ? t.u <= HOME && (t.u - v) * PX > 0.01 : false).length; };
+
+    function step(dt) {
+      const v = (st.value - st.prev) * PX / Math.max(dt, 1e-4); st.prev = st.value;
+      st.tapeV += (v - st.tapeV) * Math.min(1, dt * 30);
+      st.time += dt;
+      const tg = targets();
+      for (const t of ticks) {
+        const T = tg[t.i];
+        if (REDUCE) { t.a = T; t.v = 0; continue; }
+        const was = t.a;
+        t.v += (-700 * (t.a - T) - 50 * t.v) * dt; t.a += t.v * dt;
+        if (was * t.a < 0) { t.a = 0; t.v = 0; }
+      }
+      const nF = nDown();
+      if (st.nFallen >= 0 && nF !== st.nFallen && !REDUCE) st.knock = { ms: 0, dir: Math.sign(nF - st.nFallen) * (V() >= HOME ? 1 : -1), amp: clamp(0.08 + Math.abs(st.tapeV) * 0.0006, 0.08, 0.3) };
+      st.nFallen = nF;
+      if (st.knock) { st.knock.ms += dt * 1000; if (st.knock.ms >= KMS) st.knock = null; }
+      for (const d of st.digits) sp(d, 0, 520, 16, dt);
+      const L = load(), on = engaged();
+      sp(st.act, on ? 1 : 0, 520, 40, dt);
+      const a = clamp(st.act.x, 0, 1);
+      // engaged, the row is the pill and carries the pile like the slider does (a little less: it is wider); at rest it lies flat
+      sp(st.dip, Math.abs(L) * 0.5 * a, 260, 18, dt);
+      sp(st.prot, 1.1 * L * a, 120, 14, dt);
+      if (!REDUCE) {
+        const drag = clamp(st.tapeV * 0.022, -9, 9), damp = st.dragging || Math.abs(st.tapeV) > 5 ? 5 : 14;
+        st.swing.v += (-90 * (st.swing.x - drag) - damp * st.swing.v) * dt; st.swing.x += st.swing.v * dt;
+      }
+      sp(st.rs, on && shown() !== HOME && !st.cmpOn ? 1 : 0, 520, 40, dt);   // reset only on the pill: values never shift while you scan
+      // compare: each edited row eases back to 0 in turn (cmpAt staggers it), and back again on release
+      const cOn = st.time >= st.cmpAt ? st.cmpOn : !st.cmpOn;
+      sp(st.cmp, cOn ? 1 : 0, 260, 32, dt);
+      // the tape shows (without the grey: nothing to drag) while a row is being compared or walked home by Reset all
+      sp(st.cv, st.homing || (st.value !== HOME && (st.cmpOn || st.cmp.x > 0.02)) ? 1 : 0, 400, 36, dt);
+      sp(st.hit, 0, 600, 16, dt);
+    }
+
+    function render() {
+      const s = Math.round(clamp(V(), MIN, MAX)), txt = fmt(s), a = clamp(st.act.x, 0, 1), lit = s !== HOME || st.hover || a > 0.5;
+      const vis = Math.max(a, clamp(st.cv.x, 0, 1));
+      setDigits(txt);
+      for (const d of st.digits) d.el.style.transform = Math.abs(d.x) > 0.05 ? `translateY(${d.x.toFixed(2)}px)` : '';
+      const rx = -28 * clamp(st.rs.x, 0, 1);
+      aval.style.transform = Math.abs(rx) > 0.02 ? `translateX(${rx.toFixed(2)}px)` : '';
+      aval.classList.toggle('on', lit); ico.classList.toggle('on', lit);
+      el.setAttribute('aria-valuenow', shown()); el.setAttribute('aria-valuetext', fmt(shown()));
+      bg.style.opacity = a.toFixed(3);
+      const r = clamp(st.rs.x, 0, 1);
+      resetB.style.opacity = r.toFixed(3); resetB.style.visibility = r > 0.02 ? 'visible' : 'hidden';
+      resetB.style.transform = `scale(${(0.8 + 0.2 * r).toFixed(3)})`;
+      win.style.opacity = vis.toFixed(3); rod.style.opacity = vis.toFixed(3);
+      el.classList.toggle('drag', st.dragging && st.moved);
+      el.classList.toggle('limit', st.value <= MIN + 0.01 || st.value >= MAX - 0.01);
+      if (vis > 0.005) {
+        const W = winW();
+        rod.style.left = (134 + W / 2) + 'px';
+        // without the pill the line stops short of the row's edges, so lines in neighbouring rows don't join up
+        const rh = 28 + 20 * a; rod.style.height = rh.toFixed(2) + 'px'; rod.style.top = ((48 - rh) / 2).toFixed(2) + 'px';
+        tape.style.transform = `translateX(${offX().toFixed(2)}px)`;
+        for (const t of ticks) {
+          t.l.classList.toggle('on', Math.abs(t.a) > 1);
+          t.l.style.transform = Math.abs(t.a) > 0.05 ? `rotate(${t.a.toFixed(2)}deg)` : '';
+          t.l.style.transformOrigin = `${t.x}px ${FOOT_R}px`;
+        }
+        rod.style.transform = Math.abs(st.swing.x) > 0.01 ? `rotate(${st.swing.x.toFixed(3)}deg)` : '';
+      }
+      const kn = st.knock ? st.knock.dir * st.knock.amp * kShape(st.knock.ms / KMS) / kNorm * a : 0;
+      const half = (el.offsetWidth || 304) / 2, pv = st.knock && st.knock.dir > 0 ? -half : half;
+      const ty = st.dip.x + st.hit.x;
+      el.style.transform = Math.abs(st.prot.x) + Math.abs(ty) + Math.abs(kn) > 0.002
+        ? `translateY(${ty.toFixed(2)}px) rotate(${st.prot.x.toFixed(3)}deg) translateX(${pv}px) rotate(${kn.toFixed(3)}deg) translateX(${-pv}px)` : '';
+    }
+
+    (() => { const tg = targets(); ticks.forEach((t) => { t.a = tg[t.i]; t.v = 0; }); st.nFallen = nDown(); })();
+    function goHome() { st.homing = false; st.target = HOME; st.vel = 0; st.snapping = true; st.settled = false; }
+    function walkHome(cb, struck) {
+      if (shown() === HOME) { cb && cb(); return; }
+      Object.assign(st, { homing: true, hv: 0, onHome: cb, target: null, vel: 0, sv: 0 });
+      if (struck && !REDUCE) st.hit.v += 60;                    // knocked by the row above landing
+    }
+    function setCompare(on, delay) { st.cmpOn = on; st.cmpAt = st.time + delay; }
+
+    el.addEventListener('pointerenter', () => { st.hover = true; });
+    // A mouse selection lasts while the pointer stays on the row; move off and it folds back. Keyboard focus stays.
+    el.addEventListener('pointerleave', () => { st.hover = false; if (!st.dragging && st.focused && !st.kbd) el.blur(); });
+    el.addEventListener('focus', () => { st.focused = true; st.kbd = el.matches(':focus-visible'); });
+    el.addEventListener('blur', () => { st.focused = false; });
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('.q-reset')) return;
+      st.wasFocused = st.focused;
+      el.setPointerCapture(e.pointerId);
+      Object.assign(st, { homing: false, onHome: null, dragging: true, moved: false, snapping: false, vel: 0, target: null, startX: e.clientX, startY: e.clientY, lastX: e.clientX, startV: st.value, lastT: performance.now() });
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!st.dragging) return;
+      const dx = e.clientX - st.startX, dy = e.clientY - st.startY;
+      if (!st.moved) {
+        if (Math.abs(dx) > 3 && Math.abs(dx) > Math.abs(dy)) { st.moved = true; st.startX = e.clientX; st.startV = st.value; if (!REDUCE) st.dip.v += 4; }
+        return;
+      }
+      let v = st.startV - (e.clientX - st.startX) / PX;
+      if (v < MIN) v = MIN - Math.sqrt(MIN - v) * 1.5;
+      if (v > MAX) v = MAX + Math.sqrt(v - MAX) * 1.5;
+      const now = performance.now(), dt = Math.max(1, now - st.lastT) / 1000;
+      st.vel = clamp(0.7 * st.vel + 0.3 * (-(e.clientX - st.lastX) / PX / Math.max(dt, 0.008)), -240, 240);
+      st.lastX = e.clientX; st.lastT = now; st.value = v;
+    });
+    const up = (e) => {
+      if (!st.dragging) return;
+      const r = el.getBoundingClientRect(), inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      const dragged = st.moved;
+      Object.assign(st, { dragging: false, moved: false, snapping: true, settled: false });
+      if (REDUCE || performance.now() - st.lastT > 80) st.vel = 0;
+      // a drag is a one-off: let go and the pill folds back into the row. A click (no drag) keeps it selected.
+      if ((dragged && !st.wasFocused) || !inside) el.blur();
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('dblclick', goHome);
+    resetB.addEventListener('click', (e) => { e.stopPropagation(); goHome(); el.focus(); });
+    el.addEventListener('wheel', (e) => {
+      const horiz = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      if (!st.focused && !horiz) return;                      // not selected: up/down scrolls the page as usual
+      e.preventDefault();
+      const d = horiz ? e.deltaX : e.deltaY;
+      st.value = clamp(st.value + d / PX / 2, MIN, MAX); st.vel = 0; st.target = null; st.snapping = true; st.settled = false;
+      if (!st.focused) st.wheelUntil = st.time + 0.7;           // a sideways swipe shows the pill while it lasts
+    }, { passive: false });
+    el.addEventListener('keydown', (e) => {
+      const k = e.key, cur = shown(); let t = null;
+      if (k === 'ArrowRight') t = cur + (e.shiftKey ? 10 : 1);
+      else if (k === 'ArrowLeft') t = cur - (e.shiftKey ? 10 : 1);
+      else if (k === 'Home') t = MIN; else if (k === 'End') t = MAX;
+      else if (k === 'Backspace' || k === 'Delete') t = HOME;
+      else if (k === 'ArrowDown' || k === 'ArrowUp') { e.preventDefault(); const sib = rowEls[idx + (k === 'ArrowDown' ? 1 : -1)]; if (sib) sib.focus(); return; }
+      else if (k === 'Escape') { el.blur(); return; }
+      if (t == null) return; e.preventDefault();
+      st.target = clamp(t, MIN, MAX); st.vel = 0; st.snapping = true; st.settled = false;
+    });
+
+    function tick(dt) {
+      if (st.homing) {
+        // accelerates to a walking pace: a big value takes longer to stand back up than a small one
+        st.hv = Math.min(st.hv + 1600 * dt, 320);
+        const d = HOME - st.value, stepV = Math.sign(d) * st.hv * dt;
+        if (REDUCE || Math.abs(stepV) >= Math.abs(d)) {
+          st.value = HOME; st.homing = false; st.sv = 0;
+          if (!REDUCE) { st.digits.forEach((dd) => { dd.v -= rand(40, 70); }); st.hit.v += 40; cardSt.dip.v += 2.5; }
+          const cb = st.onHome; st.onHome = null; if (cb) cb();
+        } else st.value += stepV;
+      } else if (!st.dragging || !st.moved) {
+        if (st.snapping || st.target != null) {
+          const L = Math.abs(load());
+          if (REDUCE) { st.value = clamp(st.target ?? Math.round(st.value), MIN, MAX); st.target = null; st.vel = 0; }
+          else if (st.target != null) {
+            st.sv += (-170 * (st.value - st.target) - 26 * st.sv) * dt; st.value += st.sv * dt;
+            if (Math.abs(st.value - st.target) < 0.02 && Math.abs(st.sv) < 0.5) {
+              st.value = st.target; st.target = null; st.sv = 0;
+              if (!REDUCE) st.digits.forEach((d) => { d.v -= rand(30, 60); });
+            }
+          } else if (Math.abs(st.vel) > 2 && st.value >= MIN && st.value <= MAX) {
+            st.value += st.vel * dt; st.vel *= Math.exp(-(3 + 9 * L) * dt);
+          } else {
+            const t = clamp(st.value, MIN, MAX);
+            st.sv += (-170 * (st.value - t) - 26 * st.sv) * dt; st.value += st.sv * dt; st.vel = 0;
+            if (Math.abs(st.value - t) < 0.01 && Math.abs(st.sv) < 0.3) {
+              st.value = t; st.sv = 0;
+              if (!st.settled) { st.settled = true; if (!REDUCE) st.digits.forEach((d) => { d.v -= (0.8 + L) * rand(30, 70); }); }
+            }
+          }
+        }
+      }
+      const n = Math.max(1, Math.ceil(dt / (1 / 240)));
+      for (let i = 0; i < n; i++) step(dt / n);
+      render();
+    }
+    rowEls.push(el);
+    const bump = (k) => { if (!REDUCE) st.digits.forEach((d) => { d.v -= k * rand(30, 60); }); };
+    return { tick, load, goHome, walkHome, setCompare, bump, edited: () => shown() !== HOME, el, set: (v) => { Object.assign(st, { value: v, prev: v, target: null, vel: 0, sv: 0, homing: false, onHome: null, snapping: true, settled: true, dragging: false, moved: false }); el.blur(); } };
+  }
+  const rows = DEFS.map(makeRow);
+
+  // Reset all: the edited rows stand back up one after another, top to bottom
+  allBtn.addEventListener('click', () => {
+    rows.filter((r) => r.edited()).forEach((r, k) => setTimeout(() => r.goHome(), REDUCE ? 0 : k * 90 / speed));
+  });
+  // Compare: hold the title. Edited rows stand up one after another (45 ms apart); let go and they fall back.
+  const cmpBtn = document.getElementById('cmp'), hint = document.getElementById('cmp-hint');
+  let comparing = false;
+  function compare(on) {
+    if (on === comparing) return; comparing = on;
+    cmpBtn.classList.toggle('on', on); hint.textContent = on ? 'Original' : 'Hold to compare';
+    rows.filter((r) => r.edited()).forEach((r, k) => r.setCompare(on, REDUCE ? 0 : k * 0.045));
+  }
+  cmpBtn.addEventListener('pointerdown', (e) => { if (e.button === 0) { cmpBtn.setPointerCapture(e.pointerId); compare(true); } });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => cmpBtn.addEventListener(t, () => compare(false)));
+  cmpBtn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); compare(true); } });
+  cmpBtn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') compare(false); });
+  cmpBtn.addEventListener('blur', () => compare(false));
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000) * speed; last = now;
+    rows.forEach((r) => r.tick(dt));
+    // the card carries every row's pile: it tips toward the side more of them fell, sinks a trace with how much is edited
+    const sum = rows.reduce((a, r) => a + r.load(), 0), mag = rows.reduce((a, r) => a + Math.abs(r.load()), 0) / rows.length;
+    const n = Math.max(1, Math.ceil(dt / (1 / 240)));
+    // mean signed load −1…1 → up to 3° (everything at +100); a curve so a single edited row still shows (≈0.7°)
+    const m = sum / rows.length, held = 3 * Math.sign(m) * Math.pow(Math.abs(m), 0.7);
+    const tilt = held;
+    for (let i = 0; i < n; i++) {
+      const h = dt / n, was = cardSt.rot.x;
+      // the card follows the weight on it like a loose balance: it eases over and, as the weight comes off, sways
+      // back past level a little and settles. No stops, no knocks.
+      if (REDUCE) { cardSt.rot.x = tilt; cardSt.rot.v = 0; }
+      else { cardSt.rot.v += (-55 * (cardSt.rot.x - tilt) - 6 * cardSt.rot.v) * h; cardSt.rot.x += cardSt.rot.v * h; }
+      sp(cardSt.dip, mag * 3, 200, 16, h);
+      if (cardSt.knock) { cardSt.knock.ms += h * 1000; if (cardSt.knock.ms >= KMS) cardSt.knock = null; }
+    }
+    // the knock pivots on the edge that landed
+    const ck = cardSt.knock, ckn = ck ? ck.side * ck.amp * kShape(ck.ms / KMS) / kNorm : 0, chalf = (card.offsetWidth || 320) / 2, cpv = ck && ck.side < 0 ? -chalf : chalf;
+    card.style.transform = `translateY(${cardSt.dip.x.toFixed(2)}px) rotate(${cardSt.rot.x.toFixed(3)}deg)` + (ck ? ` translateX(${cpv}px) rotate(${ckn.toFixed(3)}deg) translateX(${-cpv}px)` : '');
+    const c = rows.filter((r) => r.edited()).length;
+    if (allBtn.hidden !== (c === 0)) allBtn.hidden = c === 0;
+    requestAnimationFrame(frame);
+  window.DOM_ROWS = rows; window.DOM_DEFS = DEFS;
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+addEventListener('pointerdown', e => { if (e.isTrusted) delete document.getElementById('stage').dataset.demo; }, true);
+KIT.demo(async c => {
+  document.getElementById('stage').dataset.demo = '';
+  const row = i => DOM_ROWS[i].el;
+  // Contrast: press and drag sideways, the row turns into the pill and the dominoes go down
+  const [x, y] = c.at(row(1), .55, .5);
+  await c.move(x, y, 800);
+  await c.wait(250);
+  await c.down();
+  await c.wait(120);
+  await c.drag(x - 30, y, 700);
+  await c.drag(x - 70, y, 800);
+  await c.wait(200);
+  await c.up();
+  await c.wait(600);
+  // Saturation the other way
+  const [x2, y2] = c.at(row(4), .45, .5);
+  await c.move(x2, y2, 600);
+  await c.wait(250);
+  await c.down();
+  await c.drag(x2 + 45, y2, 900);
+  await c.wait(150);
+  await c.up();
+  await c.wait(500);
+  // hold the title to compare with the original
+  await c.move(...c.at('#cmp', .3, .5), 700);
+  await c.wait(200);
+  await c.down();
+  await c.wait(1200);
+  await c.up();
+  await c.wait(700);
+  await c.leave();
+}, { tint: '#17181b', reset() {
+  DOM_ROWS.forEach((r, i) => r.set(DOM_DEFS[i][3]));
+} });
+</script>
+</body></html>

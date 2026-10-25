@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotation Slider · Dominoes Drag</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --card: #ffffff; --ink: #17181b; --muted: #62666d; --line: #dfe0e4; --press: #eeeef1;
+  --rail: #eeeef1; --rail-hover: #e8e8ec; --rail-press: #e3e3e7; --stop: #b9bcc2; --solid: #1b1c20;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+#stage { color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+.list { position: relative; width: 320px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--card-shadow); will-change: transform; }
+.srow { padding: 14px 16px 16px; }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.label { font: 400 16px/24px var(--sans); letter-spacing: -0.005em; }
+.unit { font: 400 12px/16px var(--mono); color: var(--muted); }
+
+/* Ruler: 272 × 46 pill, no border; value 18 from the left; tape window 160 centred on 136; 1 centre line;
+   ticks 6.65 apart (one per day), centred on 23: counted 14 #62666D, the rest 7 #B9BCC2. */
+.ruler { position: relative; width: 272px; max-width: 100%; height: 46px; margin-top: 8px; border-radius: 23px; background: var(--rail); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; outline: none; transition: background-color 140ms ease; }
+.ruler.is-hover { background: var(--rail-hover); }
+.ruler.is-press, .ruler.is-drag { background: var(--rail-press); }
+.ruler.is-drag { cursor: grabbing; }
+.ruler:focus-visible { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.r-val { position: absolute; left: 18px; top: 13px; font: 400 16px/20px var(--sans); font-variant-numeric: tabular-nums; pointer-events: none; }
+.r-val .d { display: inline-block; will-change: transform; }
+.r-window { position: absolute; left: 56px; width: 160px; top: 0; height: 46px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.r-window svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.tk { stroke: var(--stop); stroke-width: 1; stroke-linecap: round; }
+.tk.on { stroke: var(--muted); stroke-width: 1.25; }
+.bar { stroke: var(--muted); stroke-width: 1.25; stroke-linecap: round; }
+.r-ind { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.r-ind .ln { stroke: var(--ink); stroke-width: 1; }
+.ruler.is-press .r-ind .ln.taut, .ruler.is-drag .r-ind .ln.taut { stroke-width: 1.25; }
+.r-ind .solid { fill: var(--solid); }
+.r-rod { position: absolute; left: 136px; top: 0; width: 1px; height: 31px; margin-left: -0.5px; background: var(--ink); transform-origin: 50% 0; pointer-events: none; will-change: transform; }
+.r-rod.full { height: 46px; }
+.ruler.big .tk { stroke-width: 1.75; }
+.tk.stage { stroke: var(--ink); stroke-width: 1.5; transition: stroke 120ms ease; }
+.wall { stroke: #a9adb4; stroke-width: 3; stroke-linecap: round; }
+.r-rod .r-bob { position: absolute; left: -3.5px; top: 30px; width: 8px; height: 11px; overflow: visible; will-change: transform; }
+.r-rod .r-bob path { fill: var(--solid); }
+.r-who { position: absolute; right: 8px; top: 7px; display: grid; place-items: center; width: 32px; height: 32px; color: var(--ink); pointer-events: none; }
+.r-who svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.r-reset { position: absolute; right: 8px; top: 7px; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: none; color: var(--ink); cursor: pointer; transition: background-color 140ms ease; }
+.r-reset:hover, .r-reset[data-kit-hover] { background: rgba(23, 24, 27, 0.06); }
+.r-reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.r-reset svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html.pointer-mode *:focus, html.pointer-mode *:focus-visible { outline: none !important; }
+html.pointer-mode .ruler:focus-visible { box-shadow: none; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="300">
+  <div class="wrap">
+    <div class="demo" data-mode="dom" data-kind="cont">
+      <div class="list"><div class="srow"><div class="head"><span class="label" id="lc1">Grain</span><span class="unit">%</span></div></div></div>
+    </div>
+  </div>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const MIN = 0, MAX = 100, DEF = 40, HOME = 0, STEP = 5, PX = 1.33, MID = 23, LEAN_MAX = Math.asin(6.65 / 14) * 180 / Math.PI, DH = 14, DFOOT = 30, CX = 80, ACX = 136, G = 2600;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.append(e); return e; };
+  const sp = (s, t, k, c, dt) => { if (REDUCE) { s.x = t; s.v = 0; return; } s.v += (-k * (s.x - t) - c * s.v) * dt; s.x += s.v * dt; };
+  let speed = 1;
+  // A fallen row of dominoes, as in the real world: the one nearest the standing ones rests its top on the first
+  // standing one (asin(gap / height)); each one behind rests on the one in front, which already leans, so it lies
+  // further down: phi[k] = phi[k-1] + asin(gap / height · cos phi[k-1]). Far back they lie low (cap 76°).
+  const PHI = [0];
+  // Dominoes have thickness (3 here), so the gap a top falls across is 6.65 − 3: the row lowers gradually.
+  for (let k = 1; k <= 30; k++) PHI.push(Math.min(76, PHI[k - 1] + Math.asin(((1.33 * 5 - 3) / 14) * Math.cos(PHI[k - 1] * Math.PI / 180)) * 180 / Math.PI));
+  const SC = () => (window.KIT && KIT.scale) || 1;   // #stage is scaled: pointer px -> design px
+
+  /* ---------- C: dominoes, continuous and stepped ----------
+     The line hangs from the top; every tick is a domino standing on its foot. The line passes a domino's foot and
+     pushes it over, and it comes to rest on the next one. Like a real row, those further back lie lower:
+     rest[k] = rest[k-1] + asin(gap / h · cos rest[k-1]), gap = spacing − 3 (thickness), capped at 76°.
+     Continuous: any value. The front domino leans exactly as far as the line has pushed it (asin(push / h)), so a
+     half-pushed domino stays half over: its angle shows where between two ticks you are.
+     Stepped: 11 stops (every 10). Past halfway a domino passes its tipping point and falls on its own; release
+     snaps to the stop: it is either down or up, never in between. */
+  function makeDomino(demo) {
+    const stepped = demo.dataset.kind === 'step';
+    const MINd = 0, MAXd = 100, HOMEd = 0, DEFd = 40;
+    const STEPd = stepped ? 10 : 5, PXd = stepped ? 1.2 : 1.33, H = stepped ? 18 : 14, FOOT = stepped ? 32 : 30;
+    const NAMES = Array.from({ length: 11 }, (_, i) => String(i * 10));   // 0 … 100, one stop every 10
+    const SP = STEPd * PXd, GAP = SP - 3, CAP = 76;
+    const card = demo.querySelector('.list'), row = demo.querySelector('.srow'), labelId = demo.querySelector('.label').id;
+    const el = document.createElement('div');
+    el.className = 'ruler' + (stepped ? ' big' : ''); el.tabIndex = 0; el.setAttribute('role', 'slider'); el.setAttribute('aria-labelledby', labelId);
+    el.setAttribute('aria-valuemin', MINd); el.setAttribute('aria-valuemax', MAXd);
+    el.innerHTML = `<span class="r-val" aria-hidden="true"></span><div class="r-window"><svg height="46"></svg></div>
+      <button class="r-reset" type="button" aria-label="Reset grain to 0"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.05-4.95"/><path d="M5 4.5v3.5h3.5"/><circle cx="12" cy="12" r="1.75" fill="currentColor" stroke="none"/></svg></button>`;
+    row.append(el);
+    const out = el.querySelector('.r-val'), tape = el.querySelector('.r-window svg');
+    const rod = document.createElement('span'); rod.className = 'r-rod full'; rod.setAttribute('aria-hidden', 'true'); el.append(rod);
+
+    const ticks = [];
+    for (let u = MINd; u <= MAXd; u += STEPd) {
+      const x = (u - MINd) * PXd;
+      ticks.push({ u, x, i: ticks.length, a: 0, v: 0, falling: false, l: mk('line', { class: 'tk', x1: x, x2: x, y1: FOOT - H, y2: FOOT }, tape) });
+    }
+    const st = { value: DEFd, prev: DEFd, tapeV: 0, vel: 0, sv: 0, target: null, snapping: true, settled: true, time: 0, tapAt: 0,
+      dragging: false, pressed: false, moved: false, hover: false, startX: 0, startV: 0, lastX: 0, lastT: 0,
+      knock: null, nFallen: -1, pill: { x: 0, v: 0 }, cdip: { x: 0, v: 0 }, prot: { x: 0, v: 0 }, crot: { x: 0, v: 0 }, swing: { x: 0, v: 0 }, lift: { x: 0, v: 0 }, digits: [], dtxt: '', stop: 4 };
+    const deg = (r) => r * 180 / Math.PI, rad = (d) => d * Math.PI / 180;
+    const KMS = 360, kShape = (u) => Math.sin(2 * Math.PI * u * KMS / 170) * Math.exp(-3.2 * u) * (1 - u);
+    const kNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(kShape(i / 200))); return m; })();
+    const load = () => (clamp(st.value, MINd, MAXd) - MINd) / (MAXd - MINd);
+    const offX = () => CX - (st.value - MINd) * PXd;
+    const shownVal = () => stepped ? st.stop * STEPd : Math.round(clamp(st.value, MINd, MAXd));
+    // Stepped: a stop changes with a clunk: the word takes the hit, the line gets knocked, the pill dips.
+    function setStop(i) {
+      i = clamp(i, 0, NAMES.length - 1);
+      if (i === st.stop) return;
+      const dir = i > st.stop ? 1 : -1;
+      st.stop = i;
+      if (!REDUCE) { st.digits.forEach((d) => { d.v -= rand(50, 90); }); st.swing.v += dir * 22; st.pill.v += 3; }
+    }
+    const tipAngle = deg(Math.asin(clamp(GAP / H, 0, 1)));
+
+    function setDigits(text) {
+      if (st.dtxt === text) return;
+      const old = st.digits; out.textContent = '';
+      st.digits = [...text].map((ch, i) => { const s = document.createElement('span'); s.className = 'd'; s.textContent = ch; out.append(s); return { el: s, x: old[i] ? old[i].x : 0, v: old[i] ? old[i].v : 0 }; });
+      st.dtxt = text;
+    }
+
+    // Where every domino should be right now.
+    function targets() {
+      const tg = ticks.map(() => 0);
+      // the front one: the last foot the line has passed (or, stepped and at rest, the last stop below the value)
+      let f = -1;
+      const ref = stepped ? st.stop * STEPd : st.value;            // stepped: only whole stops count
+      for (const t of ticks) if ((ref - t.u) * PXd > 0.01) f = t.i;
+      if (f < 0) return tg;
+      const push = (st.value - ticks[f].u) * PXd;
+      let a = stepped ? tipAngle : deg(Math.asin(clamp(push, 0, GAP) / H));
+      // stepped: once past halfway it has tipped and falls on its own (handled as 'falling' below)
+      tg[f] = a;
+      for (let k = f - 1; k >= 0; k--) { a = Math.min(CAP, a + deg(Math.asin((GAP / H) * Math.cos(rad(a))))); tg[k] = a; }
+      return tg;
+    }
+
+    function step(dt) {
+      const v = (st.value - st.prev) * PXd / Math.max(dt, 1e-4); st.prev = st.value;
+      st.tapeV += (v - st.tapeV) * Math.min(1, dt * 30);
+      st.time += dt;
+      const tg = targets();
+      const front = ticks.findIndex((t) => ((stepped ? st.stop * STEPd : st.value) - t.u) * PXd <= 0.01);   // first one still standing
+      if (st.tapAt && st.time >= st.tapAt) { st.tapAt = 0; const o = ticks[front]; if (o) o.v += 70; }
+      for (const t of ticks) {
+        const T = tg[t.i];
+        if (REDUCE) { t.a = T; t.v = 0; continue; }
+        if (stepped && T >= tipAngle - 0.01 && t.a < T - 2 && t.a < tipAngle) t.falling = true;   // past its tipping point
+        if (t.falling) {
+          t.v += 2600 * (0.25 + Math.sin(rad(t.a))) * dt; t.a += t.v * dt;
+          if (t.a >= T) { t.a = T; if (t.v > 60) { st.pill.v += 1.2; const o = ticks[t.i + 1]; if (o) o.v += 30; t.v *= -0.22; } else { t.v = 0; t.falling = false; } }
+          if (T < t.a - 3) t.falling = false;
+        } else {
+          // pushed / settling: follows its target closely, a little give; never past upright or through the next one
+          t.v += (-700 * (t.a - T) - 50 * t.v) * dt; t.a += t.v * dt;
+          if (t.a < 0) { t.a = 0; if (t.v < 0) t.v = 0; }
+        }
+      }
+      // A domino going down (or being stood up) gives the bar a tiny one-sided knock, Week 3's press-shake shape at
+      // 0.08°–0.3° by speed: a faint tremor running through the bar as the row falls.
+      const nF = ticks.filter((t) => (st.value - t.u) * PXd > 0.01).length;
+      if (st.nFallen >= 0 && nF !== st.nFallen && !REDUCE) st.knock = { ms: 0, dir: Math.sign(nF - st.nFallen), amp: clamp(0.08 + Math.abs(st.tapeV) * 0.0006, 0.08, 0.3) };
+      st.nFallen = nF;
+      if (st.knock) { st.knock.ms += dt * 1000; if (st.knock.ms >= KMS) st.knock = null; }
+      for (const d of st.digits) sp(d, 0, 520, 16, dt);
+      const L = load();
+      // Every domino falls to the right, so each one that goes down moves its weight a little to the right: the more
+      // have fallen, the further right the row's centre of mass, and the bar tips right (0° at 0, 1.5° at 100); the
+      // card follows at half, a beat behind. A trace of sinking stays.
+      sp(st.pill, L * 0.5, 260, 18, dt);
+      sp(st.cdip, L * 0.4, 200, 16, dt);
+      sp(st.prot, 1.5 * L, 120, 14, dt);
+      sp(st.crot, st.prot.x * 0.5, 70, 11, dt);
+      if (!REDUCE) {
+        const drag = clamp(st.tapeV * 0.022, -9, 9);   // the dominoes hold the line's foot back
+        // Swings freely while the tape runs; at rest (hovering, still) it is damped hard so it settles at once.
+        const damp = st.dragging || Math.abs(st.tapeV) > 5 ? 5 : 14;
+        st.swing.v += (-90 * (st.swing.x - drag) - damp * st.swing.v) * dt; st.swing.x += st.swing.v * dt;
+      }
+      sp(st.lift, st.hover && !st.dragging ? -5 : 0, 420, 28, dt);   // hover lifts the line off the floor
+    }
+
+    function render() {
+      tape.style.transform = `translateX(${offX().toFixed(2)}px)`;
+      const shown = shownVal();
+      setDigits(stepped ? NAMES[st.stop] : String(shown));
+      for (const d of st.digits) d.el.style.transform = Math.abs(d.x) > 0.05 ? `translateY(${d.x.toFixed(2)}px)` : '';
+      el.setAttribute('aria-valuenow', shown); el.setAttribute('aria-valuetext', shown + '%');
+      for (const t of ticks) {
+        t.l.classList.toggle('on', t.a > 1);
+        t.l.style.transform = t.a > 0.05 ? `rotate(${t.a.toFixed(2)}deg)` : '';
+        t.l.style.transformOrigin = `${t.x}px ${FOOT}px`;
+      }
+      rod.style.height = (46 + st.lift.x).toFixed(2) + 'px';
+      rod.style.transform = Math.abs(st.swing.x) > 0.01 ? `rotate(${st.swing.x.toFixed(3)}deg)` : '';
+      el.classList.toggle('is-hover', st.hover && !st.pressed && !st.dragging);
+      el.classList.toggle('is-press', st.pressed && !st.moved);
+      el.classList.toggle('is-drag', st.dragging && st.moved);
+      const kn = st.knock ? st.knock.dir * st.knock.amp * kShape(st.knock.ms / KMS) / kNorm : 0;
+      const half = (el.offsetWidth || 272) / 2, pv = st.knock && st.knock.dir > 0 ? -half : half;
+      el.style.transform = `translateY(${st.pill.x.toFixed(2)}px) rotate(${st.prot.x.toFixed(3)}deg) translateX(${pv}px) rotate(${kn.toFixed(3)}deg) translateX(${-pv}px)`;
+      card.style.transform = `translateY(${st.cdip.x.toFixed(2)}px) rotate(${st.crot.x.toFixed(3)}deg)`;
+    }
+
+    el.addEventListener('pointerenter', () => {
+      st.hover = true;
+      if (!st.dragging && !REDUCE) { st.swing.v -= 10; st.tapAt = st.time + 0.09; }   // lifted, the foot taps the next domino once
+    });
+    el.addEventListener('pointerleave', () => { st.hover = false; });
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('.r-reset')) return;
+      el.setPointerCapture(e.pointerId);
+      Object.assign(st, { dragging: true, pressed: true, moved: false, snapping: false, vel: 0, target: null, startX: e.clientX, lastX: e.clientX, startV: st.value, lastT: performance.now() });
+      if (!REDUCE) st.pill.v += 4;
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!st.dragging) return;
+      if (!st.moved && Math.abs(e.clientX - st.startX) > 3) { st.moved = true; st.pressed = false; }
+      let v = st.startV - (e.clientX - st.startX) / SC() / PXd;
+      if (v < MINd) v = MINd - Math.sqrt(MINd - v) * 1.5;
+      if (v > MAXd) v = MAXd + Math.sqrt(v - MAXd) * 1.5;
+      const now = performance.now(), dt = Math.max(1, now - st.lastT) / 1000;
+      st.vel = clamp(0.7 * st.vel + 0.3 * (-(e.clientX - st.lastX) / SC() / PXd / Math.max(dt, 0.008)), -240, 240);
+      st.lastX = e.clientX; st.lastT = now;
+      if (stepped) {
+        // Ratchet: the tape only creeps toward your pull (18%), and clunks to the next stop past halfway.
+        const raw = clamp(v, MINd, MAXd);
+        setStop(Math.round(raw / STEPd));
+        st.target = st.stop * STEPd + clamp(raw - st.stop * STEPd, -STEPd / 2, STEPd / 2) * 0.18;
+      } else st.value = v;
+    });
+    const up = () => {
+      if (!st.dragging) return;
+      Object.assign(st, { dragging: false, pressed: false, moved: false, snapping: true, settled: false });
+      if (REDUCE || stepped || performance.now() - st.lastT > 80) st.vel = 0;
+      if (stepped) st.target = st.stop * STEPd;
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    let wheelAcc = 0;
+    el.addEventListener('wheel', (e) => {
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; e.preventDefault();
+      if (stepped) { wheelAcc += d; if (Math.abs(wheelAcc) > 40) { setStop(st.stop + Math.sign(wheelAcc)); wheelAcc = 0; st.target = st.stop * STEPd; } return; }
+      st.value = clamp(st.value + d / PXd / 2, MINd, MAXd); st.vel = 0; st.target = null; st.snapping = true; st.settled = false;
+    }, { passive: false });
+    el.addEventListener('keydown', (e) => {
+      const k = e.key, cur = shownVal(), one = stepped ? STEPd : 1, big = stepped ? STEPd : 10; let t = null;
+      if (k === 'ArrowRight' || k === 'ArrowUp') t = cur + (e.shiftKey ? big : one);
+      else if (k === 'ArrowLeft' || k === 'ArrowDown') t = cur - (e.shiftKey ? big : one);
+      else if (k === 'PageUp') t = cur + big; else if (k === 'PageDown') t = cur - big;
+      else if (k === 'Home') t = MINd; else if (k === 'End') t = MAXd;
+      if (t == null) return; e.preventDefault();
+      if (stepped) { setStop(Math.round(clamp(t, MINd, MAXd) / STEPd)); st.target = st.stop * STEPd; return; }
+      st.target = clamp(t, MINd, MAXd); st.vel = 0; st.snapping = true; st.settled = false;
+    });
+    el.querySelector('.r-reset').addEventListener('click', () => { if (stepped) { setStop(0); st.target = 0; return; } st.target = HOMEd; st.vel = 0; st.snapping = true; st.settled = false; });
+
+    function reset() {
+      if (stepped) st.stop = 4;
+      Object.assign(st, { value: stepped ? 4 * STEPd : DEFd, prev: stepped ? 4 * STEPd : DEFd, vel: 0, sv: 0, target: null, settled: true, snapping: true });
+      const tg = targets(); ticks.forEach((t) => { t.a = tg[t.i]; t.v = 0; t.falling = false; });
+      st.pill.x = load() * 0.5; st.cdip.x = load() * 0.4; st.pill.v = st.cdip.v = 0; st.swing.x = st.swing.v = 0;
+      st.prot.x = 1.5 * load(); st.crot.x = st.prot.x * 0.5; st.prot.v = st.crot.v = 0;
+    }
+    reset();
+
+    function tick(dt) {
+      if (stepped) {
+        // A clunk: fast and firm, a touch of overshoot.
+        if (st.target != null) { if (REDUCE) st.value = st.target; else { st.sv += (-900 * (st.value - st.target) - 48 * st.sv) * dt; st.value += st.sv * dt; } }
+      } else if (!st.dragging && st.snapping) {
+        const L = load();
+        if (REDUCE) { st.value = clamp(st.target ?? (stepped ? shownVal() : Math.round(st.value)), MINd, MAXd); st.target = null; st.vel = 0; }
+        else if (st.target != null) {
+          st.sv += (-170 * (st.value - st.target) - 26 * st.sv) * dt; st.value += st.sv * dt;
+          if (Math.abs(st.value - st.target) < 0.02 && Math.abs(st.sv) < 0.5) { st.value = st.target; st.target = null; st.sv = 0; }
+        } else if (!stepped && Math.abs(st.vel) > 2 && st.value >= MINd && st.value <= MAXd) {
+          st.value += st.vel * dt; st.vel *= Math.exp(-(3 + 9 * L) * dt);      // heavier, shorter coast
+        } else {
+          // stepped: settle on the stop; continuous: just back inside the range, wherever it stopped
+          const t = stepped ? shownVal() : clamp(st.value, MINd, MAXd);
+          st.sv += (-170 * (st.value - t) - 26 * st.sv) * dt; st.value += st.sv * dt; st.vel = 0;
+          if (Math.abs(st.value - t) < 0.01 && Math.abs(st.sv) < 0.3) {
+            st.value = t; st.sv = 0;
+            if (!st.settled) { st.settled = true; if (!REDUCE) st.digits.forEach((d) => { d.v -= (0.8 + L) * rand(30, 70); }); }
+          }
+        }
+      }
+      const n = Math.max(1, Math.ceil(dt / (1 / 240)));
+      for (let i = 0; i < n; i++) step(dt / n);
+      render();
+    }
+    return { tick, reset };
+  }
+
+  const ruler = makeDomino(document.querySelector('.demo'));
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000) * speed; last = now;
+    ruler.tick(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window.__rot = { reset() { ruler.reset(); } };
+  const root = document.documentElement;
+  addEventListener('pointerdown', () => root.classList.add('pointer-mode'), true);
+  addEventListener('keydown', (e) => { if (!e.metaKey && !e.ctrlKey && !e.altKey) root.classList.remove('pointer-mode'); }, true);
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const r = c.el('.ruler');
+  // hover lifts the line off the floor; grab the tape and pull it left: dominoes topple one after another as the line passes
+  const [ax, ay] = c.at(r, 0.6, 0.5);
+  await c.move(ax + 10, ay + 40, 700);
+  await c.move(ax, ay, 450);
+  await c.wait(450);
+  await c.down();
+  await c.wait(120);
+  await c.drag(ax - 56, ay, 1100);
+  await c.wait(200);
+  await c.drag(ax - 40, ay, 420);
+  await c.up();
+  await c.wait(900);
+  // and back: pulling right stands them up again
+  await c.down();
+  await c.drag(ax + 6, ay, 900);
+  await c.up();
+  await c.wait(1000);
+  await c.leave();
+}, { tint: '#1b1c20', reset() { window.__rot.reset(); } });
+</script>
+</body></html>

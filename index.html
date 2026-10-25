@@ -348,20 +348,82 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
   .cs-meta > div { flex: 1 1 40%; }
 }
 
-/* Playground — Areal "Works" masonry: full-bleed, 3 columns, 8px gutters, 16px corners, badges on hover */
-.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 100px 8px 0; align-items: start; }
-.pcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.pitem { position: relative; border-radius: 16px; overflow: hidden; background: var(--card); max-width: 100%; }
-.pitem img, .pitem iframe { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border: 0; display: block; }
-.pitem .meta { pointer-events: none; }
-.pitem iframe.scaled { right: auto; bottom: auto; transform-origin: 0 0; }
-.pitem .soon { position: absolute; inset: 0; display: grid; place-items: center; color: var(--faint); font-size: 14px; letter-spacing: -0.04em; }
-.pitem .meta { position: absolute; z-index: 1; top: 8px; left: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity .25s ease; }
-.pitem .meta .chip { background: rgba(0, 0, 0, .04); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: rgba(0, 0, 0, .4); font-size: 14px; line-height: 14px; letter-spacing: -0.04em; padding: 4px 10px; border-radius: 40px; }
-.pitem:hover .meta { opacity: 1; }
-/* Framer "Badge on Dark Theme": 12% white glass, white text */
-.pitem.on-dark .meta .chip { background: rgba(255, 255, 255, .12); color: #fff; }
-@media (max-width: 759px) { .pgrid { grid-template-columns: minmax(0, 1fr); padding-top: 90px; } }
+/* Playground — blocks wall (from the Interface Playground artifact), in the site's grid: full-bleed, 3 columns, 8px gutters, 16px corners */
+.pg { padding: 100px 8px 0; --pg-tag: #e9ebef; --pg-tag-ink: #8c8d90; --pg-ink: #17181a; --pg-ink2: #3c3b37; --pg-ink3: #5c5b56; --pg-ink4: #73726d;
+  --pg-tagface: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; --pg-spring: cubic-bezier(.28, 1.3, .36, 1); }
+.pg [hidden], .pg-dtl[hidden], .pg-dtl [hidden] { display: none !important; }
+.pg-tag, .pg-chip { font: 400 14px/16px var(--pg-tagface); letter-spacing: normal; padding: 2px 11px; border-radius: 999px; background: var(--pg-tag); color: var(--pg-tag-ink); white-space: nowrap; }
+.pg-chips { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 12px; }
+.pg-chip { border: 0; cursor: pointer; transition: background .16s, color .16s, transform .24s var(--pg-spring); }
+.pg-chip:hover { color: var(--pg-ink2); }
+.pg-chip:active { transform: scale(.94); }
+.pg-chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.pg-wall { display: flex; gap: 8px; align-items: flex-start; }
+.pg-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pg-card { position: relative; border-radius: 16px; overflow: hidden; background: #f4f4f4; isolation: isolate; }
+.pg-card iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
+.pg-veil { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; padding: 0 106px 22px 16px; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .26s var(--pg-spring); }
+.pg-rnd { position: absolute; bottom: 14px; z-index: 3; width: 38px; height: 38px; border: 0; padding: 0; border-radius: 999px; background: rgba(255, 255, 255, .94); color: var(--pg-ink3); display: grid; place-items: center; cursor: pointer;
+  opacity: 0; transition: opacity .18s, transform .24s var(--pg-spring), background .2s, color .16s; box-shadow: 0 1px 2px rgba(23, 24, 26, .06), 0 0 0 1px rgba(23, 24, 26, .04); }
+.pg-rnd:hover { color: var(--pg-ink); background: #fff; transform: scale(.95); }
+.pg-rnd:active { transform: scale(.9); }
+.pg-rnd.open { right: 14px; }
+.pg-rnd.play { right: 60px; }
+.pg-rnd.play[data-on="true"] { background: var(--pg-ink); color: #fff; opacity: 1; }
+.pg-vsw { position: absolute; top: 14px; left: 0; right: 0; z-index: 3; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 0 16px; pointer-events: none; opacity: 0; transform: translateY(-4px); transition: opacity .2s, transform .26s var(--pg-spring); }
+@media (hover: hover) {
+  .pg-card:hover .pg-veil { opacity: 1; transform: none; }
+  .pg-card:hover .pg-rnd, .pg-rnd:focus-visible { opacity: 1; }
+  .pg-card:hover .pg-vsw, .pg-vsw:focus-within { opacity: 1; transform: none; }
+}
+@media (hover: none) { .pg-rnd, .pg-veil, .pg-vsw { opacity: 1; transform: none; } }
+.pg-seg { position: relative; display: inline-flex; padding: 2px; border-radius: 999px; background: rgba(23, 24, 26, .07); pointer-events: auto; max-width: 100%; }
+.pg-seg button { position: relative; z-index: 1; border: 0; background: none; cursor: pointer; font: 400 14px/16px var(--pg-tagface); padding: 2px 11px; border-radius: 999px; color: var(--pg-tag-ink); white-space: nowrap; transition: color .2s; }
+.pg-seg button:hover { color: var(--pg-ink2); }
+.pg-seg button[aria-pressed="true"] { color: var(--pg-ink); }
+.pg-seg .thumb { position: absolute; top: 2px; bottom: 2px; left: 2px; width: 0; border-radius: 999px; background: #fff; box-shadow: 0 1px 2px rgba(23, 24, 26, .1), 0 0 0 .5px rgba(23, 24, 26, .06); transition: left .34s var(--pg-spring), width .34s var(--pg-spring); }
+.pg-empty { padding-block: 48px 96px; text-align: center; color: var(--muted); font-size: 14px; }
+/* detail: stage + side panel */
+.pg-dtl { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; }
+.pg-scrim { position: absolute; inset: 0; border: 0; padding: 0; background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3); cursor: default; animation: pgFade .25s both; }
+@keyframes pgFade { from { opacity: 0; } }
+.pg-shell { position: relative; width: min(1000px, 100%); height: min(640px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 8px; animation: pgPop .42s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes pgPop { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.pg-block { position: relative; border-radius: 16px; overflow: hidden; background: #f4f4f4; min-height: 0; }
+.pg-block iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.pg-block .pg-rnd { opacity: 1; right: 14px; }
+.pg-tools { position: absolute; top: 12px; right: 12px; z-index: 3; display: flex; gap: 2px; }
+.pg-tool { width: 36px; height: 36px; border: 0; padding: 0; border-radius: 999px; background: transparent; color: var(--pg-ink3); display: grid; place-items: center; cursor: pointer; position: relative; }
+.pg-tool::before { content: ""; position: absolute; inset: 0; border-radius: 999px; background: rgba(23, 24, 26, .08); opacity: 0; scale: .86; transition: opacity .15s, scale .26s cubic-bezier(.3, 1.12, .4, 1); }
+.pg-tool:hover::before { opacity: 1; scale: 1; }
+.pg-tool:hover { color: var(--pg-ink); }
+.pg-tool svg { position: relative; }
+.pg-side { background: var(--bg); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; min-height: 0; overflow: auto; box-shadow: 0 0 0 1px var(--line), 0 24px 60px -30px rgba(23, 24, 26, .25); }
+.pg-side .pg-tool { color: var(--muted); }
+.pg-side .pg-tool:hover { color: var(--fg); }
+.pg-head { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 14px; }
+.pg-head h2 { margin: 6px 0 0; font-size: 17px; font-weight: 500; line-height: 21px; letter-spacing: -0.02em; }
+.pg-say { margin: 0 0 16px; font-size: 13px; line-height: 1.45; letter-spacing: -0.01em; color: var(--muted); }
+.pg-ctl { display: grid; gap: 8px; margin-bottom: 14px; }
+.pg-ctl-label { font-size: 13px; font-weight: 500; line-height: 1; color: var(--muted); }
+.pg-ctl .pg-seg { justify-self: start; flex-wrap: wrap; }
+.pg-rows { display: grid; gap: 10px; }
+.pg-row { height: 44px; padding: 0 13px; border-radius: 10px; background: var(--card); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13.5px; font-weight: 500; line-height: 1; letter-spacing: -0.01em; }
+.pg-row span:last-child { color: var(--muted); font-weight: 400; }
+.pg-acts { margin-top: auto; padding-top: 18px; display: grid; gap: 8px; }
+.pg-wide { height: 40px; border-radius: 999px; border: 0; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; font-weight: 500; cursor: pointer; transition: transform .24s var(--pg-spring), background .2s; }
+.pg-wide.soft { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
+.pg-wide.soft:hover { background: var(--card); }
+.pg-wide.solid { background: var(--btn); color: var(--btn-fg); }
+.pg-wide:active { transform: scale(.97); }
+.pg-pager { display: flex; gap: 8px; }
+.pg-pager .pg-wide { flex: 1; }
+@media (max-width: 759px) {
+  .pg { padding-top: 90px; }
+  .pg-shell { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; height: 100%; }
+  .pg-side { max-height: 46vh; }
+}
+@media (prefers-reduced-motion: reduce) { .pg-shell, .pg-scrim { animation: none; } }
 
 /* Motion from the Framer page: hero lines rise in on load (20px, 0.4s spring, staggered);
    cards and rows rise in as they scroll into view (20px, 1s, ease [.44,0,.56,1]) */
@@ -621,15 +683,256 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
     </article>`;
   };
 
-  const PLAYGROUND = [[{"embed": "play/nokia-loader.html", "name": "Nokia Loader", "year": "2026", "r": "4/5", "link": "https://nokia-loader.vercel.app/"}, {"embed": "play/wk02-quirky.html", "name": "Information Has Weight", "year": "2026", "tone": "Quirky", "r": "4/3", "link": "https://advinterfacewk02.vercel.app/quirky/", "vw": 440}, {"embed": "play/wk02-nostalgic.html", "name": "Resolving Data", "year": "2026", "tone": "Nostalgic", "r": "4/3", "link": "https://advinterfacewk02.vercel.app/nostalgic/", "vw": 760}], [{"embed": "play/push-loader.html", "name": "Push Loader", "year": "2026", "r": "468/293", "dark": true}, {"embed": "play/wk02-playful-reading.html", "name": "Reading Pile", "year": "2026", "tone": "Playful", "r": "4/5", "link": "https://advinterfacewk02.vercel.app/playful-reading/", "vw": 560}, {"embed": "play/wk02-ethereal.html", "name": "Fluid Interface", "year": "2026", "tone": "Ethereal", "r": "4/3", "link": "https://advinterfacewk02.vercel.app/ethereal/", "vw": 520}], [{"embed": "play/tide-endless.html", "name": "Tide Loader", "year": "2026", "r": "1/1", "dark": true}, {"embed": "play/wk02-playful.html", "name": "Notifications Pile Up", "year": "2026", "tone": "Playful", "r": "4/5", "link": "https://advinterfacewk02.vercel.app/playful/", "vw": 560}, {"embed": "play/wk02-glass.html", "name": "Liquid Glass", "year": "2026", "tone": "Ethereal", "r": "1/1", "link": "https://advinterfacewk02.vercel.app/glass/", "vw": 520}]];
+  // ---------- Playground: live blocks (pg/*.html, each a component on a fixed stage that kit.js fits into its card) ----------
+  const PG_GH = "https://dakotashao.github.io/";
+  const H = {"autumn-full-bleed": 680, "avant-garde-booklet": 260, "dominoes-list--rows": 420, "dominoes-list--tape": 404, "dominoes-list--wheel": 408, "film": 259, "fling-loader-indeterminate": 600, "fling-loader": 600, "fluid-interface": 440, "information-has-weight": 520, "liquid-glass": 440, "liquid-sliders--fade-out": 300, "liquid-sliders--rain": 300, "liquid-sliders--sleep-timer": 300, "liquid-sliders--volume": 300, "mix-of-615": 340, "notifications-pile-up": 640, "push-loader--determinate": 380, "push-loader--indeterminate": 380, "reading-pile": 640, "resolving-data--badge-content": 300, "resolving-data--badge-dot": 300, "resolving-data--tooltip-plain": 380, "resolving-data--tooltip-rich": 380, "rotation-slider--domino-stacks": 300, "rotation-slider--dominoes-drag": 300, "rotation-slider--plumb-bob": 300, "selection-has-weight--checkbox": 340, "selection-has-weight--radio": 340, "selection-has-weight--toggle": 340, "tide-loader--smooth-endless": 420, "tide-loader--smooth": 420, "tide-loader--strips-endless": 420, "tide-loader--strips": 420, "weight-sliders--balance-usage": 320, "weight-sliders--balance-visible": 320, "weight-sliders--keep-for": 320, "weight-sliders--lever-usage": 320, "weight-sliders--lever-visible": 320, "weight-sliders--offline-downloads": 320};
+  
+  const ITEMS = [
+    { slug:"dominoes-list--rows", name:"Dominoes List", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
+      say:"A photo editor's Adjust list built on the Week 4 Dominoes Drag slider. Drag a row sideways and it becomes the slider in place; hold the title to compare." },
+    { slug:"autumn-full-bleed", name:"Autumn", type:"Lists", week:5, verb:"Hover",
+      say:"Autumn leaves in three groups. Hover a leaf and the big leaf behind the list turns into it; a group row expands, a leaf row opens its page.", url:"adv_interface_wk05/autumn-full/" },
+    { name:"Domino Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/rotation-slider/",
+      say:"Dominoes topple as you drag and stand back up as you return. Stepped, they stack and slam into each stop.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["rotation-slider--dominoes-drag","rotation-slider--domino-stacks"] },
+    { name:"Lever Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
+      say:"The track is a lever pivoted at zero. The further out the ball goes, the more it tips, and the harder the most exposed stop is to reach.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--lever-visible","weight-sliders--lever-usage"] },
+    { slug:"avant-garde-booklet", name:"Avant Garde Booklet", type:"Booklets", verb:"Press",
+      say:"A type specimen for ITC Avant Garde Gothic, set to 1970s funk. Turn the pages; it opens on the Funkadelic spread.", href:"https://claude.ai/artifact/LFMgefpSSuxcwXRv6kGR7C" },
+    { slug:"selection-has-weight--toggle", name:"Toggle", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
+      say:"A choice weighs as much as what it exposes. Hold to tip the switch over; turning it back off is one tap.", url:"adv_interface_wk03_selector/quirky/" },
+    { slug:"reading-pile", name:"Reading Pile", type:"Badges & Tooltips", week:2, tone:"Playful", verb:"Select",
+      say:"Select a word while you read to save it. It drops into your Words pile and the badge counts it.", url:"adv_interface_wk02/playful-reading/" },
+    { name:"Surface Slider", type:"Sliders", week:4, tone:"Ethereal", verb:"Drag", url:"adv_interface_wk04_slider/ethereal-sliders/",
+      say:"A slider of water. Hover and the surface rises under your hand; drag and the bulk of the water trails the head.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["liquid-sliders--volume","liquid-sliders--rain"] },
+    { name:"Fling Loader", type:"Loaders", verb:"Drag",
+      say:"A progress indicator on an early-2000s Nokia LCD. While your message sends, fling the bird at the mailbox; it can only fly as far as the send has got.", href:"https://nokia-loader.vercel.app",
+      axes:[["Progress",["Determinate","Indeterminate"]]], grid:["fling-loader","fling-loader-indeterminate"] },
+    { slug:"film", name:"Short Film", tagName:"Film", type:"Film", nodemo:true, minimal:true,
+      say:"Commercial for a face mask. Directed and shot by Dakota Shao. Award of Merit, Shanghai International College Students' Advertising Festival." },
+    { name:"Rope Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
+      say:"A value weighs as much as what it exposes. The number hangs on a rope that droops deeper as the value rises.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--offline-downloads","weight-sliders--keep-for"] },
+    { slug:"dominoes-list--wheel", name:"Dominoes Wheel", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
+      say:"The same list as a wheel. Rows you scroll past tip back onto the pile like dominoes." },
+    { slug:"selection-has-weight--radio", name:"Radio", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
+      say:"The more people an option reaches, the higher the ball has to be lifted. Hold to lift it; tap to drop it.", url:"adv_interface_wk03_selector/quirky/" },
+    { slug:"fluid-interface", name:"Fluid Interface", type:"Badges & Tooltips", week:2, tone:"Ethereal", verb:"Hover",
+      say:"A badge and tooltip that move like water. Blue stands for water across the whole Ethereal system.", url:"adv_interface_wk02/ethereal/" },
+    { slug:"information-has-weight", name:"Information Has Weight", type:"Badges & Tooltips", week:2, tone:"Quirky", verb:"Hover",
+      say:"A badge on a share bar that gets heavier the more people a link reaches.", url:"adv_interface_wk02/quirky/" },
+    { name:"Plumb Bob Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/rotation-slider/",
+      say:"A plumb bob hangs from the value line. Scrub and it swings; flick and the tape coasts to a whole value.", slug:"rotation-slider--plumb-bob" },
+    { slug:"notifications-pile-up", name:"Notifications Pile Up", type:"Badges & Tooltips", week:2, tone:"Playful", verb:"Hover",
+      say:"Notifications land on top of each other and pile up until you clear them.", url:"adv_interface_wk02/playful/" },
+    { slug:"selection-has-weight--checkbox", name:"Checkbox", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
+      say:"Each item weighs what it would share. Hold to press a check in; tap to flick it off.", url:"adv_interface_wk03_selector/quirky/" },
+    { name:"Tide Loader", type:"Loaders", verb:"Watch", nodemo:true,
+      say:"An ASCII ocean. Blue water washes into a white square from the left, pulls back, leaves grains on the sand, then reaches further.", href:"https://dakotashao.github.io/tide-loader/",
+      axes:[["Edge",["Smooth","Strips"]],["Progress",["Loading","Endless"]]], grid:["tide-loader--smooth","tide-loader--smooth-endless","tide-loader--strips","tide-loader--strips-endless"] },
+    { slug:"mix-of-615", name:"Mix of 615", type:"Booklets", verb:"Press",
+      say:"A printed booklet as a flip book. Click a page or use the arrows to turn it.", href:"https://claude.ai/artifact/LEhvyGWGKJQd7d2HfoUqUV" },
+    { name:"Parting Slider", type:"Sliders", week:4, tone:"Ethereal", verb:"Drag", url:"adv_interface_wk04_slider/ethereal-sliders/",
+      say:"A bar of glass that parts where you press, and heals where it was cut before.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["liquid-sliders--sleep-timer","liquid-sliders--fade-out"] },
+    { name:"Balance Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
+      say:"A beam the ball rolls along. Push one end and it leans; the ball only moves once it tips far enough.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--balance-visible","weight-sliders--balance-usage"] },
+    { name:"Push Loader", type:"Loaders", verb:"Watch",
+      say:"A stick figure pushes the word LOADING. The letters squeeze and the screen turns orange as the pressure builds; at 100% the word springs open and throws the figure out.", href:"https://dakotashao.github.io/push-loader/",
+      axes:[["Progress",["Determinate","Indeterminate"]]], grid:["push-loader--determinate","push-loader--indeterminate"] },
+    { slug:"dominoes-list--tape", name:"Dominoes Tape", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
+      say:"A wheel with a domino tape: a fixed line, and each row carries its own dominoes that tip as it passes." },
+    { name:"Resolving Badge", type:"Badges & Tooltips", week:2, tone:"Nostalgic", verb:"Press",
+      say:"Badges start blank and resolve into place, like data arriving on an old terminal.", url:"adv_interface_wk02/nostalgic/",
+      axes:[["Type",["Content","Dot"]]], grid:["resolving-data--badge-content","resolving-data--badge-dot"] },
+  ];
+  
+  const CARD_H = { "avant-garde-booklet": 340, "mix-of-615": 400 };
+  
+  const ZOOM = {"autumn-full-bleed": 0.68, "dominoes-list--rows": 0.75, "dominoes-list--tape": 0.75, "dominoes-list--wheel": 0.75, "fling-loader": 0.68, "fling-loader-indeterminate": 0.68, "fluid-interface": 1, "information-has-weight": 1, "liquid-glass": 0.57, "liquid-sliders--fade-out": 0.6, "liquid-sliders--rain": 0.6, "liquid-sliders--sleep-timer": 0.6, "liquid-sliders--volume": 0.6, "notifications-pile-up": 0.66, "push-loader--determinate": 0.6, "push-loader--indeterminate": 0.6, "reading-pile": 0.66, "resolving-data--badge-content": 0.89, "resolving-data--badge-dot": 0.89, "rotation-slider--domino-stacks": 0.75, "rotation-slider--dominoes-drag": 0.75, "rotation-slider--plumb-bob": 0.75, "selection-has-weight--checkbox": 0.75, "selection-has-weight--radio": 0.75, "selection-has-weight--toggle": 0.74, "tide-loader--smooth": 0.8, "tide-loader--smooth-endless": 0.8, "tide-loader--strips": 0.8, "tide-loader--strips-endless": 0.8, "weight-sliders--balance-usage": 0.82, "weight-sliders--balance-visible": 0.82, "weight-sliders--keep-for": 0.82, "weight-sliders--lever-usage": 0.82, "weight-sliders--lever-visible": 0.82, "weight-sliders--offline-downloads": 0.82, "avant-garde-booklet": 0.62, "mix-of-615": 0.62};
+  
+  const TYPES = ["Badges & Tooltips", "Selectors", "Sliders", "Lists", "Loaders", "Booklets", "Film"];
+  
+  const ICON = {
+    play: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>',
+    stop: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="3"/></svg>',
+    open: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/></svg>',
+  };
+  
+  ITEMS.forEach((it) => { if (it.axes) it.sel = it.axes.map(() => 0); });
+  const pgSrc = (slug, extra = "") => `pg/${slug}.html?soft=1${extra || "&zoom=" + (ZOOM[slug] || 1)}`;
+  const pgGi = (it) => it.sel.reduce((acc, k, a) => acc * it.axes[a][1].length + k, 0);
+  const pgSlug = (it) => it.axes ? it.grid[pgGi(it)] : it.slug;
+  const pgSegs = (it, labelled) => it.axes.map(([name, opts], a) => {
+    const seg = `<span class="pg-seg" role="radiogroup" aria-label="${name}"><span class="thumb"></span>${opts.map((o, k) =>
+      `<button data-a="${a}" data-k="${k}" role="radio" aria-pressed="${it.sel[a] === k}" aria-checked="${it.sel[a] === k}">${o}</button>`).join("")}</span>`;
+    return labelled ? `<div class="pg-ctl"><span class="pg-ctl-label">${name}</span>${seg}</div>` : seg;
+  }).join("");
+  const pgTag = (t) => `<span class="pg-tag">${t}</span>`;
   const playground = () => `
-    <section class="pgrid" aria-label="Playground">
-      ${PLAYGROUND.map((col) => `<div class="pcol">${col.map((it) => `
-        <div class="pitem${it.embed ? " live" : ""}${it.dark ? " on-dark" : ""}" style="aspect-ratio:${it.r}">
-          ${it.embed ? `<iframe src="${it.embed}" title="${it.name} (interactive)" loading="lazy"${it.vw ? ` class="scaled" data-vw="${it.vw}"` : ""}></iframe>` : `<span class="soon">Coming soon</span>`}
-          ${it.embed ? `<div class="meta"><span class="chip">${it.name}</span>${it.tone ? `<span class="chip">${it.tone}</span>` : ""}<span class="chip">${it.year}</span></div>` : ""}
-        </div>`).join("")}</div>`).join("")}
-    </section>`;
+    <section class="pg" aria-label="Playground">
+      <div class="pg-chips" id="pg-chips" role="group" aria-label="Filter">${TYPES.map((t) => `<button class="pg-chip" aria-pressed="false">${t}</button>`).join("")}</div>
+      <div class="pg-wall" id="pg-wall"></div>
+      <p class="pg-empty" id="pg-empty" hidden>No block matches that.</p>
+    </section>
+    <div class="pg-dtl" id="pg-dtl" hidden role="dialog" aria-modal="true" aria-labelledby="pg-d-title">
+      <button class="pg-scrim" id="pg-d-scrim" aria-label="Close" tabindex="-1"></button>
+      <div class="pg-shell">
+        <div class="pg-block">
+          <iframe id="pg-d-frame" title="Block"></iframe>
+          <div class="pg-tools"><a class="pg-tool" id="pg-d-full" target="_blank" rel="noopener" aria-label="Open the full prototype" title="Full prototype"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></div>
+          <button class="pg-rnd play" id="pg-d-play" aria-label="Show me how"></button>
+        </div>
+        <aside class="pg-side">
+          <header class="pg-head"><h2 id="pg-d-title"></h2><button class="pg-tool" id="pg-d-x" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+          <p class="pg-say" id="pg-d-say"></p>
+          <div id="pg-d-vsw"></div>
+          <div class="pg-rows" id="pg-d-rows"></div>
+          <div class="pg-acts">
+            <div class="pg-pager" id="pg-d-pager"><button class="pg-wide soft" id="pg-d-prev" aria-label="Previous block">←</button><button class="pg-wide soft" id="pg-d-next" aria-label="Next block">→</button></div>
+            <a class="pg-wide solid" id="pg-d-open" target="_blank" rel="noopener">Full prototype</a>
+          </div>
+        </aside>
+      </div>
+    </div>`;
+
+  // state lives here; the markup is rebuilt each time the route renders
+  const pg = { filter: null, shown: [], cur: -1, frames: new Map(), io: null, opener: null, n: 0 };
+  const pgEl = (id) => document.getElementById(id);
+  const pgCols = () => innerWidth > 759 ? 3 : 1;
+  function pgThumbs(root, instant) {
+    root.querySelectorAll(".pg-seg").forEach((seg) => {
+      const on = seg.querySelector('button[aria-pressed="true"]'), th = seg.querySelector(".thumb");
+      if (!on) return;
+      if (instant) th.style.transition = "none";
+      th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px";
+      th.style.top = on.offsetTop + "px"; th.style.height = on.offsetHeight + "px"; th.style.bottom = "auto";
+      if (instant) { th.offsetWidth; th.style.transition = ""; }
+    });
+  }
+  function pgSyncSegs(root, it) {
+    root.querySelectorAll(".pg-seg button").forEach((b) => { const on = it.sel[+b.dataset.a] === +b.dataset.k; b.setAttribute("aria-pressed", on); b.setAttribute("aria-checked", on); });
+    pgThumbs(root);
+  }
+  function pgSetPlay(btn, on) {
+    if (!btn) return;
+    btn.dataset.on = on; btn.innerHTML = on ? ICON.stop : ICON.play;
+    btn.setAttribute("aria-label", on ? "Stop" : "Show me how");
+  }
+  function pgRender(again) {
+    const wall = pgEl("pg-wall"); if (!wall) return;
+    pg.shown = ITEMS.filter((it) => !pg.filter || it.type === pg.filter);
+    pgEl("pg-empty").hidden = pg.shown.length > 0;
+    if (pg.io) pg.io.disconnect(); pg.frames.clear();
+    pg.io = new IntersectionObserver((es) => es.forEach((en) => {
+      const card = en.target; let f = card.querySelector("iframe");
+      if (en.isIntersecting && !f) {
+        f = document.createElement("iframe"); f.src = pgSrc(card.dataset.slug); f.title = card.dataset.name;
+        card.prepend(f);
+        f.addEventListener("load", () => pg.frames.set(f.contentWindow, card.querySelector(".play")), { once: true });
+      } else if (!en.isIntersecting && f) {
+        pg.frames.delete(f.contentWindow); f.remove(); pgSetPlay(card.querySelector(".play"), false);
+      }
+    }), { rootMargin: "400px 0px" });
+    const n = pg.n = pgCols(), heights = Array(n).fill(0);
+    const columns = Array.from({ length: n }, () => Object.assign(document.createElement("div"), { className: "pg-col" }));
+    pg.shown.forEach((it, i) => {
+      const first = it.axes ? it.grid[0] : it.slug;
+      const h = Math.min(520, CARD_H[first] || H[first] || 380);
+      const k = heights.indexOf(Math.min(...heights)); heights[k] += h + 8;
+      const card = document.createElement("article");
+      card.className = "pg-card"; card.dataset.slug = pgSlug(it); card.dataset.name = it.name; card.dataset.i = i;
+      card.style.aspectRatio = `460 / ${h}`;
+      card.innerHTML = (it.axes ? `<div class="pg-vsw">${pgSegs(it)}</div>` : "") + `<div class="pg-veil">${pgTag(it.tagName || it.name)}${it.verb ? pgTag(it.verb) : ""}</div>
+        <button class="pg-rnd play" aria-label="Show me how"${it.nodemo ? " hidden" : ""}>${ICON.play}</button>
+        <button class="pg-rnd open" aria-label="Open ${it.name}">${ICON.open}</button>`;
+      columns[k].appendChild(card);
+    });
+    wall.replaceChildren(...columns);
+    wall.querySelectorAll(".pg-card").forEach((c) => { c.classList.add("rv", "in"); pg.io.observe(c); });
+    pgThumbs(wall, true);
+  }
+  function pgVariant(it, a, k, card) {
+    if (it.sel[a] === k) return;
+    it.sel[a] = k;
+    card = card || [...document.querySelectorAll(".pg-card")].find((c) => pg.shown[+c.dataset.i] === it);
+    if (card) {
+      card.dataset.slug = pgSlug(it); pgSyncSegs(card, it);
+      const f = card.querySelector("iframe");
+      if (f) { pg.frames.delete(f.contentWindow); f.src = pgSrc(pgSlug(it)); f.addEventListener("load", () => pg.frames.set(f.contentWindow, card.querySelector(".play")), { once: true }); }
+      pgSetPlay(card.querySelector(".play"), false);
+    }
+    if (pg.cur >= 0 && pg.shown[pg.cur] === it) { pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1.5"); pgSetPlay(pgEl("pg-d-play"), false); pgSyncSegs(pgEl("pg-d-vsw"), it); }
+  }
+  function pgOpen(i) {
+    if (pg.cur < 0) pg.opener = document.activeElement;
+    pg.cur = (i + pg.shown.length) % pg.shown.length;
+    const it = pg.shown[pg.cur];
+    pgEl("pg-d-title").textContent = it.name;
+    pgEl("pg-d-say").textContent = it.say;
+    pgEl("pg-d-rows").hidden = !!it.minimal; pgEl("pg-d-pager").hidden = !!it.minimal;
+    pgEl("pg-d-rows").innerHTML = [["Interaction", it.verb], ["Component", it.type], ["Tone", it.tone]].filter((r) => r[1]).map(([k, v]) => `<div class="pg-row"><span>${k}</span><span>${v}</span></div>`).join("");
+    pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1.5"); pgEl("pg-d-frame").title = it.name;
+    pgEl("pg-d-vsw").innerHTML = it.axes ? pgSegs(it, true) : ""; pgEl("pg-d-vsw").hidden = !it.axes;
+    requestAnimationFrame(() => pgThumbs(pgEl("pg-d-vsw"), true));
+    const link = it.href || (it.url ? PG_GH + it.url : "");
+    pgEl("pg-d-full").hidden = pgEl("pg-d-open").hidden = !link;
+    if (link) pgEl("pg-d-full").href = pgEl("pg-d-open").href = link;
+    pgSetPlay(pgEl("pg-d-play"), false); pgEl("pg-d-play").hidden = !!it.nodemo;
+    pgEl("pg-dtl").hidden = false; document.body.style.overflow = "hidden";
+    pgEl("pg-d-x").focus();
+  }
+  function pgClose() {
+    const d = pgEl("pg-dtl"); if (!d) { if (pg.cur >= 0) document.body.style.overflow = ""; pg.cur = -1; return; }
+    d.hidden = true; pgEl("pg-d-frame").src = "about:blank"; pg.cur = -1; document.body.style.overflow = "";
+    pg.opener?.focus?.();
+  }
+  function pgMount() {
+    pg.cur = -1; document.body.style.overflow = "";
+    const chips = pgEl("pg-chips");
+    [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.textContent === pg.filter));
+    chips.addEventListener("click", (e) => {
+      const b = e.target.closest(".pg-chip"); if (!b) return;
+      pg.filter = pg.filter === b.textContent ? null : b.textContent;
+      [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.textContent === pg.filter));
+      pgRender(true);
+    });
+    pgEl("pg-wall").addEventListener("click", (e) => {
+      const card = e.target.closest(".pg-card"); if (!card) return;
+      const vb = e.target.closest(".pg-vsw .pg-seg button");
+      if (vb) return pgVariant(pg.shown[+card.dataset.i], +vb.dataset.a, +vb.dataset.k, card);
+      if (e.target.closest(".pg-vsw")) return;
+      if (e.target.closest(".open")) return pgOpen(+card.dataset.i);
+      const play = e.target.closest(".play");
+      if (play) { const f = card.querySelector("iframe"); if (!f) return; const on = play.dataset.on !== "true"; f.contentWindow.postMessage({ type: "demo", on }, "*"); pgSetPlay(play, on); }
+    });
+    pgEl("pg-d-vsw").addEventListener("click", (e) => { const b = e.target.closest(".pg-seg button"); if (b) pgVariant(pg.shown[pg.cur], +b.dataset.a, +b.dataset.k); });
+    pgEl("pg-d-play").addEventListener("click", () => { const on = pgEl("pg-d-play").dataset.on !== "true"; pgEl("pg-d-frame").contentWindow.postMessage({ type: "demo", on }, "*"); pgSetPlay(pgEl("pg-d-play"), on); });
+    pgEl("pg-d-x").onclick = pgClose; pgEl("pg-d-scrim").onclick = pgClose;
+    pgEl("pg-d-prev").onclick = () => pgOpen(pg.cur - 1);
+    pgEl("pg-d-next").onclick = () => pgOpen(pg.cur + 1);
+    pgRender(false);
+  }
+  // page-level listeners, set once; they do nothing unless the playground is on screen
+  addEventListener("message", (e) => {
+    if (!pgEl("pg-wall")) return;
+    const d = e.data || {}, df = pgEl("pg-d-frame");
+    const cardOf = (src) => [...document.querySelectorAll(".pg-card")].find((c) => c.querySelector("iframe")?.contentWindow === src);
+    if (d.type === "demo-avail") { const btn = e.source === df.contentWindow ? pgEl("pg-d-play") : cardOf(e.source)?.querySelector(".play"); if (btn) btn.hidden = !d.on; }
+    if (d.type === "demo-state") { if (e.source === df.contentWindow) pgSetPlay(pgEl("pg-d-play"), d.on); else pgSetPlay(pg.frames.get(e.source), d.on); }
+    if (d.type === "open-detail" && e.source !== df.contentWindow) { const card = cardOf(e.source); if (card) pgOpen(+card.dataset.i); }
+  });
+  addEventListener("keydown", (e) => {
+    if (pg.cur < 0 || !pgEl("pg-dtl")) return;
+    if (e.key === "Escape") pgClose();
+    if (e.target.matches?.("input")) return;
+    if (e.key === "ArrowRight") pgOpen(pg.cur + 1);
+    if (e.key === "ArrowLeft") pgOpen(pg.cur - 1);
+  });
+  addEventListener("resize", () => { if (!pgEl("pg-wall")) return; if (pgCols() !== pg.n) pgRender(true); pgThumbs(document, true); });
 
   const exp = (date, title, cls, paras, role) => `
     <div class="cols exp"><p class="date">${date}</p><div><h3 class="${cls}">${title}</h3>${role ? `<p class="role">${role}</p>` : ""}${paras.map((p) => `<p>${p}</p>`).join("")}</div></div>`;
@@ -735,6 +1038,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
       wm.forEach((a) => a.classList.toggle("on", a === cur));
     } : null;
     if (spy) spy();
+    if (h === "playground") pgMount(); else pgClose();
     app.querySelectorAll(".inst").forEach((b) => {
       const d = kit.find((x) => x.k === b.dataset.k);
       b.addEventListener("pointerdown", (e) => hit(b, d, e));
@@ -742,13 +1046,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
     });
     tick();
     // scroll-in reveal (same as Framer "onInView": opacity 0 → 1, y 20 → 0)
-    // Playground: draw each wide demo at its own page width, then shrink it to the card
-    app.querySelectorAll("iframe.scaled").forEach((f) => {
-      const card = f.parentElement, vw = +f.dataset.vw;
-      const size = () => { const k = card.clientWidth / vw; f.style.width = vw + "px"; f.style.height = card.clientHeight / k + "px"; f.style.transform = `scale(${k})`; };
-      size(); new ResizeObserver(size).observe(card);
-    });
-    const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .pitem, .cs-hero, .cs-img, .monitor");
+    const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .cs-hero, .cs-img, .monitor");
     if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
       rvTargets.forEach((el) => { el.classList.add("rv"); io.observe(el); });

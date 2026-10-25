@@ -1,26 +1,13 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>
-  html { color-scheme: light; }
-  body { margin: 0; }
-  img { max-width: 100%; }
-  [hidden] { display: none !important; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reading Pile</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: the phone centred on a flat ground (every state plays out on its screen), then one centred row of demo controls. Nothing else. */
-:root{
-  --ground:#f6f6f6;
-  --ctl:#ffffff;
-  --press:#eeeef1;
-  --cline:#dfe0e4;
-  --cink:#17181b;
-  --cmuted:#62666d;
-  --k:1;
+[hidden] { display: none !important; }
+#stage{
+    --k:1;
   --screen:#FFFFFF;
   --ink:#000000;
   --muted:#6C6C70;
@@ -45,34 +32,16 @@
   --read:ui-serif,"New York","Iowan Old Style","Songti SC",Georgia,serif;
   --spring:cubic-bezier(.3,1.45,.5,1);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --ground:#0f1012;--ctl:#202226;--press:#2c2f34;--cline:#2a2c31;--cink:#eeeff1;--cmuted:#9a9ea5;--screen:#000000;--ink:#FFFFFF;--muted:#98989F;--line:#38383A;--fill:rgba(118,118,128,.28);--pick:rgba(118,118,128,.5);
-    --tint:#0A84FF;--on-tint:#FFFFFF;--pop:#FF453A;--on-pop:#FFFFFF;--mat:rgba(44,44,46,.96);--bar:rgba(22,22,24,.9);
-    --shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.14);--fall:#FFFFFF;--frame:#2C2C2E;--frame-edge:#6A6A70;--device-shadow:0 30px 50px -24px rgba(0,0,0,.8);color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --ground:#0f1012;--ctl:#202226;--press:#2c2f34;--cline:#2a2c31;--cink:#eeeff1;--cmuted:#9a9ea5;--screen:#000000;--ink:#FFFFFF;--muted:#98989F;--line:#38383A;--fill:rgba(118,118,128,.28);--pick:rgba(118,118,128,.5);
-  --tint:#0A84FF;--on-tint:#FFFFFF;--pop:#FF453A;--on-pop:#FFFFFF;--mat:rgba(44,44,46,.96);--bar:rgba(22,22,24,.9);
-  --shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.14);--fall:#FFFFFF;--frame:#2C2C2E;--frame-edge:#6A6A70;--device-shadow:0 30px 50px -24px rgba(0,0,0,.8);color-scheme:dark;
-}
-*{box-sizing:border-box}
-body{background:var(--ground);color:var(--cink);font:400 15px/1.5 var(--sans);margin:0;-webkit-font-smoothing:antialiased}
-button{font:inherit;color:inherit;cursor:pointer}
-.stage :focus-visible{outline:3px solid color-mix(in srgb,var(--tint) 55%,transparent);outline-offset:2px}
+#stage,#stage *{box-sizing:border-box}
+:where(#stage) button{font:inherit;color:inherit;cursor:pointer}
+.screen :focus-visible{outline:3px solid color-mix(in srgb,var(--tint) 55%,transparent);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-.page{max-width:1000px;margin:0 auto;padding-inline:20px;padding-block:28px 40px;display:flex;flex-direction:column;gap:20px}
-.canvas{display:flex;justify-content:center;padding:36px 16px}
-
-/* ---------- screen ---------- */
-.fit{flex:none;width:calc(415px * var(--z,1));height:calc(874px * var(--z,1))}
-.device{position:relative;width:415px;transform:scale(var(--z,1));transform-origin:0 0;padding:11px;border-radius:66px;background:var(--frame);box-shadow:inset 0 0 0 1.5px var(--frame-edge),var(--device-shadow)}
+.device{position:absolute;left:40px;top:40px;width:415px;padding:11px;border-radius:66px;background:var(--frame);box-shadow:inset 0 0 0 1.5px var(--frame-edge),var(--device-shadow)}
 .device::before,.device::after{content:"";position:absolute;width:3px}
 .device::before{left:-3px;top:150px;height:176px;border-radius:2px 0 0 2px;background:linear-gradient(var(--frame) 0 28px,transparent 28px 58px,var(--frame) 58px 110px,transparent 110px 124px,var(--frame) 124px 176px)}
 .device::after{right:-3px;top:240px;height:88px;border-radius:0 2px 2px 0;background:var(--frame)}
-.stage{-webkit-user-select:none;user-select:none;position:relative;width:100%;aspect-ratio:393/852;background:var(--screen);color:var(--ink);font:400 15px/1.45 var(--ui);border-radius:55px;overflow:hidden}
+.screen{-webkit-user-select:none;user-select:none;position:relative;width:100%;aspect-ratio:393/852;background:var(--screen);color:var(--ink);font:400 15px/1.45 var(--ui);border-radius:55px;overflow:hidden;-webkit-font-smoothing:antialiased}
 .status{position:relative;height:58px;display:grid;grid-template-columns:1fr 126px 1fr;align-items:center;justify-items:center;padding-top:8px;font-weight:600;font-size:17px;letter-spacing:-.01em}
 .status::before{content:"";position:absolute;left:50%;top:11px;width:126px;height:37px;margin-left:-63px;border-radius:19px;background:var(--hw)}
 .status .sys{grid-column:3;display:flex;align-items:center;gap:6px}
@@ -91,7 +60,7 @@ svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke
 .article>p{margin:0;font-size:16px;line-height:26px;cursor:text;-webkit-user-select:text;user-select:text}
 .article>p ::selection{background:var(--pick);color:var(--ink)}
 .w{border-radius:5px;padding:1px 2px;margin:0 -2px;background:color-mix(in srgb,var(--tint) 14%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background .12s}
-.w:hover,.w.is-open{background:color-mix(in srgb,var(--tint) 30%,transparent)}
+.w:hover,.w[data-kit-hover],.w.is-open{background:color-mix(in srgb,var(--tint) 30%,transparent)}
 
 #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 .pellet{position:absolute;left:0;top:0;width:10px;height:10px;border-radius:50%;background:var(--pop);z-index:6;pointer-events:none}
@@ -124,7 +93,7 @@ svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke
 .tip-body{margin:0}
 .tip-zh{margin:0;color:var(--muted)}
 .tip-action{margin-top:10px;border:0;border-radius:999px;background:var(--tint);color:var(--on-tint);font-weight:600;font-size:15px;line-height:20px;padding:7px 16px}
-.tip-action:hover{opacity:.82}
+.tip-action:hover,.tip-action[data-kit-hover]{opacity:.82}
 .word{display:inline-block;white-space:nowrap}
 .ch{display:inline-block}
 .tip.shed .ch{visibility:hidden}
@@ -136,41 +105,16 @@ svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke
 @keyframes rise{from{opacity:0;transform:translateY(-4px)}}
 @keyframes pop{from{opacity:0;transform:scale(.7)}}
 
-/* ---------- controls under the canvas ---------- */
-.controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 8px}
-.seg{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:999px;background:var(--ctl);box-shadow:inset 0 0 0 1px var(--cline)}
-.btn{appearance:none;min-width:38px;height:34px;padding:0 10px;border:0;border-radius:999px;background:none;color:var(--cmuted);font-family:var(--mono);font-size:13px;cursor:pointer;transition:background-color 140ms ease,color 140ms ease}
-.btn:hover{background:var(--press);color:var(--cink)}
-.btn[aria-pressed="true"]{background:var(--cink);color:var(--ground)}
-.btn.quiet{height:42px;padding:0 16px;background:var(--ctl);box-shadow:inset 0 0 0 1px var(--cline);color:var(--cink);font-family:var(--sans);font-size:14px}
-.btn.quiet:hover{background:var(--press)}
-.check{display:inline-flex;align-items:center;gap:8px}
-.check input{width:16px;height:16px;margin:0;accent-color:var(--cink)}
-.check input:focus-visible{outline:none}
-.check:focus-within{outline:2px solid var(--cink);outline-offset:3px}
-.notice{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;color:var(--cmuted);font-size:14px}
-.btn:focus-visible{outline:2px solid var(--cink);outline-offset:3px}
-
 @media (prefers-reduced-motion: reduce){
   .tip.open,.tip.open [data-drop] .ch,.tip.open .tip-pron,.tip.open .tip-body,.tip.open .tip-zh,.tip.open .tip-action{animation:none}
-  .btn,.badge,.w,.tab{transition:none}
+  .badge,.w,.tab{transition:none}
 }
 
-/* Thumbnail mode (page opened with #thumb): just the phone, centred on a flat ground, no controls. */
-html.thumb body{background:#f6f6f6}
-html.thumb .page{max-width:none;min-height:100vh;padding:0;justify-content:center}
-html.thumb .canvas{padding:0}
-html.thumb .controls{display:none}
 </style>
-<style>/*pg-embed*/ html,body{overflow:hidden} .controls{display:none!important}</style>
-</head>
-<body>
-<script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
-<main class="page">
-  <div class="canvas" id="canvas">
-    <div class="fit" id="fit">
+</head><body>
+<div id="stage" data-w="495" data-h="954" data-card-h="640">
     <div class="device">
-    <div class="stage" id="stage">
+    <div class="screen" id="screen">
       <div class="status" aria-hidden="true">
         <span>9:41</span>
         <span class="sys">
@@ -216,34 +160,14 @@ html.thumb .controls{display:none}
       </nav>
     </div>
     </div>
-    </div>
-  </div>
-
-  <div class="controls">
-    <div class="seg" role="group" aria-label="Badge on the Words tab">
-      <button class="btn" type="button" id="b-none" data-key="none" aria-pressed="false">None</button>
-      <button class="btn" type="button" id="b-dot" data-key="dot" aria-pressed="false">Dot</button>
-      <button class="btn" type="button" id="b-1" data-key="1" aria-pressed="false">1</button>
-      <button class="btn" type="button" id="b-3" data-key="3" aria-pressed="true">3</button>
-      <button class="btn" type="button" id="b-12" data-key="12" aria-pressed="false">12</button>
-      <button class="btn" type="button" id="b-99" data-key="99+" aria-pressed="false">99+</button>
-    </div>
-    <button class="btn quiet" type="button" id="replay">Replay</button>
-    <button class="btn quiet" type="button" id="sweep">Sweep</button>
-    <label class="btn quiet check" for="slow"><input type="checkbox" id="slow"> Slow motion</label>
-  </div>
-  <div class="notice" id="rm-notice" hidden>
-    <span>Your system asks for reduced motion, so the physics are off.</span>
-    <button class="btn quiet" type="button" id="rm-override">Play motion anyway</button>
-  </div>
-  <div class="sr" id="live" aria-live="polite"></div>
-</main>
-
+    <div class="sr" id="live" aria-live="polite"></div>
+</div>
+<script src="kit.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const stage = $('stage'), cv = $('fx'), ctx = cv.getContext('2d'), tabbar = $('tabbar'), para = $('para');
-  let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stage = $('screen'), cv = $('fx'), ctx = cv.getContext('2d'), tabbar = $('tabbar'), para = $('para');
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let speed = 1;
   const play = (el, kf, o) => { const a = el.animate(kf, o); a.playbackRate = speed; return a; };
   const say = msg => { $('live').textContent = msg; };
@@ -256,9 +180,9 @@ html.thumb .controls{display:none}
   let gid = 0, raf = 0, last = 0, acc = 0, calm = 0, wakeAt = 0, tx = 0, ty = 0;
 
   function readColors() {
-    const cs = getComputedStyle(document.documentElement);
+    const cs = getComputedStyle(document.getElementById('stage'));
     colors = { pop: cs.getPropertyValue('--pop').trim(), fall: cs.getPropertyValue('--fall').trim() };
-    uiFont = getComputedStyle(document.body).fontFamily;
+    uiFont = cs.getPropertyValue('--sans').trim();
   }
   function measure() {
     W = stage.clientWidth; H = stage.clientHeight; floor = tabbar.offsetTop;
@@ -615,7 +539,6 @@ html.thumb .controls{display:none}
 
   function sync() {
     const k = keyNow();
-    document.querySelectorAll('.seg .btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === k)));
     wordsTab.setAttribute('aria-label', !shown() ? 'Words' : isDot ? 'Words, new' : 'Words, ' + count + ' new');
   }
   function paint() {
@@ -703,16 +626,6 @@ html.thumb .controls{display:none}
     }
     say('Swept ' + n + ' pieces off the floor.');
   }
-  document.querySelectorAll('.seg .btn').forEach(b => b.addEventListener('click', () => select(b.dataset.key)));
-  $('replay').addEventListener('click', () => select(shown() ? keyNow() : lastKey));
-  $('sweep').addEventListener('click', sweep);
-  $('slow').addEventListener('change', e => {
-    speed = e.target.checked ? 0.25 : 1;
-    document.documentElement.style.setProperty('--k', 1 / speed);
-  });
-  $('rm-notice').hidden = !RM;
-  $('rm-override').addEventListener('click', () => { RM = false; $('rm-notice').hidden = true; select(shown() ? keyNow() : lastKey); });
-
   /* ---------- boot: a small pile already on the floor, three saved words in the badge ---------- */
   function seed() {
     const font = '400 15px ' + uiFont;
@@ -721,21 +634,57 @@ html.thumb .controls{display:none}
     for (let i = 0; i < 5; i++) add({ ...spot(4 + Math.random() * 1.5), c: 'pop' });
     settleNow();
   }
-  function fit() {
-    const availW = $('canvas').clientWidth - 40, availH = window.innerHeight - 212;
-    const z = Math.min(availW / 415, Math.max(0.6, Math.min(0.85, availH / 874)));
-    $('fit').style.setProperty('--z', z.toFixed(4));
-  }
-  fit(); addEventListener('resize', fit);
   readColors(); measure(); render(); seed();
   count = saved.length; paint(); sync();
 
   new ResizeObserver(() => { measure(); if (RM) settleNow(); else { draw(); wake(); } }).observe(stage);
-  const retheme = () => { readColors(); draw(); };
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
-  new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* demo hooks: a native text selection can't be made by synthetic events, so the demo selects through the app's own path */
+  window.RP = {
+    select(word) {
+      const t = para.querySelector('.t[data-i="' + WORDS.indexOf(word) + '"]');
+      const r = document.createRange(); r.selectNodeContents(t);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    },
+    reset() {
+      seq++; clearTimeout(pullTimer); pulling = false; afterPull = null; wordsTab.classList.remove('pull');
+      stage.querySelectorAll('.pellet').forEach(e => e.remove());
+      if (rsel) closeRich(false);
+      getSelection().removeAllRanges();
+      saved = START.map(r => ({ ...r })); render();
+      ps.length = 0; seed();
+      count = saved.length; isDot = false; paint(); sync();
+    }
+  };
 })();
 </script>
-
-</body>
-</html>
+<script>
+KIT.demo(async c => {
+  const word = w => c.el('#para .t[data-i="' + w + '"]');
+  const idx = t => [...c.el('#para').querySelectorAll('.t')].findIndex(e => e.textContent.toLowerCase() === t);
+  const g = word(idx('ginkgo'));
+  const [gx, gy] = c.at(g);
+  await c.move(gx, gy, 800);                          // hover a saved word: its plain tooltip drops in
+  await c.wait(1100);
+  const e = word(idx('ephemeral'));
+  const [x0, y0] = c.at(e, .02, .5), [x1, y1] = c.at(e, .98, .5);
+  await c.move(x0, y0, 650);
+  await c.down();
+  await c.drag(x1, y1, 600);                          // drag across "ephemeral"
+  RP.select('ephemeral');                             // native selection, made through the app's own path
+  await c.up();
+  await c.wait(1200);
+  const [sx, sy] = c.at('#saveBtn');
+  await c.move(sx, sy, 600);
+  await c.wait(200);
+  await c.click();                                    // Save: letters fall, a pellet lands on Words
+  await c.wait(1300);
+  const [tx, ty] = c.at('#wordsTab', .5, .4);
+  await c.move(tx, ty, 700);
+  await c.wait(200);
+  await c.click();                                    // open Words: the pile is pulled in, the badge pops
+  await c.wait(1400);
+  await c.move(tx + 90, ty - 120, 600);
+}, { tint: '#007AFF', reset() { RP.reset(); } });
+</script>
+</body></html>

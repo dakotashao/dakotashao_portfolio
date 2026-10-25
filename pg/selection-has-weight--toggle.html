@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weighted Toggle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --card: #ffffff;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --ink: #17181b;
+  --muted: #62666d;
+  --line: #dfe0e4;
+  --press: #eeeef1;
+  --track: #ffffff;
+  --track-on: #1b1c20;
+  --knob: #eeeef1;
+  --knob-on: #ffffff;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+#stage { color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.demo { display: flex; flex-direction: column; gap: 8px; }
+.group-label { margin: 0; padding-left: 16px; font: 500 11px/16px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.list { position: relative; width: 320px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--card-shadow); transform-origin: 50% 50%; }
+.row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 12px 0 16px; border-radius: 16px; transition: background-color 140ms ease; user-select: none; -webkit-user-select: none; touch-action: none; cursor: pointer; }
+.row:active, .row.is-pressed { background: var(--press); }
+.label { flex: 1; min-width: 0; font: 400 16px/24px var(--sans); color: var(--ink); letter-spacing: -0.005em; }
+.count { margin-left: 8px; font: 500 12px/24px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.group-label .count { margin-left: 6px; font-size: 11px; line-height: 16px; color: var(--ink); }
+.hint { position: absolute; left: 0; right: 0; bottom: 22px; margin: 0 auto; min-height: 18px; max-width: 380px; text-align: center; color: var(--muted); font-size: 13px; line-height: 18px; transition: color 160ms ease; }
+.hint.is-nudge { color: var(--ink); }
+.cargo { position: relative; display: inline-block; white-space: nowrap; }
+.cargo .ch { display: inline-block; will-change: transform; }
+.cargo .sp { display: inline-block; width: 0.28em; }
+/* Toggle in a list: 56 × 32, 20 knob, 6 from the edge (the solo toggle's proportions, list-sized). */
+.toggle { appearance: none; position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 16px; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.toggle::before { content: ""; position: absolute; inset: -12px -8px; border-radius: 28px; }   /* the tipped end stays pressable */
+.toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.switch { display: block; position: relative; width: 56px; height: 32px; border-radius: 16px; background: var(--track); box-shadow: inset 0 0 0 1px var(--line); transform-origin: 50% 50%; transition: background-color 120ms ease, box-shadow 120ms ease; }
+.switch.on { background: var(--track-on); box-shadow: none; }
+.knob { position: absolute; left: 6px; top: 6px; width: 20px; height: 20px; border-radius: 10px; background: var(--knob); transition: background-color 120ms ease; }
+.switch.on .knob { background: var(--knob-on); }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="340">
+  <div class="wrap">
+    <div class="demo">
+      <p class="group-label" id="g-sharing2">Sharing</p>
+      <div class="list" id="list-heavy" role="group" aria-labelledby="g-sharing2">
+        <div class="row" data-w="light" data-on="true">
+          <span class="label" id="h1"><span class="cargo">Show my status</span></span>
+          <button class="toggle" type="button" role="switch" aria-checked="true" aria-labelledby="h1"><span class="switch" aria-hidden="true"><span class="knob"></span></span></button>
+        </div>
+        <div class="row" data-w="medium">
+          <span class="label" id="h2"><span class="cargo">Allow comments</span></span>
+          <button class="toggle" type="button" role="switch" aria-checked="false" aria-labelledby="h2"><span class="switch" aria-hidden="true"><span class="knob"></span></span></button>
+        </div>
+        <div class="row" data-w="heavy">
+          <span class="label" id="h3"><span class="cargo">Allow downloads</span></span>
+          <button class="toggle" type="button" role="switch" aria-checked="false" aria-labelledby="h3"><span class="switch" aria-hidden="true"><span class="knob"></span></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="hint" id="hint" aria-live="polite"></p>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = () => mq.matches;
+  let speed = 1;
+  const rad = d => d * Math.PI / 180;
+
+  /* ---------- The list: takes each landing ---------- */
+  // Like the Week 2 bar under a badge: the card tips toward where a knob lands, the other rows skid a little,
+  // and it all settles. A heavier setting tips it further.
+  // Each list can be tipped (rot, deg) and pushed down (dip, px); both spring back. Rows slide with the tip.
+  function makeKnocker(list) {
+    const rows = [...list.querySelectorAll('.row')];
+    let la = 0, lv = 0, ly = 0, vy = 0, raf = 0, last = 0, src = 0, base = 0;   // base: where the list rests (px down)
+    let baseRot = 0;                                           // resting tilt of the card (deg)
+    const rowRot = rows.map(() => ({ a: 0, v: 0, target: 0 })); // resting tilt of each row (deg), sprung
+    const labels = rows.map(r => r.querySelector('.label'));
+    let contents = null;                                       // (slope deg, row index) => lays out the loose contents of the row
+    const paint = () => {
+      const t = [], y = base + ly, rot = baseRot + la;
+      if (Math.abs(y) > 0.01) t.push(`translateY(${y.toFixed(2)}px)`);
+      if (Math.abs(rot) > 0.002) t.push(`rotate(${rot.toFixed(3)}deg)`);
+      list.style.transform = t.join(' ');
+    };
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000) * speed; last = now;
+      lv += (-230 * la - 14 * lv) * dt; la += lv * dt;
+      vy += (-260 * ly - 16 * vy) * dt; ly += vy * dt;
+      let rowsMoving = false;
+      rowRot.forEach(q => { q.v += (-150 * (q.a - q.target) - 13 * q.v) * dt; q.a += q.v * dt; if (Math.abs(q.a - q.target) > 0.002 || Math.abs(q.v) > 0.01) rowsMoving = true; });
+      paint();
+      rows.forEach((r, i) => {
+        const s = i === src ? 0 : la * 2.2 * (1 - 0.25 * Math.abs(i - src));   // skid downhill, nearest most
+        const t = [];
+        if (Math.abs(s) > 0.01) t.push(`translateX(${s.toFixed(2)}px)`);
+        if (Math.abs(rowRot[i].a) > 0.002) t.push(`rotate(${rowRot[i].a.toFixed(3)}deg)`);
+        r.style.transform = t.join(' ');
+        if (contents) contents(baseRot + la, i, baseRot);
+      });
+      if (!rowsMoving && Math.abs(la) < 0.002 && Math.abs(lv) < 0.01 && Math.abs(ly) < 0.01 && Math.abs(vy) < 0.05) {
+        rowRot.forEach(q => { q.a = q.target; q.v = 0; });
+        la = lv = ly = vy = 0; paint();
+        rows.forEach((r, i) => {
+          r.style.transform = Math.abs(rowRot[i].a) > 0.002 ? `rotate(${rowRot[i].a.toFixed(3)}deg)` : '';
+          if (contents) contents(baseRot, i, baseRot);
+        });
+        raf = 0; return;
+      }
+      raf = requestAnimationFrame(step);
+    }
+    const knock = (rotKick, from, dipKick = 0) => {
+      if (reduced()) return;
+      src = from; lv += rotKick; vy += dipKick;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    const wakeK = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } };
+    knock.setRest = (cardDeg, rowDegs, instant) => {   // where the card and each row rest, tilted by what they carry
+      if (instant || reduced()) {
+        baseRot = cardDeg; rowRot.forEach((q, i) => { q.a = q.target = rowDegs[i]; q.v = 0; }); la = 0; paint();
+        rows.forEach((r, i) => { r.style.transform = Math.abs(q0(i)) > 0.002 ? `rotate(${q0(i).toFixed(3)}deg)` : ''; if (contents) contents(baseRot, i, baseRot); });
+        return;
+      }
+      la += baseRot - cardDeg; baseRot = cardDeg;               // the card swings over to its new rest
+      rowRot.forEach((q, i) => { q.target = rowDegs[i]; });
+      wakeK();
+    };
+    const q0 = i => rowRot[i].a;
+    knock.setContents = fn => { contents = fn; };
+    knock.tilt = () => baseRot + la;                // the card's current tilt (deg)
+    knock.rest = () => baseRot;
+    knock.setBase = (v, instant) => {                 // move where it rests; it settles there with the same spring
+      if (instant || reduced()) { base = v; ly = 0; paint(); return; }
+      ly += base - v; base = v;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    return knock;
+  }
+  // A small hop: the element jumps a few px and lands, with one smaller hop after. Used when a heavy landing
+  // ripples through the neighbouring controls. dirY: -1 up (default), +1 down; or 'x' with a sign for sideways.
+  function hop(el, px, delay = 0, axis = 'y', sign = -1) {
+    if (reduced() || px < 0.05) return;
+    let t = -delay, last = performance.now();
+    const H1 = 200, H2 = 120;
+    const f = now => {
+      t += (now - last) * speed; last = now;
+      let v = 0;
+      if (t > 0 && t < H1) { const p = t / H1; v = 4 * px * p * (1 - p); }
+      else if (t >= H1 && t < H1 + H2) { const q = (t - H1) / H2; v = 4 * px * 0.3 * q * (1 - q); }
+      el.style.transform = v > 0.01 ? (axis === 'y' ? `translateY(${(sign * v).toFixed(2)}px)` : `translateX(${(sign * v).toFixed(2)}px)`) : '';
+      if (t < H1 + H2) requestAnimationFrame(f); else el.style.transform = '';
+    };
+    requestAnimationFrame(f);
+  }
+
+  /* ---------- The hint ---------- */
+  const hint = $('hint'), HINT = hint.textContent;
+  let hintTimer = 0;
+  function nudgeHint(text = 'Hold to tip it.') {
+    hint.textContent = text;
+    hint.classList.add('is-nudge');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => { hint.textContent = HINT; hint.classList.remove('is-nudge'); }, 2600);
+  }
+
+  /* ---------- Toggle: press to tip it (one per row) ---------- */
+  // The bar is a lever and the knob a weight resting on it. Press and hold the side you want the knob to go to:
+  // that side goes down gradually. The knob grips while the bar is shallow and rolls once it is steeper than the
+  // row's grip. Let go before halfway and it rolls home; past halfway the bar carries it the rest of the way.
+  // It hits the end, bounces, the bar takes the hit and drops back to level, and the list takes the landing.
+  // Turning off is always light: a tap sends it home.
+  const TRAVEL = 24, MAX_TILT = 4, RATE = 8, DRAG = 0.12, G = 9000;
+  const WEIGHTS = {
+    light:  { grip: 0.8, kick: 1.0, list: 14, text: 0.6 },
+    medium: { grip: 1.8, kick: 1.5, list: 35, text: 1.5 },
+    heavy:  { grip: 2.8, kick: 2.5, list: 64, text: 2.8 }
+  };
+  const BACK_TILT = 2.2, TEASE_MS = 300, TEASE_DEG = 3.2, TAP_S = 0.3, LEAN = 2.2, LEAN_S = 0.12;
+  const SHAKE_MS = 360, SHAKE_DEG = 1.0;
+  const shakeShape = u => Math.sin(2 * Math.PI * u * SHAKE_MS / 170) * Math.exp(-3.2 * u) * (1 - u);
+  const shakeNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(shakeShape(i / 200))); return m; })();
+
+  // The row's own text feels the landing too. The label is jolted toward the toggle and swings back; the
+  // consequence line under it follows a beat later and a little less, so the two lines move on their own,
+  // like the loose contents of the Week 2 tooltip.
+  const JOLT_MS = 430, joltShape = u => Math.exp(-2.2 * u) * Math.pow(1 - u, 1.4) * Math.sin(2 * Math.PI * 2.1 * u * JOLT_MS / 1000);
+  const joltNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(joltShape(i / 200))); return m; })();
+  const joltAt = ms => (ms <= 0 || ms >= JOLT_MS) ? 0 : joltShape(ms / JOLT_MS) / joltNorm;
+
+  function makeToggle(row, index, ctx) {
+    const btn = row.querySelector('.toggle'), sw = row.querySelector('.switch'), knob = row.querySelector('.knob');
+    const w = WEIGHTS[row.dataset.w];
+    const initial = row.dataset.on === 'true';
+    let on = initial, a = 0, va = 0, x = 0, v = 0, free = false, hold = null, carry = false, tease = null;
+    let shakeMs = -1, shakeDir = 0, raf = 0, last = 0;
+    const label = row.querySelector('.label');
+    let jolt = null;                                      // { dir, amp, ms }
+    function drawText() {
+      if (!jolt) { label.style.transform = ''; return; }
+      const l = jolt.dir * jolt.amp * joltAt(jolt.ms);
+      label.style.transform = Math.abs(l) > 0.01 ? `translateX(${l.toFixed(2)}px)` : '';
+    }
+
+    function restAngle() {
+      if (carry) return -BACK_TILT;
+      if (!free) return 0;
+      const to = x > TRAVEL / 2 ? 1 : -1, left = to > 0 ? TRAVEL - x : x;
+      return to * Math.min(MAX_TILT, w.grip + 0.4 + 1.1 * Math.min(1, left / 12));
+    }
+    function draw() {
+      const sh = shakeMs >= 0 ? shakeDir * SHAKE_DEG * shakeShape(shakeMs / SHAKE_MS) / shakeNorm : 0;
+      const shake = Math.abs(sh) > 0.001 ? ` translateX(${-shakeDir * 28}px) rotate(${sh.toFixed(3)}deg) translateX(${shakeDir * 28}px)` : '';
+      sw.style.transform = (Math.abs(a) > 0.001 || shake) ? `rotate(${a.toFixed(3)}deg)${shake}` : '';
+      let tr = 0;                                        // straining: the knob trembles as the bar nears its grip
+      if (hold && !hold.done && !carry && !free) {
+        const r = (hold.dir * a) / w.grip;
+        if (r > 0.7 && r < 1.05) tr = Math.sin(performance.now() / 16) * 0.45 * Math.min(1, (r - 0.7) / 0.3);
+      }
+      const kx = x + tr;
+      knob.style.transform = Math.abs(kx) > 0.01 ? `translateX(${kx.toFixed(2)}px)` : '';
+      sw.classList.toggle('on', on && x > TRAVEL - 4);
+    }
+    function rest() { cancelAnimationFrame(raf); raf = 0; hold = null; carry = false; tease = null; jolt = null; drawText(); free = false; a = 0; va = 0; x = on ? TRAVEL : 0; v = 0; draw(); }
+    function setOn(next) { on = next; btn.setAttribute('aria-checked', String(on)); ctx.changed(); }
+
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000) * speed; last = now;
+      if (shakeMs >= 0) { shakeMs += dt * 1000; if (shakeMs >= SHAKE_MS) shakeMs = -1; }
+      if (jolt) { jolt.ms += dt * 1000; if (jolt.ms >= JOLT_MS) jolt = null; drawText(); }
+      let target = restAngle();
+      if (hold && !hold.done) {
+        hold.t += dt;
+        const lean = LEAN * hold.lever * (1 - Math.exp(-hold.t / LEAN_S));
+        target = hold.dir * Math.min(MAX_TILT, lean + RATE * hold.lever * hold.force * hold.t + DRAG * Math.max(0, hold.dy));
+      } else if (tease) {
+        tease.ms += dt * 1000;
+        const nearHome = on ? x > TRAVEL - 4 : x < 4;
+        if (tease.ms < TEASE_MS && nearHome) target = tease.dir * TEASE_DEG;
+        else if (tease.ms >= TEASE_MS) tease = null;
+      }
+      const pressing = (hold && !hold.done) || !!tease || free;
+      const k = pressing ? 160 : 420, c = pressing ? 24 : 13;
+      va += (-k * (a - target) - c * va) * dt;
+      a += va * dt;
+
+      let tilt = a;
+      const grip = carry ? 0 : w.grip;
+      if (carry) tilt = Math.min(a, -BACK_TILT);
+      else if (free && !(hold && !hold.done) && !tease) { const to = x > TRAVEL / 2 ? 1 : -1; tilt = to * Math.max(to * a, w.grip + 1.2); }
+      const sa = Math.sin(rad(tilt)), sg = Math.sin(rad(grip));
+      if (Math.abs(v) < 1 && Math.abs(sa) <= sg) v = 0;
+      else v += G * (sa - Math.sign(v || sa) * sg) * dt;
+      x += v * dt;
+      if (x >= TRAVEL || x <= 0) {
+        const end = x >= TRAVEL ? 1 : -1, hit = Math.abs(v);
+        x = end > 0 ? TRAVEL : 0;
+        if (hit > 25) {
+          va += end * hit * 0.03 * w.kick;
+          ctx.knock(end * Math.min(1, hit / 300) * (end > 0 ? w.list : 6), index);   // the list takes it; pulling back barely moves it
+          if (end > 0) ctx.rows.forEach((r, j) => {                                     // and the other toggles jump, nearest first
+            if (j !== index) hop(r.querySelector(".toggle"), w.kick * 0.6 * Math.min(1, hit / 140) / Math.abs(j - index), 50 * Math.abs(j - index));
+          });
+          jolt = { dir: end, amp: Math.min(1, hit / 120) * (end > 0 ? w.text : 0.5), ms: 0 };   // and so does this row's text
+        }
+        v = -v * 0.3;
+        if (Math.abs(v) < 12) v = 0;
+        if (end < 0) carry = false;
+        if ((end > 0) !== on) { setOn(end > 0); if (hold) hold.done = true; }
+      }
+      free = x > 0.01 && x < TRAVEL - 0.01;
+      draw();
+      const calm = !hold && !tease && !carry && !free && !jolt && v === 0 && shakeMs < 0 && Math.abs(a) < 0.01 && Math.abs(va) < 0.05;
+      if (calm) { rest(); return; }
+      raf = requestAnimationFrame(step);
+    }
+    function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }
+
+    function press(dir, lever, force) {
+      if (reduced()) { hold = { dir }; return; }
+      hold = { dir, t: 0, lever, force, dy: 0, done: false };
+      tease = null;
+      if (dir < 0 && (on || x > 0.5)) carry = true;
+      shakeMs = 0; shakeDir = dir;
+      wake();
+    }
+    function release() {
+      if (!hold) return;
+      const was = hold; hold = null;
+      if (reduced()) { if ((was.dir > 0) !== on) setOn(was.dir > 0); rest(); return; }
+      if (carry) { wake(); return; }
+      const wanted = was.dir > 0 ? !on : on;
+      const far = was.dir > 0 ? x > TRAVEL / 2 : x < TRAVEL / 2;
+      if (wanted && !far && !was.done) nudgeHint();
+      if (!was.done && was.t < TAP_S && Math.abs(a) < TEASE_DEG) tease = { dir: was.dir, ms: 0 };
+      wake();
+    }
+
+    // Pointer on the toggle: which side, how far out, how hard.
+    let startY = 0, sc = 1, pointerId = null;
+    function begin(e, dir, lever) {
+      e.preventDefault();
+      pointerId = e.pointerId;
+      row.setPointerCapture(e.pointerId);
+      const real = (e.pointerType === 'pen' || e.pointerType === 'touch') && e.pressure > 0 && e.pressure !== 0.5;
+      sc = sw.getBoundingClientRect().width / 56; startY = e.clientY;
+      press(dir, lever, real ? 0.5 + e.pressure : 1);
+    }
+    btn.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      const r = sw.getBoundingClientRect(), off = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      begin(e, off >= 0 ? 1 : -1, 0.35 + 0.65 * Math.min(1, Math.abs(off)));
+    });
+    // Pressing anywhere else on the row presses the side the knob needs to go to, at the end of the lever.
+    row.addEventListener('pointerdown', e => begin(e, on ? -1 : 1, 1));
+    row.addEventListener('pointermove', e => {
+      if (!hold || hold.t == null || e.pointerId !== pointerId) return;
+      hold.dy = (e.clientY - startY) / sc;
+      if ((e.pointerType === 'pen' || e.pointerType === 'touch') && e.pressure > 0 && e.pressure !== 0.5) hold.force = 0.5 + e.pressure;
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => row.addEventListener(t, release));
+    btn.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); press(on ? -1 : 1, 1, 1); }
+    });
+    btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); release(); } });
+    btn.addEventListener('click', e => e.preventDefault());
+
+    rest();
+    return {
+      reset() { setOn(initial); rest(); },
+      set(next) {                         // scripted: hold the needed side until it is past halfway
+        if (next === on) return;
+        press(next ? 1 : -1, 1, 1);
+        const id = setInterval(() => { if (!hold || (next ? x > TRAVEL / 2 : x < TRAVEL / 2)) { clearInterval(id); release(); } }, 30);
+      },
+      get on() { return on; }
+    };
+  }
+
+  function makeWeighted(heavyList, onTilt = () => {}) {
+    /* ---------- Sharing that carries weight ---------- */
+    // The card is a box. What is switched on weighs down its right side, so the box tips in its own plane, right
+    // side down, by the weight of what is on (Allow downloads most). Rows and toggles are fixed to the box.
+    // The letters are loose. Each one is a small object on its row's floor: tip the box and they slide downhill,
+    // until they hit an invisible wall at the right end of the longest label, then pile up against it and against
+    // each other, knocking and bouncing. The gaps between words close first, so words run into words.
+    // Level the box again and they drift back home. Every row feels the same tilt: it is the box that moves them.
+    const heavyRows = [...heavyList.querySelectorAll('.row')];
+    const knockH = makeKnocker(heavyList);
+    // deg each setting tips the box while on, in the Week 2 badge's proportions (3 : 12 : 99+ tipped the bar 1 : 1.9 : 3)
+    const CARRY = { light: 0.4, medium: 0.75, heavy: 1.2 };     // all on ≈ 2.35°
+    // The toggles tip the box; the box moves the words. Every letter feels the same slope, the box's tilt, less a
+    // little friction, so a light setting (a slight tilt) barely shifts them and a heavy one sends them sliding.
+    // Stiff and quick, so they slide, knock and settle crisply (≈ 0.3 s).
+    const FRICTION = 0.12;                                       // deg of tilt before letters start to slide
+    const SLIDE_G = 1500, HOME_K = 75, DAMP = 9, BOUNCE = 0.4;  // px/s² per degree (20 px per degree at rest); pull back home (1/s²); damping (1/s); restitution
+    // Split each label into letters; spaces are gaps, not objects.
+    const rowsL = heavyRows.map(r => {
+      const c = r.querySelector('.cargo'), text = c.textContent;
+      c.textContent = '';
+      const items = [];
+      [...text].forEach(chr => {
+        const el = document.createElement('span');
+        if (chr === ' ') { el.className = 'sp'; c.appendChild(el); return; }
+        el.className = 'ch'; el.textContent = chr; c.appendChild(el);
+        // every letter is a little different: how much it grips, how heavy it is, which way it tumbles
+        items.push({ el, x0: 0, w: 0, u: 0, v: 0, fr: 0.04 + 0.22 * Math.random(), m: 0.7 + 0.6 * Math.random(), rs: Math.random() < 0.5 ? -1 : 1 });
+      });
+      c.setAttribute('aria-label', text);
+      return { c, items, wall: 0 };
+    });
+    function measure() {                                         // home positions, widths, and the wall
+      let wall = 0;
+      rowsL.forEach(R => {
+        R.items.forEach(it => { it.el.style.transform = ''; });
+        R.left = R.c.offsetLeft;
+        R.items.forEach(it => { it.x0 = it.el.offsetLeft; it.w = it.el.offsetWidth; });
+        // How close each letter may get to the next. Inside a word letters already touch: they may squeeze 0.5 px
+        // closer. Across a word gap the gap may close to a third of a space, so words knock but stay readable.
+        R.items.forEach((it, j) => {
+          const nx = R.items[j + 1];
+          it.gap = nx ? nx.x0 - (it.x0 + it.w) : 0;                 // natural gap to the next letter (a word gap if wide)
+        });
+        wall = Math.max(wall, R.left + R.c.offsetWidth);
+      });
+      rowsL.forEach(R => { R.wall = wall - R.left; R.items.forEach(it => { it.el.style.transform = it.u ? `translateX(${it.u.toFixed(2)}px)` : ''; }); });
+    }
+    // The box goes first, the letters follow: they feel the tilt the box had a moment ago (LAG), so the card tips,
+    // and only then do the words let go and slide. Same on the way back.
+    // The letters feel the box's tilt through a little inertia (they catch up over ≈ 0.25 s), so the card tips first
+    // and the words follow smoothly rather than snapping after a fixed pause.
+    const FOLLOW = 0.25;                                         // s
+    let felt = 0;
+    function rowSlope(i) { return felt; }
+    let lraf = 0, llast = 0;
+    function lettersStep(now) {
+      const dt = Math.min(0.032, (now - llast) / 1000) * speed; llast = now;
+      felt += (knockH.tilt() - felt) * (1 - Math.exp(-dt / FOLLOW));
+      let moving = false;
+      rowsL.forEach((R, i) => {
+        const sl = rowSlope(i), its = R.items, n = its.length;
+        // The steeper the box, the harder the letters are pressed together: word gaps close further and letters in a
+        // word squeeze closer, so a heavier tilt crowds them more, not just the same pile.
+        const press = Math.max(0, sl - FRICTION);
+        its.forEach(it => {
+          it.overlap = it.gap > 1.5 ? -it.gap * Math.max(0.15, 1 - 0.38 * press)   // a word gap may close to this
+                                    : Math.max(0, -it.gap) + 0.35 * press;           // letters in a word may squeeze this much
+        });
+        for (const it of its) {                                  // slide downhill (each by its own grip and weight), pulled home, damped
+          const a = SLIDE_G * it.m * Math.sign(sl) * Math.max(0, Math.abs(sl) - it.fr);
+          it.v += (a - HOME_K * it.u - DAMP * it.v) * dt;
+          it.u += it.v * dt;
+          if (it.u < 0 && a <= 0) { it.u = Math.max(it.u, -2); }
+        }
+        // collisions, from the wall back: nothing passes the wall, no letter passes the one ahead of it
+        for (let j = n - 1; j >= 0; j--) {
+          const it = its[j];
+          const limit = j === n - 1 ? R.wall : its[j + 1].x0 + its[j + 1].u + it.overlap;   // the wall, or the next letter's left edge
+          const right = it.x0 + it.u + it.w;
+          if (right > limit) {
+            it.u -= right - limit;
+            const vAhead = j === n - 1 ? 0 : its[j + 1].v;
+            if (it.v > vAhead) {                                 // knock: trade momentum, lose a little, bounce back
+              const rel = it.v - vAhead;
+              if (j < n - 1) its[j + 1].v += rel * (1 + BOUNCE) / 2;
+              it.v -= rel * (1 + BOUNCE) / (j === n - 1 ? 1 : 2);
+            }
+          }
+        }
+        for (const it of its) {
+          const a = SLIDE_G * it.m * Math.sign(sl) * Math.max(0, Math.abs(sl) - it.fr);
+          if (Math.abs(it.v) > 0.5 || Math.abs(it.u) > 0.05 && Math.abs(a - HOME_K * it.u) > 2) moving = true;
+          const rot = Math.max(-2.5, Math.min(2.5, it.v * 0.02 * it.rs));   // a little tumble while it moves
+          it.el.style.transform = (Math.abs(it.u) > 0.02 || Math.abs(rot) > 0.05) ? `translateX(${it.u.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)` : '';
+        }
+      });
+      if (!moving && !heavyAnimating() && Math.abs(felt - knockH.tilt()) < 0.002) { lraf = 0; return; }
+      lraf = requestAnimationFrame(lettersStep);
+    }
+    const heavyAnimating = () => Math.abs(knockH.tilt() - knockH.rest()) > 0.002;
+    function wakeLetters() { if (reduced()) return; if (!lraf) { llast = performance.now(); lraf = requestAnimationFrame(lettersStep); } }
+    measure();
+    addEventListener('resize', () => { measure(); wakeLetters(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); wakeLetters(); });
+    let heavyInstant = true, heavyToggles = [];
+    function heavyChanged(instant) {
+      if (!heavyToggles.length) return;
+      const deg = heavyRows.reduce((t, r, i) => t + (heavyToggles[i].on ? CARRY[r.dataset.w] : 0), 0);
+      knockH.setRest(deg, heavyRows.map(() => 0), heavyInstant || instant === true);
+      wakeLetters();
+    }
+    heavyToggles = heavyRows.map((r, i) => makeToggle(r, i, { rows: heavyRows, knock: (k, f, d) => { knockH(k, f, d); wakeLetters(); }, changed: heavyChanged }));
+    heavyChanged(); heavyInstant = false;
+    // report the card's tilt to anyone listening (the level readout)
+    (function watch() { onTilt(knockH.tilt()); requestAnimationFrame(watch); })();
+    const api = { rowsL, rowSlope: i => rowSlope(i), wake: () => wakeLetters(), raf: () => lraf,
+      reset() { heavyInstant = true; heavyToggles.forEach(t => t.reset()); heavyChanged(); heavyInstant = false; } };
+    return api;
+  }
+  const weighted = makeWeighted($('list-heavy'));
+  window.__card = { reset() { weighted.reset(); clearTimeout(hintTimer); hint.textContent = HINT; hint.classList.remove('is-nudge'); } };
+  // press feedback (:active) for the demo's synthetic pointer
+  document.querySelectorAll('#stage .row').forEach(r => { r.addEventListener('pointerdown', () => r.classList.add('is-pressed')); ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => r.addEventListener(t, () => r.classList.remove('is-pressed'))); });
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const until = async (fn, max) => { const t0 = performance.now(); while (!fn() && performance.now() - t0 < max) await c.wait(30); };
+  const dl = c.el('.row:nth-child(3) .toggle'), dlRow = c.el('.row:nth-child(3)');
+  // hold the far end of "Allow downloads" until the bar tips and the knob rolls over
+  const [tx, ty] = c.at(dl, 0.82, 0.5);
+  await c.move(tx - 70, ty + 50, 700);
+  await c.move(tx, ty, 520);
+  await c.wait(180);
+  await c.down();
+  await until(() => dl.getAttribute('aria-checked') === 'true', 2200);
+  await c.wait(120);
+  await c.up();
+  await c.wait(1300);                       // the box tips, the letters slide and pile up
+  // pulling back is a tap: press the row and it rolls home
+  const [lx, ly] = c.at(dlRow, 0.35, 0.5);
+  await c.move(lx, ly, 650);
+  await c.wait(160);
+  await c.down();
+  await until(() => dl.getAttribute('aria-checked') === 'false', 1200);
+  await c.up();
+  await c.wait(1200);
+  await c.leave();
+}, { tint: '#1b1c20', reset() { window.__card.reset(); } });
+</script>
+</body></html>

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weighted Checkbox</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --card: #ffffff;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --ink: #17181b;
+  --muted: #62666d;
+  --line: #dfe0e4;
+  --press: #eeeef1;
+  --track: #ffffff;
+  --track-on: #1b1c20;
+  --knob: #eeeef1;
+  --knob-on: #ffffff;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+#stage { color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.demo { display: flex; flex-direction: column; gap: 8px; }
+.group-label { margin: 0; padding-left: 16px; font: 500 11px/16px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.list { position: relative; width: 320px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--card-shadow); transform-origin: 50% 50%; }
+.row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 12px 0 16px; border-radius: 16px; transition: background-color 140ms ease; user-select: none; -webkit-user-select: none; touch-action: none; cursor: pointer; }
+.row:active, .row.is-pressed { background: var(--press); }
+.label { flex: 1; min-width: 0; font: 400 16px/24px var(--sans); color: var(--ink); letter-spacing: -0.005em; }
+.count { margin-left: 8px; font: 500 12px/24px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.group-label .count { margin-left: 6px; font-size: 11px; line-height: 16px; color: var(--ink); }
+.hint { position: absolute; left: 0; right: 0; bottom: 22px; margin: 0 auto; min-height: 18px; max-width: 380px; text-align: center; color: var(--muted); font-size: 13px; line-height: 18px; transition: color 160ms ease; }
+.hint.is-nudge { color: var(--ink); }
+/* Checkbox: 22 box, radius 7. Off: white, 1.5 line. On: the toggle's dark fill, white check. */
+.cbx { appearance: none; position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 8px; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.cbx::before { content: ""; position: absolute; inset: -12px; border-radius: 12px; }
+.cbx:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.box { display: block; position: relative; width: 22px; height: 22px; border-radius: 7px; background: var(--track); box-shadow: inset 0 0 0 1.5px var(--line); transition: background-color 120ms ease, box-shadow 120ms ease; }
+.box.on { background: var(--track-on); box-shadow: none; }
+.tick { position: absolute; left: 0; top: 0; width: 22px; height: 22px; overflow: visible; pointer-events: none; }
+.tick path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke 120ms ease; }
+.box { transition: background-color 120ms ease; }
+.box.on .tick path { stroke: var(--knob-on); }
+.tick-ghost { position: absolute; width: 22px; height: 22px; pointer-events: none; overflow: visible; }
+.tick-ghost path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="340">
+  <div class="wrap">
+    <div class="demo">
+      <p class="group-label" id="g-include">Include when sharing<span class="count" id="inc-count" aria-label="items included">1</span></p>
+      <div class="list" id="list-check" role="group" aria-labelledby="g-include">
+        <div class="row" data-w="light" data-on="true">
+          <button class="cbx" type="button" role="checkbox" aria-checked="true" aria-labelledby="c1"><span class="box" aria-hidden="true"><svg class="tick" viewBox="0 0 22 22"><path d="M6.5 11.5 9.5 14.5 15.5 8"/></svg></span></button>
+          <span class="label" id="c1">Comments</span>
+        </div>
+        <div class="row" data-w="medium">
+          <button class="cbx" type="button" role="checkbox" aria-checked="false" aria-labelledby="c2"><span class="box" aria-hidden="true"><svg class="tick" viewBox="0 0 22 22"><path d="M6.5 11.5 9.5 14.5 15.5 8"/></svg></span></button>
+          <span class="label" id="c2">Version history</span>
+        </div>
+        <div class="row" data-w="heavy">
+          <button class="cbx" type="button" role="checkbox" aria-checked="false" aria-labelledby="c3"><span class="box" aria-hidden="true"><svg class="tick" viewBox="0 0 22 22"><path d="M6.5 11.5 9.5 14.5 15.5 8"/></svg></span></button>
+          <span class="label" id="c3">Private notes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="hint" id="hint" aria-live="polite"></p>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = () => mq.matches;
+  let speed = 1;
+  const rad = d => d * Math.PI / 180;
+
+  /* ---------- The list: takes each landing ---------- */
+  // Like the Week 2 bar under a badge: the card tips toward where a knob lands, the other rows skid a little,
+  // and it all settles. A heavier setting tips it further.
+  // Each list can be tipped (rot, deg) and pushed down (dip, px); both spring back. Rows slide with the tip.
+  function makeKnocker(list) {
+    const rows = [...list.querySelectorAll('.row')];
+    let la = 0, lv = 0, ly = 0, vy = 0, raf = 0, last = 0, src = 0, base = 0;   // base: where the list rests (px down)
+    let baseRot = 0;                                           // resting tilt of the card (deg)
+    const rowRot = rows.map(() => ({ a: 0, v: 0, target: 0 })); // resting tilt of each row (deg), sprung
+    const labels = rows.map(r => r.querySelector('.label'));
+    let contents = null;                                       // (slope deg, row index) => lays out the loose contents of the row
+    const paint = () => {
+      const t = [], y = base + ly, rot = baseRot + la;
+      if (Math.abs(y) > 0.01) t.push(`translateY(${y.toFixed(2)}px)`);
+      if (Math.abs(rot) > 0.002) t.push(`rotate(${rot.toFixed(3)}deg)`);
+      list.style.transform = t.join(' ');
+    };
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000) * speed; last = now;
+      lv += (-230 * la - 14 * lv) * dt; la += lv * dt;
+      vy += (-260 * ly - 16 * vy) * dt; ly += vy * dt;
+      let rowsMoving = false;
+      rowRot.forEach(q => { q.v += (-150 * (q.a - q.target) - 13 * q.v) * dt; q.a += q.v * dt; if (Math.abs(q.a - q.target) > 0.002 || Math.abs(q.v) > 0.01) rowsMoving = true; });
+      paint();
+      rows.forEach((r, i) => {
+        const s = i === src ? 0 : la * 2.2 * (1 - 0.25 * Math.abs(i - src));   // skid downhill, nearest most
+        const t = [];
+        if (Math.abs(s) > 0.01) t.push(`translateX(${s.toFixed(2)}px)`);
+        if (Math.abs(rowRot[i].a) > 0.002) t.push(`rotate(${rowRot[i].a.toFixed(3)}deg)`);
+        r.style.transform = t.join(' ');
+        if (contents) contents(baseRot + la, i, baseRot);
+      });
+      if (!rowsMoving && Math.abs(la) < 0.002 && Math.abs(lv) < 0.01 && Math.abs(ly) < 0.01 && Math.abs(vy) < 0.05) {
+        rowRot.forEach(q => { q.a = q.target; q.v = 0; });
+        la = lv = ly = vy = 0; paint();
+        rows.forEach((r, i) => {
+          r.style.transform = Math.abs(rowRot[i].a) > 0.002 ? `rotate(${rowRot[i].a.toFixed(3)}deg)` : '';
+          if (contents) contents(baseRot, i, baseRot);
+        });
+        raf = 0; return;
+      }
+      raf = requestAnimationFrame(step);
+    }
+    const knock = (rotKick, from, dipKick = 0) => {
+      if (reduced()) return;
+      src = from; lv += rotKick; vy += dipKick;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    const wakeK = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } };
+    knock.setRest = (cardDeg, rowDegs, instant) => {   // where the card and each row rest, tilted by what they carry
+      if (instant || reduced()) {
+        baseRot = cardDeg; rowRot.forEach((q, i) => { q.a = q.target = rowDegs[i]; q.v = 0; }); la = 0; paint();
+        rows.forEach((r, i) => { r.style.transform = Math.abs(q0(i)) > 0.002 ? `rotate(${q0(i).toFixed(3)}deg)` : ''; if (contents) contents(baseRot, i, baseRot); });
+        return;
+      }
+      la += baseRot - cardDeg; baseRot = cardDeg;               // the card swings over to its new rest
+      rowRot.forEach((q, i) => { q.target = rowDegs[i]; });
+      wakeK();
+    };
+    const q0 = i => rowRot[i].a;
+    knock.setContents = fn => { contents = fn; };
+    knock.tilt = () => baseRot + la;                // the card's current tilt (deg)
+    knock.rest = () => baseRot;
+    knock.setBase = (v, instant) => {                 // move where it rests; it settles there with the same spring
+      if (instant || reduced()) { base = v; ly = 0; paint(); return; }
+      ly += base - v; base = v;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    return knock;
+  }
+  // A small hop: the element jumps a few px and lands, with one smaller hop after. Used when a heavy landing
+  // ripples through the neighbouring controls. dirY: -1 up (default), +1 down; or 'x' with a sign for sideways.
+  function hop(el, px, delay = 0, axis = 'y', sign = -1) {
+    if (reduced() || px < 0.05) return;
+    let t = -delay, last = performance.now();
+    const H1 = 200, H2 = 120;
+    const f = now => {
+      t += (now - last) * speed; last = now;
+      let v = 0;
+      if (t > 0 && t < H1) { const p = t / H1; v = 4 * px * p * (1 - p); }
+      else if (t >= H1 && t < H1 + H2) { const q = (t - H1) / H2; v = 4 * px * 0.3 * q * (1 - q); }
+      el.style.transform = v > 0.01 ? (axis === 'y' ? `translateY(${(sign * v).toFixed(2)}px)` : `translateX(${(sign * v).toFixed(2)}px)`) : '';
+      if (t < H1 + H2) requestAnimationFrame(f); else el.style.transform = '';
+    };
+    requestAnimationFrame(f);
+  }
+
+  /* ---------- The hint ---------- */
+  const hint = $('hint'), HINT = hint.textContent;
+  let hintTimer = 0;
+  function nudgeHint(text = 'Hold to tip it.') {
+    hint.textContent = text;
+    hint.classList.add('is-nudge');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => { hint.textContent = HINT; hint.classList.remove('is-nudge'); }, 2600);
+  }
+
+  const SHAKE_MS = 360, TAP_S = 0.3;
+  const shakeShape = u => Math.sin(2 * Math.PI * u * SHAKE_MS / 170) * Math.exp(-3.2 * u) * (1 - u);
+  const shakeNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(shakeShape(i / 200))); return m; })();
+  const JOLT_MS = 430, joltShape = u => Math.exp(-2.2 * u) * Math.pow(1 - u, 1.4) * Math.sin(2 * Math.PI * 2.1 * u * JOLT_MS / 1000);
+  const joltNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(joltShape(i / 200))); return m; })();
+  const joltAt = ms => (ms <= 0 || ms >= JOLT_MS) ? 0 : joltShape(ms / JOLT_MS) / joltNorm;
+
+  /* ---------- Checkbox: press the check in ---------- */
+  // Checking exposes more, so it takes a press. The check is a solid little weight. Hold the box and it sinks a
+  // little, rigidly, like a key, while the whole check is lowered into it from above. When it reaches the bottom it
+  // locks in: the box fills, springs back up through level with one small bounce, and the list and the label take
+  // the hit. Let go before it is in and it lifts back out and fades. Unchecking is a tap: the check lifts out at once
+  // and the box pops up, let off. More private items are heavier, so they take a longer press to lower.
+  // Each item weighs what it reveals: comments least, private notes most. A heavier item takes a deeper press
+  // to go in. Whatever is included rests in the list, so the list sits lower by the weight of what it carries,
+  // and the count beside the group label says how many items are in.
+  const CB = { light: { deep: 1.2, sink: 0.6, list: 14, text: 0.6 }, medium: { deep: 2.4, sink: 1.2, list: 30, text: 1.5 }, heavy: { deep: 3.4, sink: 2.0, list: 50, text: 2.6 } };
+  let included = () => 0, carried = () => 0;          // set once the checkboxes exist
+  const deepFor = self => self.w.deep;
+  const MAX_DEEP = 4, DEEP_RATE = 3.2, DEEP_LEAN = 1.0, SINK = 0.4;   // SINK: px the box moves per unit of depth (≤ 1.6)
+  const knockC = makeKnocker($('list-check'));
+  const cbRows = [...$('list-check').querySelectorAll('.row')];
+  function makeCheckbox(row, index) {
+    const btn = row.querySelector('.cbx'), box = row.querySelector('.box'), tick = row.querySelector('.tick'), label = row.querySelector('.label');
+    const path = tick.querySelector('path'), L = path.getTotalLength ? path.getTotalLength() : 17;
+    const LIFT = 14;                                   // px above the box the check starts from
+    const w = CB[row.dataset.w], initial = row.dataset.on === 'true';
+    const me = { w, get on() { return on; } };
+    let on = initial, d = 0, vd = 0, ink = on ? 1 : 0, hold = null, tease = null, shakeMs = -1, jolt = null, raf = 0, last = 0;
+    // Unchecking flicks the check off, the way the Week 2 bar flicked its badge off the bell: the box winds down,
+    // snaps up, and throws the check, which arcs up and away, spinning, and fades. A heavier check flies lower and
+    // shorter and spins less, as the heavy badge did.
+    const FLICK = { light: { apex: 30, reach: 20, spin: 260 }, medium: { apex: 22, reach: 16, spin: 190 }, heavy: { apex: 15, reach: 12, spin: 130 } }[row.dataset.w];
+    const WIND = 120, FLIGHT = 420;
+    let flickMs = null, ghost = null, ghostMs = 0;
+    function launch() {
+      setOn(false); ink = 0;
+      if (ghost) ghost.remove();
+      ghost = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      ghost.setAttribute('viewBox', '0 0 22 22'); ghost.setAttribute('class', 'tick-ghost'); ghost.setAttribute('aria-hidden', 'true');
+      ghost.innerHTML = '<path d="M6.5 11.5 9.5 14.5 15.5 8"/>';
+      row.style.position = 'relative';
+      ghost.style.left = btn.offsetLeft + 'px'; ghost.style.top = (btn.offsetTop + d * SINK) + 'px';
+      row.appendChild(ghost); ghostMs = 0;
+      vd = -60;                                          // the box snaps up
+      knockC(0.4, index, -8);
+    }
+    function draw() {
+      const sh = shakeMs >= 0 ? 0.8 * shakeShape(shakeMs / SHAKE_MS) / shakeNorm : 0;
+      const y = d * SINK + sh;
+      box.style.transform = Math.abs(y) > 0.01 ? `translateY(${y.toFixed(2)}px)` : '';
+      box.classList.toggle('on', on);
+      const r = Math.max(0, Math.min(1, d / deepFor(me)));
+      box.style.boxShadow = on ? '' : `inset 0 0 0 1.5px var(--line), inset 0 ${(1.5 * r).toFixed(2)}px ${(3 * r).toFixed(2)}px rgba(26, 28, 36, ${(0.1 * r).toFixed(3)})`;
+      // the check is one solid piece: held above the box, it is lowered in as the press goes on
+      const lift = on ? 0 : -LIFT * (1 - ink);
+      tick.style.transform = Math.abs(lift) > 0.01 ? `translateY(${lift.toFixed(2)}px)` : '';
+      tick.style.opacity = on ? '' : ink > 0.001 ? (0.35 + 0.65 * ink).toFixed(3) : '0';
+      if (jolt) {
+        const l = jolt.dir * jolt.amp * joltAt(jolt.ms);
+        label.style.transform = Math.abs(l) > 0.01 ? `translateX(${l.toFixed(2)}px)` : '';
+      } else label.style.transform = '';
+    }
+    function rest() { cancelAnimationFrame(raf); raf = 0; hold = tease = jolt = null; flickMs = null; if (ghost) { ghost.remove(); ghost = null; } shakeMs = -1; d = vd = 0; ink = on ? 1 : 0; draw(); }
+    function setOn(v) { on = v; btn.setAttribute('aria-checked', String(on)); bundleChanged(); }
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000) * speed; last = now;
+      if (shakeMs >= 0) { shakeMs += dt * 1000; if (shakeMs >= SHAKE_MS) shakeMs = -1; }
+      if (jolt) { jolt.ms += dt * 1000; if (jolt.ms >= JOLT_MS) jolt = null; }
+      let target = 0;
+      if (flickMs != null) {                             // wind down, then snap up and throw
+        flickMs += dt * 1000;
+        if (flickMs < WIND) target = 2.2 * Math.sin(Math.PI / 2 * flickMs / WIND);
+        else { flickMs = null; launch(); }
+      }
+      if (ghost) {
+        ghostMs += dt * 1000;
+        const f = Math.min(1, ghostMs / FLIGHT), q = (f - 0.4) / 0.4;
+        ghost.style.transform = `translate(${(FLICK.reach * f).toFixed(2)}px, ${(-FLICK.apex * (1 - q * q)).toFixed(2)}px) rotate(${(FLICK.spin * f).toFixed(1)}deg)`;
+        ghost.style.opacity = f < 0.55 ? '1' : Math.max(0, 1 - (f - 0.55) / 0.45).toFixed(3);
+        if (f >= 1) { ghost.remove(); ghost = null; }
+      }
+      if (hold && !hold.done) {
+        hold.t += dt;
+        target = Math.min(MAX_DEEP, DEEP_LEAN * (1 - Math.exp(-hold.t / 0.12)) + DEEP_RATE * hold.force * hold.t);
+      } else if (tease) {
+        tease.ms += dt * 1000;
+        if (tease.ms < 300) target = 1.6;
+        else { tease = null; if (!on) nudgeHint('Hold to press it in.'); }   // a tap was not enough
+      }
+      const pressing = (hold && !hold.done) || !!tease || flickMs != null;
+      const k = pressing ? 200 : 420, c = pressing ? 26 : 13;
+      vd += (-k * (d - target) - c * vd) * dt; d += vd * dt;
+      // the check: drawn by the press, un-drawn when let go
+      if (on) ink = 1;
+      else if (pressing) ink += (Math.max(0, Math.min(1, d / deepFor(me))) - ink) * Math.min(1, dt * 30);
+      else ink = Math.max(0, ink - dt * 7);
+      if (!on && pressing && d >= deepFor(me)) {            // the stroke completes: it locks in
+        setOn(true); ink = 1;
+        if (hold) hold.done = true; tease = null;
+        vd = -Math.max(vd, 30) * 0.9;                   // the box springs back up through level
+        knockC(-w.list * 0.8, index, 0);
+        cbRows.forEach((r, j) => {                     // the thud runs through the other boxes
+          if (j !== index) hop(r.querySelector('.cbx'), (w.sink * 0.7) / Math.abs(j - index), 50 * Math.abs(j - index));
+        });
+        jolt = { dir: -1, amp: w.text, ms: 0 };
+      }
+      draw();
+      if (!hold && !tease && !jolt && flickMs == null && !ghost && shakeMs < 0 && ink === (on ? 1 : 0) && Math.abs(d) < 0.01 && Math.abs(vd) < 0.05) { rest(); return; }
+      raf = requestAnimationFrame(step);
+    }
+    function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }
+    function press(force) {
+      shakeMs = 0;
+      if (reduced()) { hold = { t: 0 }; return; }
+      if (on) {                                          // pulling back: a tap; the box winds down and flicks the check off
+        if (flickMs != null) return;
+        flickMs = 0; hold = null; wake(); return;
+      }
+      hold = { t: 0, force, done: false }; tease = null; wake();
+    }
+    function release() {
+      if (!hold) return;
+      const was = hold; hold = null;
+      if (reduced()) { setOn(!on); rest(); return; }
+      if (!was.done && !on) {
+        if (was.t < TAP_S) tease = { ms: 0 };
+        else nudgeHint('Hold to press it in.');
+      }
+      wake();
+    }
+    btn.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); row.setPointerCapture(e.pointerId);
+      const real = (e.pointerType === 'pen' || e.pointerType === 'touch') && e.pressure > 0 && e.pressure !== 0.5;
+      press(real ? 0.5 + e.pressure : 1); });
+    row.addEventListener('pointerdown', e => { e.preventDefault(); row.setPointerCapture(e.pointerId); press(1); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => row.addEventListener(t, release));
+    btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); press(1); } });
+    btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); release(); } });
+    btn.addEventListener('click', e => e.preventDefault());
+    rest();
+    return { reset() { setOn(initial); rest(); }, get on() { return on; }, w };
+  }
+  let bundleInstant = true;
+  function bundleChanged() {
+    const n = included();
+    $('inc-count').textContent = String(n);
+    knockC.setBase(carried(), bundleInstant);
+  }
+  const checkboxes = [...$('list-check').querySelectorAll('.row')].map(makeCheckbox);
+  included = () => checkboxes.filter(c => c.on).length;
+  carried = () => checkboxes.reduce((t, c) => t + (c.on ? c.w.sink : 0), 0);
+  bundleChanged(); bundleInstant = false;
+  window.__card = { reset() { bundleInstant = true; checkboxes.forEach(c => c.reset()); bundleChanged(); bundleInstant = false; clearTimeout(hintTimer); hint.textContent = HINT; hint.classList.remove('is-nudge'); } };
+  // press feedback (:active) for the demo's synthetic pointer
+  document.querySelectorAll('#stage .row').forEach(r => { r.addEventListener('pointerdown', () => r.classList.add('is-pressed')); ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => r.addEventListener(t, () => r.classList.remove('is-pressed'))); });
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const until = async (fn, max) => { const t0 = performance.now(); while (!fn() && performance.now() - t0 < max) await c.wait(30); };
+  const vh = c.el('.row:nth-child(2) .cbx'), cm = c.el('.row:nth-child(1) .cbx');
+  // hold "Version history" until the check is pressed in
+  const [vx, vy] = c.at(vh);
+  await c.move(vx + 50, vy + 50, 700);
+  await c.move(vx, vy, 480);
+  await c.wait(180);
+  await c.down();
+  await until(() => vh.getAttribute('aria-checked') === 'true', 2000);
+  await c.wait(140);
+  await c.up();
+  await c.wait(1100);
+  // unchecking is a tap: "Comments" flicks its check off
+  const [cx, cy] = c.at(cm);
+  await c.move(cx, cy, 600);
+  await c.wait(160);
+  await c.click();
+  await c.wait(1200);
+  await c.leave();
+}, { tint: '#1b1c20', reset() { window.__card.reset(); } });
+</script>
+</body></html>

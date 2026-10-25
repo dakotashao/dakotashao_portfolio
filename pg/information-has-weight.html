@@ -1,19 +1,10 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>
-  html { color-scheme: light; }
-  body { margin: 0; }
-  img { max-width: 100%; }
-  [hidden] { display: none !important; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Information Has Weight</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one flat ground. The pill bar sits at the centre of the window, scaled to suit it
-   (badges drop onto the bell, tooltips hang below the bar). Demo controls sit along the bottom. */
 :root {
   --bg: #f6f6f6;
   --stage: #f5f5f7;
@@ -34,89 +25,29 @@
   --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f1012; --stage: #131517; --bar: #202226;
-    --bar-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
-    --ink: #eeeff1; --icon: #9a9ea5; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
-    --badge: #e8502f; --badge-ink: #ffffff;
-    --tip-bg: #eeeff1; --tip-ink: #17181b; --tip-muted: #50545b;
-    --tip-chip: rgba(18, 20, 24, 0.08); --tip-chip-hover: rgba(18, 20, 24, 0.14);
-    color-scheme: dark;
-  }
 }
-:root[data-theme="dark"] {
-  --bg: #0f1012; --stage: #131517; --bar: #202226;
-  --bar-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
-  --ink: #eeeff1; --icon: #9a9ea5; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
-  --badge: #e8502f; --badge-ink: #ffffff;
-  --tip-bg: #eeeff1; --tip-ink: #17181b; --tip-muted: #50545b;
-    --tip-chip: rgba(18, 20, 24, 0.08); --tip-chip-hover: rgba(18, 20, 24, 0.14);
-  color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
-body {
-  background: var(--bg);
+[hidden] { display: none !important; }
+#stage {
   color: var(--ink);
   font-family: var(--sans);
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-html, body { height: 100%; }
-.page {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Header */
-.head { display: flex; flex-direction: column; gap: 8px; }
-.eyebrow {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-h1 {
-  margin: 0;
-  font-size: clamp(26px, 4.4vw, 38px);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-  text-wrap: balance;
-}
-.lede { margin: 0; max-width: 60ch; color: var(--muted); text-wrap: pretty; }
-
-/* Stage and pill bar */
-/* No canvas block: the whole page is one flat ground. The stage is everything above the controls. */
-.stage {
-  position: relative;
-  flex: 1;
-  min-height: 380px;
-}
-/* The scene is drawn at its natural size and scaled up to suit the window (--k is set in script).
-   It always covers the stage exactly, with the bar dead centre. */
+/* The bar sits at its natural size in the centre; badges drop onto the bell from above, tooltips hang below. */
 .scene {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(100% / var(--k, 1));
-  height: calc(100% / var(--k, 1));
-  transform: translate(-50%, -50%) scale(var(--k, 1));
+  inset: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: center;            /* the bar always sits in the exact centre of the stage */
 }
 .bar {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px;
   border-radius: 999px;
   background: var(--bar);
@@ -141,7 +72,7 @@ h1 {
 }
 .nav-btn > svg { display: block; width: 24px; height: 24px; }
 .tip-wrap > .nav-btn, #home, #bell { will-change: transform; }
-.nav-btn:hover,
+.nav-btn:hover, .nav-btn[data-kit-hover],
 .tip-wrap.is-open .nav-btn { background: var(--press); color: var(--ink); }
 .nav-btn.is-current { background: var(--press); color: var(--ink); cursor: default; }
 .icon-stroke { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -150,34 +81,34 @@ h1 {
 .swing {
   position: relative;
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   transform-origin: 50% 10.4%;
   will-change: transform;
 }
-.swing svg { display: block; width: 28px; height: 28px; overflow: visible; }
+.swing svg { display: block; width: 24px; height: 24px; overflow: visible; }
 .badge {
   position: absolute;
-  left: 15px;
-  top: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
+  left: 13px;
+  top: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
   background: var(--badge);
   color: var(--badge-ink);
   box-shadow: 0 0 0 2px var(--bar);
   font-family: var(--sans);
   font-size: 11px;
-  font-weight: 600;
-  line-height: 18px;
+  font-weight: 500;
+  line-height: 16px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   transform-origin: 50% 100%;
   will-change: transform, opacity;
   pointer-events: none;
 }
-.badge.dot { left: 19px; top: -1px; min-width: 0; width: 8px; height: 8px; padding: 0; }
+.badge.dot { left: 17px; top: -1px; min-width: 0; width: 6px; height: 6px; padding: 0; border-radius: 3px; }
 
 /* Tooltip, hanging below the bar */
 .tip-wrap { position: relative; display: block; }
@@ -196,18 +127,20 @@ h1 {
 .tip-bg path { fill: var(--tip-bg); }
 .tip-body {
   position: relative;
-  padding: 8px 13px;
+  padding: 4px 8px;
   color: var(--tip-ink);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 16px;
   will-change: transform;
 }
 .tip[data-kind="rich"] .tip-body {
-  width: 216px;
-  padding: 14px 16px 14px;
+  width: 240px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 20px;
 }
 .tip-title { margin: 0; font-weight: 600; }
 .tip-title, .tip-text, .tip-action, .tip-body { will-change: transform; }
@@ -215,15 +148,16 @@ h1 {
 .tip-action {
   appearance: none;
   align-self: flex-start;
-  margin-top: 12px;
-  height: 30px;
-  padding: 0 10px 0 12px;
+  margin-top: 8px;
+  height: 32px;
+  padding: 0 12px;
   border: 0;
   border-radius: 999px;
   background: var(--tip-chip);
   color: var(--tip-ink);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -234,166 +168,71 @@ h1 {
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
 }
-.tip-action:hover, .tip-action.is-pressed { background: var(--tip-chip-hover); }
+.tip-action:hover, .tip-action[data-kit-hover], .tip-action.is-pressed { background: var(--tip-chip-hover); }
 .tip-action .arrow { display: grid; place-items: center; transition: transform 160ms ease; }
-.tip-action .arrow svg { width: 14px; height: 14px; display: block; }
-.tip-action:hover .arrow { transform: translateX(2px); }
+.tip-action .arrow svg { width: 16px; height: 16px; display: block; }
+.tip-action:hover .arrow, .tip-action[data-kit-hover] .arrow { transform: translateX(2px); }
 .tip-action.is-pressed .arrow { transform: translateX(3px); }
-
-/* Panels under the stage */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 36px;
-}
-@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
-.panel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.panel-head { display: flex; flex-direction: column; gap: 2px; }
-h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
-.rule { margin: 0; color: var(--muted); font-size: 14px; }
-
-.controls { position: relative; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 8px; padding: 0 16px 28px; }
-.seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--bar); box-shadow: inset 0 0 0 1px var(--line); }
-.btn {
-  appearance: none;
-  min-width: 38px;
-  height: 34px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-.btn:hover { background: var(--press); color: var(--ink); }
-.btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-.btn.quiet { height: 42px; padding: 0 16px; background: var(--bar); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font-family: var(--sans); font-size: 14px; }
-.btn.quiet:hover { background: var(--press); }
-.status { margin: 0; min-height: 42px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
-
-:where(.nav-btn, .btn, .tip-action, input):focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+:where(.nav-btn, .tip-action):focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .tip-action:focus-visible { outline-color: var(--tip-ink); outline-offset: 2px; }
-
-/* Weight tables */
-.spec { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
-.spec caption {
-  caption-side: bottom;
-  text-align: left;
-  padding-top: 10px;
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--muted);
-}
-.spec th, .spec td { text-align: right; padding: 7px 0 7px 10px; border-bottom: 1px solid var(--line); font-weight: 400; white-space: nowrap; }
-.spec th:first-child, .spec td:first-child { text-align: left; padding-left: 0; }
-.spec thead th { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
-.spec tbody tr { color: var(--muted); transition: color 160ms ease; }
-.spec tbody tr.is-active { color: var(--ink); font-weight: 500; }
-.spec tbody tr.is-active th { font-weight: 500; }
-
-/* Footer */
-.foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 14px;
-}
-.check { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); cursor: pointer; }
-.check:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
-.check input:focus-visible { outline: none; }
-.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); }
-.notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 0 16px 20px; color: var(--muted); font-size: 14px; }
-
-/* Thumbnail mode (page opened with #thumb): no controls, the canvas fills the frame. */
-.thumb .controls, .thumb .notice { display: none; }
 </style>
-<style>/*pg-embed*/ html,body{overflow:hidden} .controls{display:none!important}</style>
-</head>
-<body>
-<script>if (location.hash === "#thumb") document.documentElement.classList.add("thumb");</script>
-<main class="page">
-  <div class="stage">
-    <div class="scene" id="scene">
+</head><body>
+<div id="stage" data-w="460" data-h="520">
+<div class="scene" id="scene">
     <nav class="bar" id="bar" aria-label="Demo navigation">
-      <button class="nav-btn is-current" type="button" id="home" aria-label="Home" aria-current="page">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-stroke" d="M4.5 10.5 12 4l7.5 6.5V18a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path class="icon-stroke" d="M10 16h4"/></svg>
-      </button>
+  <button class="nav-btn is-current" type="button" id="home" aria-label="Home" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-stroke" d="M4.5 10.5 12 4l7.5 6.5V18a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path class="icon-stroke" d="M10 16h4"/></svg>
+  </button>
 
-      <div class="tip-wrap" data-kind="plain">
-        <button class="nav-btn" type="button" id="anchor-plain" aria-label="Copy link" aria-describedby="tip-plain">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path class="icon-stroke" d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/>
-            <path class="icon-stroke" d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>
-          </svg>
-        </button>
-        <div class="tip" id="tip-plain" data-kind="plain" role="tooltip" hidden>
-          <div class="tip-inner">
-            <svg class="tip-bg" aria-hidden="true"><path/></svg>
-            <div class="tip-body">Copy link</div>
-          </div>
-        </div>
+  <div class="tip-wrap" data-kind="plain">
+    <button class="nav-btn" type="button" id="anchor-plain" aria-label="Copy link" aria-describedby="tip-plain">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path class="icon-stroke" d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/>
+        <path class="icon-stroke" d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>
+      </svg>
+    </button>
+    <div class="tip" id="tip-plain" data-kind="plain" role="tooltip" hidden>
+      <div class="tip-inner">
+        <svg class="tip-bg" aria-hidden="true"><path/></svg>
+        <div class="tip-body">Copy link</div>
       </div>
-
-      <div class="tip-wrap" data-kind="rich">
-        <button class="nav-btn" type="button" id="anchor-rich" aria-label="Link sharing info" aria-describedby="tip-rich">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle class="icon-stroke" cx="12" cy="12" r="8.5"/>
-            <path class="icon-stroke" d="M12 11v5"/>
-            <path class="icon-stroke" d="M12 7.8v.01" style="stroke-width:2"/>
-          </svg>
-        </button>
-        <div class="tip" id="tip-rich" data-kind="rich" role="tooltip" hidden>
-          <div class="tip-inner">
-            <svg class="tip-bg" aria-hidden="true"><path/></svg>
-            <div class="tip-body">
-              <p class="tip-title">Your link is public.</p>
-              <p class="tip-text">Anyone with this link can view it.</p>
-              <button class="tip-action" type="button" id="manage"><span>Manage access</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="icon-stroke" style="stroke-width:1.75" d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button class="nav-btn bell" id="bell" type="button" aria-label="Notifications, 3 unread">
-        <span class="swing" id="swing">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path class="icon-stroke" d="M12 2.5V4"/>
-            <path class="icon-stroke" d="M6 10a6 6 0 0 1 12 0v5l2 3H4l2-3z"/>
-            <path class="icon-stroke" id="clapper" d="M10 21a2 2 0 0 0 4 0"/>
-          </svg>
-          <span class="badge" id="badge" aria-hidden="true">3</span>
-        </span>
-      </button>
-    </nav>
     </div>
   </div>
 
-  <div class="controls">
-    <div class="seg" role="group" aria-label="Badge content">
-      <button class="btn" type="button" id="b-none" data-key="none" aria-pressed="false">None</button>
-      <button class="btn" type="button" id="b-dot" data-key="dot" aria-pressed="false">Dot</button>
-      <button class="btn" type="button" id="b-1" data-key="1" aria-pressed="false">1</button>
-      <button class="btn" type="button" id="b-3" data-key="3" aria-pressed="true">3</button>
-      <button class="btn" type="button" id="b-12" data-key="12" aria-pressed="false">12</button>
-      <button class="btn" type="button" id="b-99" data-key="99+" aria-pressed="false">99+</button>
+  <div class="tip-wrap" data-kind="rich">
+    <button class="nav-btn" type="button" id="anchor-rich" aria-label="Link sharing info" aria-describedby="tip-rich">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle class="icon-stroke" cx="12" cy="12" r="8.5"/>
+        <path class="icon-stroke" d="M12 11v5"/>
+        <path class="icon-stroke" d="M12 7.8v.01" style="stroke-width:2"/>
+      </svg>
+    </button>
+    <div class="tip" id="tip-rich" data-kind="rich" role="tooltip" hidden>
+      <div class="tip-inner">
+        <svg class="tip-bg" aria-hidden="true"><path/></svg>
+        <div class="tip-body">
+          <p class="tip-title">Your link is public.</p>
+          <p class="tip-text">Anyone with this link can view it.</p>
+          <button class="tip-action" type="button" id="manage"><span>Manage access</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="icon-stroke" style="stroke-width:1.75" d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></span></button>
+        </div>
+      </div>
     </div>
-    <button class="btn quiet" type="button" id="replay">Replay</button>
-    <button class="btn quiet" type="button" id="reset">Reset</button>
-    <label class="btn quiet check" for="slow"><input type="checkbox" id="slow"> Slow motion</label>
   </div>
-  <div class="notice" id="rm-notice" hidden>
-    <span>Your system asks for reduced motion, so the physics are off.</span>
-    <button class="btn quiet" type="button" id="rm-override">Play motion anyway</button>
-  </div>
-</main>
 
+  <button class="nav-btn bell" id="bell" type="button" aria-label="Notifications, 3 unread">
+    <span class="swing" id="swing">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path class="icon-stroke" d="M12 2.5V4"/>
+        <path class="icon-stroke" d="M6 10a6 6 0 0 1 12 0v5l2 3H4l2-3z"/>
+        <path class="icon-stroke" id="clapper" d="M10 21a2 2 0 0 0 4 0"/>
+      </svg>
+      <span class="badge" id="badge" aria-hidden="true">3</span>
+    </span>
+  </button>
+</nav>
+</div>
+</div>
+<script src="kit.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -401,9 +240,8 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
 
   /* ---------- Shared: one clock, one rule ---------- */
   const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let motionOverride = false;
-  const reduced = () => mq.matches && !motionOverride;
-  let speed = 1;
+  const reduced = () => mq.matches;
+  const speed = 1;
 
   const anims = new Map();
   function cancel(key) {
@@ -506,7 +344,6 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     badge.textContent = key === 'dot' ? '' : key;
   }
   function syncUI() {
-    document.querySelectorAll('.seg .btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === current)));
     bell.setAttribute('aria-label',
       current === 'none' ? 'Notifications, none' :
       current === 'dot' ? 'Notifications, new activity' : `Notifications, ${current} unread`);
@@ -556,17 +393,8 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     const tau = t - WIND, u = tau / RING;
     return Math.cos(TAU * tau / RING_MS) * Math.exp(-3.2 * u) * Math.pow(1 - u, 1.2);
   }
-  const stage = document.querySelector('.stage'), scene = $('scene');
-  // Scale the scene gently with the window: the bar takes about a fifth of the window's width, at most 1.5x,
-  // and always leaves room for the rich tooltip under it. The thumbnail keeps the natural size.
-  let K = 1;
-  function fitScene() {
-    const thumb = document.documentElement.classList.contains('thumb');
-    K = thumb ? 1 : Math.max(1, Math.min((stage.clientHeight / 2 - 12) / 210, stage.clientWidth * 0.2 / 226, 1.5));
-    scene.style.setProperty('--k', K.toFixed(3));
-  }
-  fitScene();
-  addEventListener('resize', fitScene);
+  const scene = $('scene');
+  const K = () => (window.KIT ? KIT.scale : 1);                     // the card scales the stage
   let ghost = null;                                                    // the badge once it is airborne, free of the bar
   function killGhost() { if (ghost) { ghost.remove(); ghost = null; } }
   function clearBadge(fromKey, animated) {
@@ -588,8 +416,8 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
       }
       if (!ghost) {
         const r = badge.getBoundingClientRect(), sr = scene.getBoundingClientRect();   // screen px, so divide by the scene scale
-        const left = (r.left + r.width / 2 - sr.left) / K - badge.offsetWidth / 2;
-        const top = (r.top + r.height / 2 - sr.top) / K - badge.offsetHeight / 2;
+        const left = (r.left + r.width / 2 - sr.left) / K() - badge.offsetWidth / 2;
+        const top = (r.top + r.height / 2 - sr.top) / K() - badge.offsetHeight / 2;
         ghost = badge.cloneNode(true);
         ghost.removeAttribute('id');
         ghost.style.cssText = `left:${left.toFixed(1)}px;top:${top.toFixed(1)}px;box-shadow:none;transform-origin:50% 50%;`;
@@ -621,14 +449,6 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     else drop(key);
   }
 
-  document.querySelectorAll('.seg .btn').forEach(b => b.addEventListener('click', () => select(b.dataset.key)));
-  $('replay').addEventListener('click', () => select(current === 'none' ? last : current));
-  $('reset').addEventListener('click', () => {
-    current = 'none';
-    setTab('home');
-    syncUI();
-    clearBadge(null, false);
-  });
   // Opening the bell moves the highlight off Home and the badge, now read, falls away.
   // Pressing a tab gives the whole bar a small, simple shake: it dips a touch, rings twice and stills.
   // The icon rides with the bar; nothing changes size.
@@ -642,7 +462,17 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
       applyBar();
     }, () => { pulls['press-' + key] = 0; applyBar(); });
   }
-  bell.addEventListener('click', () => { setTab('bell'); pressTab(bell, 'bell'); if (current !== 'none') select('none'); });
+  // Once the badge has been read and flicked off, a new notification lands a moment later, each one heavier.
+  const NEXT = ['12', '99+', '1', '3'];
+  let nextI = 0, nextT = 0;
+  bell.addEventListener('click', () => {
+    setTab('bell'); pressTab(bell, 'bell');
+    if (current !== 'none') {
+      select('none');
+      clearTimeout(nextT);
+      nextT = setTimeout(() => { if (current === 'none') select(NEXT[nextI++ % NEXT.length]); }, 1500);
+    }
+  });
   home.addEventListener('click', () => { setTab('home'); pressTab(home, 'home'); });
 
   syncUI();
@@ -659,10 +489,10 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     // rattle: how the loose contents are thrown about inside once the box stops (px).
     //   float  how far up they hang during the fall      floor  how far down they slam before the bottom stops them
     //   ceil   how far up they bounce before the top stops them      back, last  the two smaller swings that follow
-    plain: { drop: 6, hop: 2, pull: 0.8, pointer: 5, radius: 12,
+    plain: { drop: 6, hop: 2, pull: 0.8, pointer: 6, radius: 8,
              rattle: { float: 3, floor: 6, ceil: 5, back: 2, last: 0.5 },
              items: [{ sel: '.tip-body', lag: 0, thud: 0.3 }] },
-    rich:  { drop: 13, stretch: 12, pull: 3.2, pointer: 18, radius: 14,
+    rich:  { drop: 12, stretch: 12, pull: 3.2, pointer: 18, radius: 12,
              rattle: { float: 8, floor: 13, ceil: 13, back: 5, last: 2 },
              // The button is the heaviest thing inside, so it leads; the text follows a beat behind and piles onto it.
              items: [{ sel: '.tip-action', lag: 0, thud: 1.5 },
@@ -685,7 +515,7 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
   const drawShape = u => Math.sin(TAU * u * T_SETTLE / 270) * Math.exp(-4.2 * u) * (1 - u);
   const drawNorm = peakOf(drawShape);
   const drawAt = tau => (tau <= 0 || tau >= T_SETTLE) ? 0 : drawShape(tau / T_SETTLE) / drawNorm;
-  const SHORT = 5;                                       // the small pointer; the box hangs this far plus a gap below the bar
+  const SHORT = 6;                                       // the small pointer; the box hangs this far plus a gap below the bar
   // A rounded box with a triangular pointer of length L on top. Only the pointer's length ever changes.
   function boxPath(W, H, r, L) {
     const c = W / 2, n = v => v.toFixed(2);
@@ -907,31 +737,48 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
     manage.dataset.pressed = String((+manage.dataset.pressed || 0) + 1);   // the action is live; count presses
   });
 
-  /* ---------- Demo controls ---------- */
-  $('slow').addEventListener('change', e => { speed = e.target.checked ? 0.25 : 1; });
-  const notice = $('rm-notice');
-  const syncNotice = () => { notice.hidden = !reduced(); };
-  syncNotice();
-  if (mq.addEventListener) mq.addEventListener('change', syncNotice);
-  $('rm-override').addEventListener('click', () => { motionOverride = true; syncNotice(); select(current === 'none' ? last : current); });
-
   // Opening beat: the badge that is already resting on the bell drops in once.
-  setTimeout(() => { if (!document.hidden && current === '3') drop('3'); }, 700);
+  const openingT = setTimeout(() => { if (!document.hidden && current === '3' && !(window.KIT && KIT.playing)) drop('3'); }, 700);
 
-  window.__weight = { drop, select, openTip, closeTip };   // handles for scripted demos
-
-  // In thumbnail mode nobody can click, so the bar demonstrates itself: a badge lands, gets flicked off, a heavier one lands.
-  if (document.documentElement.classList.contains('thumb')) {
-    const loop = ['none', '12', 'none', '99+', 'none', '3'];
-    let step = 0;
-    setInterval(() => { if (!document.hidden) select(loop[step++ % loop.length]); }, 2600);
+  function reset() {
+    clearTimeout(openingT); clearTimeout(nextT); nextI = 0;
+    [...anims.keys()].forEach(cancel);
+    Object.keys(TIPS).forEach(kind => {
+      clearTimeout(leaveTimers[kind]);
+      openState[kind] = false;
+      const { tip, wrap } = parts(kind);
+      wrap.classList.remove('is-open');
+      tip.hidden = true; tip.style.opacity = '';
+      restTip(kind);
+    });
+    pressed = false; manage.classList.remove('is-pressed');
+    Object.keys(pulls).forEach(k => { pulls[k] = 0; });
+    current = '3'; last = '3';
+    setTab('home');
+    paintBadge('3');
+    badge.hidden = false;
+    rest();
+    syncUI();
   }
+  window.__weight = { drop, select, openTip, closeTip, reset };   // handles for scripted demos
 })();
 </script>
 <script>
-/* playground thumbnail: cycle the badge states on a loop */
-addEventListener('load',()=>{const ks=['dot','3','12','99+','none'];let i=0;
-const go=()=>{const b=document.querySelector('.seg [data-k="'+ks[i%ks.length]+'"]');b&&b.click();i++;};setTimeout(go,900);setInterval(go,2600);});
+KIT.demo(async c => {
+  await c.move(...c.at('#anchor-plain'), 800);          // a light tooltip drops in
+  await c.wait(800);
+  await c.move(...c.at('#anchor-rich'), 520);           // a heavy one: longer drop, the bar gives more
+  await c.wait(600);
+  await c.move(...c.at('#manage', .42, .5), 620);
+  await c.wait(260);
+  await c.down(); await c.wait(220); await c.up();      // pressing pushes the whole tooltip down
+  await c.wait(420);
+  await c.move(...c.at('#bell'), 700);
+  await c.wait(200);
+  await c.click();                                      // reading it flicks the badge off the bar
+  await c.wait(700);
+  await c.move(c.pos.x + 40, c.pos.y + 96, 700);        // step aside; a heavier one lands
+  await c.wait(1100);
+}, { tint: '#dc4428', reset() { window.__weight.reset(); } });
 </script>
-</body>
-</html>
+</body></html>

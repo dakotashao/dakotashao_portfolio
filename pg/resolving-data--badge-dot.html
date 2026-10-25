@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resolving Dot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+:root {
+  color-scheme: light;
+  --bg: #ffffff;            /* the canvas ground */
+  --blue: #3462db;          /* frames, wires, ports */
+  --fg: #ffffff;
+  --muted: rgba(255, 255, 255, .74);
+  --dim: rgba(255, 255, 255, .46);
+  --line: rgba(255, 255, 255, .36);
+  --stage: rgba(255, 255, 255, .1);
+  --ring: #3462db;          /* the frame fill: also the cut-out around badges and icon details */
+  --wait: #8ea6ec;          /* an unresolved badge */
+  --ink: #2748b4;           /* type on white */
+  --ink-dim: rgba(39, 72, 180, .4);
+  --sans: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 4px;
+}
+* { box-sizing: border-box; }
+#stage { color: var(--fg); font: 400 13px/1.5 var(--mono); -webkit-font-smoothing: antialiased; }
+p, h1, h2 { margin: 0; }
+button { font: inherit; color: inherit; }
+.anchor:focus-visible, .act:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+/* ---------- frames: rounded hairline panel, header row with light, path and chip ---------- */
+.node, .frame { position: relative; isolation: isolate; border: 1px solid var(--blue); border-radius: 9px; background: var(--ring);
+  box-shadow: 0 22px 36px -26px rgba(12, 28, 96, .55); }
+.node { position: absolute; cursor: default; }
+.node-h { cursor: grab; }
+.is-flow .node-h { cursor: default; }
+.node-h, .fh { height: 34px; padding: 0 8px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line);
+  background: var(--fg); color: var(--ink); border-bottom-color: var(--fg); border-radius: 8px 8px 0 0; font: 500 12px/1.4 var(--mono); }
+h2 { font: inherit; letter-spacing: .02em; margin-right: auto; white-space: nowrap; }
+/* the tooltip's header is also the handle it is dragged by */
+.fh { --unres: var(--ink-dim); cursor: grab; touch-action: none; user-select: none; }
+.fh:active { cursor: grabbing; }
+.is-flow .fh { cursor: default; touch-action: auto; }
+.led { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+.node-h .led { background: var(--ink-dim); }
+[data-s="resolving"] > .node-h .led { background: var(--ink); animation: blink 240ms steps(2) infinite; }
+[data-s="clearing"] > .node-h .led { background: var(--ink); animation: blink 160ms steps(2) infinite; }
+[data-s="locked"] > .node-h .led, .node-h .led.is-live { background: var(--ink); box-shadow: 0 0 0 3px rgba(39, 72, 180, .2); }
+@keyframes blink { 50% { opacity: .25; } }
+.chip { flex: none; display: inline-flex; align-items: center; justify-content: center; height: 20px; min-width: 78px; padding: 0 7px;
+  border: 1px solid var(--ink-dim); border-radius: 4px; color: rgba(39, 72, 180, .72); font: 500 9.5px/1 var(--mono); letter-spacing: .12em; }
+[data-s="resolving"] > .node-h .chip { color: var(--ink); border-color: var(--ink); }
+[data-s="locked"] > .node-h .chip { background: var(--ink); border-color: var(--ink); color: var(--fg); }
+.node-b { padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+/* ---------- anchor ---------- */
+.wrap { position: relative; --ax: calc(76px + (var(--nw, 200px) - 76px) / 2); }
+.anchor {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 76px; padding: 10px 0 8px; border: 0; border-radius: var(--r);
+  background: transparent; color: var(--fg); font: 500 12px/1.2 var(--sans); cursor: pointer;
+}
+.icon { position: relative; width: 24px; height: 24px; }
+.icon svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; }
+/* hover: the icon fills white; its inner lines switch to the ground colour. No box. */
+@media (hover: hover) {
+  .wrap:hover .icon .s { fill: currentColor; }
+  .wrap:hover .icon .d { stroke: var(--ring); }
+}
+.wrap[data-kit-hover] .icon .s { fill: currentColor; }
+.wrap[data-kit-hover] .icon .d { stroke: var(--ring); }
+.wrap[data-open] .icon .s, .anchor:focus-visible .icon .s { fill: currentColor; }
+.wrap[data-open] .icon .d, .anchor:focus-visible .icon .d { stroke: var(--ring); }
+
+/* ---------- reels and flaps ---------- */
+.reel { display: inline-block; min-width: calc(var(--rw, 0) * 1ch); }
+.reel::after { content: "\200b"; }
+.reel[data-state="blank"], .reel[data-state="cycling"], .reel[data-state="clearing"] { color: var(--unres); }
+.flap[data-state] { color: inherit; }
+.ch { display: inline-block; font-style: normal; }
+.ch[data-s="blank"], .ch[data-s="cycling"], .ch[data-s="clearing"] { color: var(--unres); }
+/* a block cursor's plain cousin: one underscore after the last locked line, blinking in hard steps */
+.cur { visibility: hidden; }
+.flap[data-state="locked"] + .cur { visibility: visible; animation: cur 1060ms step-end infinite; }
+@keyframes cur { 50% { opacity: 0; } }
+.line { white-space: pre; }
+.line:has(.reel[data-state="empty"]) .static { visibility: hidden; }
+
+/* ---------- badges ---------- */
+.b { position: absolute; pointer-events: none; }
+.b-dot { top: -2px; right: -3px; width: 8px; height: 8px; display: grid; place-items: center; color: var(--fg); font: 600 12px/1 var(--mono); --unres: var(--fg); }
+.b-dot[data-state="locked"]::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2px var(--ring); }
+.b-dot[data-state="locked"] { animation: snap 150ms step-end; }
+.b-content {
+  top: -7px; left: 14px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--wait); color: var(--fg); outline: 2px solid var(--ring); --unres: rgba(255, 255, 255, .8);
+  font: 600 10px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; white-space: nowrap;
+  transform-origin: 0 100%;
+}
+.b-content .reel { min-width: 1ch; text-align: center; }
+.b-content[data-step="0"] { visibility: hidden; }
+.b-content[data-step="1"] { scale: .35; }
+.b-content[data-step="2"] { scale: .7; }
+.b-content[data-state="locked"] { background: var(--fg); color: var(--ink); animation: snap 150ms step-end; }
+@keyframes snap { 0% { translate: 0 -2px; } 45% { translate: 0 1px; } 100% { translate: 0 0; } }
+
+/* ---------- tooltip: one more node, wired from the frame's edge ---------- */
+/* the wire is white where it crosses the frame's blue body and blue once it is out on the ground */
+.conn { position: absolute; z-index: 3; left: var(--ax); top: -6px; width: 58px; height: 28px; overflow: visible; pointer-events: none; fill: none; stroke: var(--blue); stroke-width: 1.25; }
+.conn .in { stroke: var(--fg); }
+.conn path { stroke-dasharray: 80; stroke-dashoffset: 80; }
+.wrap[data-link="1"] .conn path { stroke-dashoffset: 53; }
+.wrap[data-link="2"] .conn path { stroke-dashoffset: 27; }
+.wrap[data-link="3"] .conn path { stroke-dashoffset: 0; }
+.conn circle { fill: var(--fg); stroke: none; visibility: hidden; }
+.conn .a { stroke: var(--blue); stroke-width: 1.25; }
+.conn .b { fill: var(--blue); stroke: var(--fg); stroke-width: 1.5; }
+.wrap[data-link] .conn .a, .wrap[data-link="3"] .conn .b { visibility: visible; }
+.tip { position: absolute; left: 76px; top: -23px; padding-left: calc(var(--ax) - 76px + 58px); z-index: 2; }
+.tip[data-step="0"] { visibility: hidden; }
+.is-flow .tip { translate: none !important; }
+.frame { background: var(--ink); border-color: var(--ink); color: var(--fg); --unres: var(--dim); font: 400 12px/1.4 var(--mono); transform-origin: 0 17px; }
+.tip[data-step="1"] .frame { scale: .3 1; }
+.tip[data-step="2"] .frame { scale: .65 1; }
+.fb { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.frame.plain { white-space: nowrap; }
+.frame.plain .fb { flex-direction: row; gap: 0; font-size: 13px; font-weight: 500; }
+.frame.rich { width: 222px; }
+.rt { font-size: 11px; font-variant-numeric: tabular-nums; }
+.pg { display: flex; flex-direction: column; gap: 4px; }
+.act { margin-top: 6px; padding: 5px 10px; border: 0; border-radius: var(--r); background: transparent; box-shadow: inset 0 0 0 1px var(--dim); color: var(--fg); font: 500 12px/1.2 var(--mono); white-space: pre; cursor: default; }
+.act[data-ready="true"] { background: var(--fg); box-shadow: none; color: var(--ink); cursor: pointer; }
+@media (hover: hover) { .act[data-ready="true"]:hover { background: var(--blue); color: var(--fg); } }
+.act[data-ready="true"][data-kit-hover] { background: var(--blue); color: var(--fg); }
+/* ---------- stacked on a phone: the tooltip opens inside its own frame ---------- */
+.is-flow .node--tip .node-b { align-items: flex-start; padding: 44px 2px 18px; min-height: 126px; }
+.is-flow .node--tip.is-rich .node-b { min-height: 208px; }
+.is-flow .wrap { --ax: 54px; }
+@media (prefers-reduced-motion: reduce) {
+  .cur, .b-dot[data-state="locked"], .b-content[data-state="locked"], .led { animation: none !important; }
+}
+/* card: one frame, centred in the stage, in the stacked (phone) layout so the tooltip opens inside its frame */
+.app { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.node { position: relative; width: var(--nw); }
+.anchor { touch-action: manipulation; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="300">
+<div class="app is-flow" id="app" style="--nw:270px">
+      <section class="node" id="n-dot" aria-labelledby="h-2">
+        <div class="node-h"><i class="led"></i><h2 id="h-2" aria-label="Dot badge">badge/dot</h2><span class="chip" id="chip-dot" aria-hidden="true">BLANK</span></div>
+        <div class="node-b">
+          <div class="wrap">
+            <button class="anchor" type="button" id="s2-anchor" aria-label="Chat, nothing new">
+              <span class="icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path class="s" d="M4 5h16v11H9.5L4 20z"/></svg>
+                <span class="b b-dot" id="dot" data-state="empty" aria-hidden="true"></span>
+              </span>
+              <span class="lbl">Chat</span>
+            </button>
+          </div>
+        </div>
+      </section>
+</div>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const rnd = n => Math.floor(Math.random() * n);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  /* frame chrome only: the state light and chip follow the component */
+  const Canvas = (() => {
+    const WORD = { empty: 'BLANK', resolving: 'RESOLVING', locked: 'LOCKED', clearing: 'CLEARING' };
+    function set(id, st) { const n = $('#n-' + id); if (!n) return; n.dataset.s = st; $('#chip-' + id).textContent = WORD[st] || WORD.empty; }
+    function rounded(p, r) {
+      let d = `M${p[0][0]} ${p[0][1]}`;
+      for (let i = 1; i < p.length - 1; i++) {
+        const [ax, ay] = p[i - 1], [cx, cy] = p[i], [bx, by] = p[i + 1];
+        const d1 = Math.hypot(cx - ax, cy - ay), d2 = Math.hypot(bx - cx, by - cy), rr = Math.min(r, d1 / 2, d2 / 2);
+        if (rr < 0.5) continue;
+        d += ` L${(cx - (cx - ax) / d1 * rr).toFixed(1)} ${(cy - (cy - ay) / d1 * rr).toFixed(1)} Q${cx} ${cy} ${(cx + (bx - cx) / d2 * rr).toFixed(1)} ${(cy + (by - cy) / d2 * rr).toFixed(1)}`;
+      }
+      const z = p[p.length - 1];
+      return d + ` L${z[0]} ${z[1]}`;
+    }
+    const hooks = [], layout = () => hooks.forEach(f => f());
+    addEventListener('resize', layout);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+    return { set, val() {}, raise() {}, rounded, layout, flow: () => true, scale: () => (window.KIT ? KIT.scale : 1), onLayout: f => hooks.push(f) };
+  })();
+
+  /* ================= timing ================= */
+  const ENTER5 = [45, 45, 60, 75, 110];
+  /* One runner per component. begin() invalidates whatever was running before it. */
+  function runner() {
+    let gen = 0;
+    return {
+      begin() {
+        const me = ++gen;
+        return {
+          ok: () => me === gen,
+          wait(ms) {
+            if (mq.matches || ms <= 0) return Promise.resolve(me === gen);
+            return new Promise(r => setTimeout(() => r(me === gen), ms));
+          }
+        };
+      }
+    };
+  }
+  const notSame = (make, final) => prev => { let v; do { v = make(); } while (v === prev || v === final); return v; };
+  const digitPick = final => notSame(() => String(rnd(10)), final);
+  const symPick = notSame(() => ['-', '=', '*', '#', '/'][rnd(5)], '+');
+  const seq = list => (prev, i) => list[i % list.length];
+
+  /* ================= reel: one value that cycles, slows and locks ================= */
+  class Reel {
+    constructor(el, o) {
+      this.el = el; this.final = o.final; this.pick = o.pick; this.unpick = o.unpick || o.pick;
+      this.blank = o.blank ?? '_';
+      this.state = 'empty'; this.text = '';
+      el.textContent = ''; el.dataset.state = 'empty';
+    }
+    set(text, state, i = 0) {
+      this.text = text; this.state = state;
+      this.el.textContent = text;
+      this.el.dataset.state = state;
+    }
+    async resolve(t, { delay = 0, durs = ENTER5 } = {}) {
+      if (this.state === 'locked') return true;
+      if (this.state === 'empty') this.set(this.blank, 'blank');
+      if (!await t.wait(delay)) return false;
+      let prev = this.text;
+      for (let i = 0; i < durs.length; i++) {
+        prev = this.pick(prev, i);
+        this.set(prev, 'cycling', i);
+        if (!await t.wait(durs[i])) return false;
+      }
+      this.set(this.final, 'locked');
+      return true;
+    }
+    async clear(t, { delay = 0, frames = 1, dur = 36 } = {}) {
+      if (!await t.wait(delay)) return false;
+      if (this.state === 'empty') return true;
+      if (this.state !== 'blank') {
+        let prev = this.text;
+        for (let i = 0; i < frames; i++) {
+          prev = this.unpick(prev, i);
+          this.set(prev, 'clearing', i);
+          if (!await t.wait(dur)) return false;
+        }
+        this.set(this.blank, 'blank');
+        if (!await t.wait(dur)) return false;
+      }
+      this.set('', 'empty');
+      return true;
+    }
+  }
+
+  /* ================= flap: a line of text that resolves character by character =================
+     Every slot is filled from the start, with the wrong character. Then slots turn right in a
+     random order, a few at a time: each swaps in place through two to four candidates at an
+     uneven tick and locks; the last few tick slower. Nothing moves vertically. It clears the
+     same way, faster: characters turn wrong again in a random order, then all go. */
+  const UP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', LOW = UP.toLowerCase(), NUM = '0123456789';
+  class Flap {
+    constructor(el, o) {
+      this.el = el; this.final = o.final; this.alts = o.alts || []; this.on = o.on || null;
+      this.cells = []; this.state = 'empty'; el.dataset.state = 'empty';
+    }
+    mark(state) { this.state = state; this.el.dataset.state = state; if (this.on) this.on(state); }
+    put(i, ch, s, k = 0) {
+      const c = this.cells[i]; c.ch = ch; c.s = s;
+      c.el.textContent = ch; c.el.dataset.s = s;
+    }
+    build(keep = []) {
+      this.el.textContent = '';
+      this.cells = [...this.final].map(() => {
+        const e = document.createElement('i'); e.className = 'ch'; this.el.append(e);
+        return { el: e, ch: '', s: '' };
+      });
+      [...this.final].forEach((f, i) => {
+        if (keep[i] === f) this.put(i, f, 'locked'); else this.put(i, f === ' ' ? f : this.alt(i, 2), 'blank');
+      });
+    }
+    show() { if (this.state === 'empty') { this.build(); this.mark('blank'); } }
+    hide() { this.el.textContent = ''; this.cells = []; this.mark('empty'); }
+    /* Point an already-showing flap at a new value: characters that match stay locked. */
+    retarget(final, alts) {
+      const keep = this.state === 'empty' ? [] : this.cells.map(c => c.s === 'locked' ? c.ch : null);
+      this.final = final; this.alts = alts || [];
+      if (this.state !== 'empty') { this.build(keep); this.mark('blank'); }
+    }
+    alt(i, k) {
+      const f = this.final[i], a = this.alts.length ? this.alts[k % this.alts.length][i] : null;
+      if (a && a !== ' ' && a !== f) return a;
+      const pool = NUM.includes(f) ? NUM : UP.includes(f) ? UP : LOW.includes(f) ? LOW : null;
+      if (!pool) return f;
+      let v; do { v = pool[rnd(pool.length)]; } while (v === f);
+      return v;
+    }
+    async resolve(t, { delay = 0, durs = [16, 20] } = {}) {
+      if (this.state === 'locked') return true;
+      this.show();
+      if (!await t.wait(delay)) return false;
+      this.mark('cycling');
+      /* the order is drawn at random, and a few slots are in motion at once */
+      const idx = shuffle([...this.final].map((f, i) => i).filter(i => this.final[i] !== ' ' && this.cells[i].s !== 'locked'));
+      const base = durs.reduce((a, b) => a + b, 0) / durs.length;
+      let next = 0;
+      const lane = async l => {
+        if (!await t.wait(l * base * 0.6)) return false;
+        while (next < idx.length) {
+          const j = next++, i = idx[j], fin = this.final[i], slow = idx.length - j <= 3 ? 1.5 : 1;
+          if (this.alt(i, 0) !== fin) for (let k = 0, n = 2 + rnd(3); k < n; k++) {
+            this.put(i, this.alt(i, k), 'cycling', k);
+            if (!await t.wait(base * slow * (0.7 + Math.random() * 0.8))) return false;
+          }
+          this.put(i, fin, 'locked');
+        }
+        return true;
+      };
+      const lanes = clamp(Math.ceil(idx.length / 5), 2, 4);
+      if (!(await Promise.all(Array.from({ length: lanes }, (_, l) => lane(l)))).every(Boolean)) return false;
+      this.mark('locked');
+      return true;
+    }
+    async clear(t, { delay = 0, step = 13 } = {}) {
+      if (!await t.wait(delay)) return false;
+      if (this.state === 'empty') return true;
+      this.mark('clearing');
+      const idx = shuffle(this.cells.map((c, i) => i).filter(i => this.final[i] !== ' ' && this.cells[i].s !== 'blank'));
+      const jobs = idx.map(async (i, j) => {
+        if (!await t.wait(j * step)) return false;
+        this.put(i, this.alt(i, 0), 'clearing', 1);
+        if (!await t.wait(26)) return false;
+        this.put(i, this.alt(i, 1), 'blank');
+        return true;
+      });
+      if (!(await Promise.all(jobs)).every(Boolean)) return false;
+      if (!await t.wait(34)) return false;
+      this.hide();
+      return true;
+    }
+  }
+
+  /* Containers open and collapse in hard steps, never a fade. */
+  async function steps(el, key, list, t, ms = 26) {
+    for (const s of list) {
+      if (s === null) delete el.dataset[key]; else el.dataset[key] = s;
+      if (s !== list[list.length - 1] && !await t.wait(ms)) return false;
+    }
+    return true;
+  }
+  const press = (sel, key, val) => document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[key] === val)));
+  /* ================= 2. badge without content ================= */
+  const Dot = (() => {
+    const el = $('#dot'), anchor = $('#s2-anchor'), run = runner();
+    /* ASCII marks get denser until the signal resolves into a solid dot */
+    const reel = new Reel(el, { final: '', pick: seq(['.', '+', '*', '#']), unpick: seq(['#', '*', '+', '.']) });
+    let on = false;
+    async function show(want) {
+      if (want === on) return;
+      on = want;
+      anchor.setAttribute('aria-label', on ? 'Chat, new activity' : 'Chat, nothing new');
+      Canvas.set('dot', on ? 'resolving' : 'clearing');
+      const t = run.begin();
+      const ok = on ? await reel.resolve(t, { delay: 45, durs: [40, 45, 60, 85] }) : await reel.clear(t, { frames: 4, dur: 34 });
+      if (ok) Canvas.set('dot', on ? 'locked' : 'empty');
+    }
+    /* clicking Chat reads it (the dot clears); clicking again brings new activity */
+    anchor.addEventListener('click', () => show(!on));
+    return { show, on: () => on };
+  })();
+  setTimeout(() => Dot.show(true), 700);
+  window.__card = { async reset() { if (!Dot.on()) { Dot.show(true); await new Promise(r => setTimeout(r, 450)); } } };
+
+  Canvas.layout();
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const [mx, my] = c.at('#s2-anchor');
+  await c.move(mx + 70, my + 50, 700);
+  await c.move(mx, my, 520);
+  await c.wait(400);
+  await c.click();                           // read: the dot de-resolves into marks and goes
+  await c.wait(1100);
+  await c.click();                           // new activity: marks get denser and lock into a dot
+  await c.wait(1200);
+  await c.move(mx + 80, my + 60, 600);
+  await c.wait(300);
+}, { tint: '#3462db', reset() { return window.__card.reset(); } });
+</script>
+</body></html>

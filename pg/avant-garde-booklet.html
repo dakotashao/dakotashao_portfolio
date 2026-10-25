@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avant Garde Booklet</title>
+<style>
+:root{
+  --label:#1c1c1e;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 24px 60px -12px rgba(0,0,0,.22);
+  --sf:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+}
+#stage{color:var(--label);font-family:var(--sf);-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
+.bk{position:absolute;left:40px;top:40px;width:760px;height:380px;perspective:2800px}
+.book{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.32,.72,0,1)}
+.book.closed-front{transform:translateX(-25%)}
+.book.closed-back{transform:translateX(25%)}
+.shadow{position:absolute;top:0;bottom:0;left:0;right:0;box-shadow:var(--shadow);transition:left .7s cubic-bezier(.32,.72,0,1),right .7s cubic-bezier(.32,.72,0,1);pointer-events:none}
+.book.closed-front .shadow{left:50%}
+.book.closed-back .shadow{right:50%}
+.leaf{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.45,.05,.2,1)}
+.leaf.flipped{transform:rotateY(-180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.face img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+.face.back{transform:rotateY(180deg)}
+.face::after{content:"";position:absolute;inset:0;pointer-events:none}
+.face.front::after{background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 7%)}
+.face.back::after{background:linear-gradient(270deg,rgba(0,0,0,.14),transparent 7%)}
+.hit{position:absolute;top:0;bottom:0;width:50%;z-index:600;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hit.l{left:0}.hit.r{right:0}
+.hit:focus-visible{outline:none}
+.instant,.instant *,.instant *::before{transition:none!important}
+@media (prefers-reduced-motion:reduce){.leaf,.book,.shadow{transition-duration:.01s}}
+</style>
+</head><body>
+<div id="stage" data-w="840" data-h="460" data-card-h="260">
+  <div class="bk" id="bk">
+    <div class="book closed-front" id="book"><div class="shadow"></div></div>
+    <button class="hit l" id="hitL" aria-label="Previous page"></button>
+    <button class="hit r" id="hitR" aria-label="Next page"></button>
+  </div>
+</div>
+<script src="kit.js"></script>
+<script>
+const BOOK = (function(){
+  const N=20, SEQ=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,0], START=6;
+  const src=k=>'booklet/'+String(SEQ[k]).padStart(2,'0')+'.webp';
+  const $=id=>document.getElementById(id);
+  const book=$('book'), max=N/2, leaves=[];
+  for(let j=0;j<max;j++){
+    const l=document.createElement('div');l.className='leaf';
+    const near=Math.abs(j-START)<=2;
+    l.innerHTML=`<div class="face front"><img alt="" src="${src(2*j)}" loading="${near?'eager':'lazy'}"></div>`+
+                `<div class="face back"><img alt="" src="${src(2*j+1)}" loading="${near?'eager':'lazy'}"></div>`;
+    book.appendChild(l);leaves.push(l);
+  }
+  let n=0, timer;
+  function ui(){
+    book.classList.toggle('closed-front',n===0);book.classList.toggle('closed-back',n===max);
+    $('hitL').hidden=n===0;$('hitR').hidden=n===max;
+    $('hitR').style.width=n===0?'100%':'';$('hitL').style.width=n===max?'100%':'';
+  }
+  function go(d){
+    const t=n+d; if(t<0||t>max)return;
+    const j=d>0?n:n-1; n=t;
+    leaves.forEach((l,k)=>{l.classList.toggle('flipped',k<n); l.style.zIndex=k===j?450:(k<n?100+k:300-k)});
+    ui();
+  }
+  function jump(t){
+    clearTimeout(timer);
+    const step=()=>{ if(n===t)return; go(t>n?1:-1); if(n!==t) timer=setTimeout(step,110); };
+    step();
+  }
+  // open on a spread instantly, no page-turn animation
+  function set(t){
+    clearTimeout(timer);
+    const st=$('stage'); st.classList.add('instant');
+    n=t; leaves.forEach((l,k)=>{l.classList.toggle('flipped',k<n); l.style.zIndex=k<n?100+k:300-k}); ui();
+    void st.offsetWidth; st.classList.remove('instant');
+  }
+  $('hitL').onclick=()=>jump(n-1); $('hitR').onclick=()=>jump(n+1);
+  addEventListener('keydown',e=>{
+    if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();jump(Math.min(max,n+1))}
+    if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();jump(Math.max(0,n-1))}
+    if(e.key==='Home')jump(0); if(e.key==='End')jump(max);
+  });
+  set(START);
+  return { set, jump, START };
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  await c.wait(700);
+  BOOK.jump(7); await c.wait(1500);   // turn forward
+  BOOK.jump(8); await c.wait(1500);   // and again
+  BOOK.jump(6); await c.wait(1500);   // two leaves fall back to 6
+}, { cursor: false, tint: '#1c1c1e', reset() { BOOK.set(BOOK.START); } });
+</script>
+</body></html>

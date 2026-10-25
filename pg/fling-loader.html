@@ -1,5 +1,7 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fling Loader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,19 +15,15 @@
   --caption:#3A3D3C;
 }
 *{box-sizing:border-box}
-body{background:var(--page);color:var(--caption);font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  margin:0;padding:0;overflow:hidden;}
-html,body{height:100%}
-/* full-window frame; fixed so the page height never feeds back into the stage size */
-.wrap{position:fixed;inset:0}
-/* 4:3 stage: the whole phone at rest; hovering leans in on the screen */
-.stage{position:absolute;inset:0;overflow:hidden;background:var(--page);container-type:size}
+/* stage = the whole handset at its natural size + 40px air; the lean-in may spill past it and is framed by the card */
+#stage{overflow:hidden}
 
 
 /* ---------- handset: photo, with the LCD placed in its screen window ---------- */
-.handset{position:absolute;top:50%;left:50%;height:min(96cqh, 100cqw * 1560 / 900);aspect-ratio:900/1560;
-  transform-origin:50% 41.79%;transform:translate(-50%, -50%);transition:transform 3s cubic-bezier(.45,0,.25,1);}
-.stage.zoom .handset{transform:translate(-50%, -50%) translateY(13.5%) scale(1.5);}
+/* photo is 900x1560 with transparent air; the phone body (x 162-684, y 237-1392) is centred in the stage */
+.handset{position:absolute;top:50%;left:50%;width:519px;height:900px;
+  transform-origin:50% 41.79%;transform:translate(-47%, -52.21%);transition:transform 3s cubic-bezier(.45,0,.25,1);}
+#stage.zoom .handset{transform:translate(-47%, -52.21%) translateY(13.5%) scale(1.5);}
 @media (prefers-reduced-motion: reduce){ .handset{transition:none} }
 .shell{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;user-select:none}
 .screen{position:absolute;z-index:1;left:31.23%;top:33.98%;width:37.53%;height:15.62%;background:var(--screen);justify-content:center;
@@ -37,7 +35,7 @@ html,body{height:100%}
 #lcd:focus-visible{outline:none}
 .screen:has(#lcd:focus-visible){box-shadow:inset 0 0 0 2px #3C4630}
 .hot{position:absolute;z-index:3;border:0;padding:0;background:transparent;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:background .08s}
-.hot:hover{background:rgba(255,255,255,.12)}
+.hot:hover,.hot[data-kit-hover]{background:rgba(255,255,255,.12)}
 .hot:active{background:rgba(0,0,0,.12)}
 .hot:focus-visible{outline:2px solid #5E6B58;outline-offset:1px}
 #kNavi{left:40.1%;top:52.7%;width:19.4%;height:3%}
@@ -45,9 +43,7 @@ html,body{height:100%}
 #kRight{left:53.9%;top:53.2%;width:15.5%;height:7%;border-radius:30% 40% 40% 50%}
 </style>
 </head><body>
-
-<div class="wrap">
-  <div class="stage" id="stage">
+<div id="stage" data-w="381" data-h="746" data-card-h="600">
   <div class="handset" id="handset">
     <div class="screen">
       <canvas id="lcd" width="996" height="726" tabindex="0" aria-label="Phone screen. Use the soft keys, or Enter and Escape. While sending, drag the bird back and release."></canvas>
@@ -57,9 +53,8 @@ html,body{height:100%}
     <button class="hot" id="kNavi" type="button" aria-label="Select"></button>
     <button class="hot" id="kRight" type="button" aria-label="Right soft key"></button>
   </div>
-  </div>
 </div>
-
+<script src="kit.js"></script>
 <script>
 (() => {
 /* =========================================================
@@ -200,7 +195,7 @@ function text(str, x, y, opts={}){
 function softKey(label, side){
   const w = textWidth(label), x = side === 'left' ? BM : W - BM - w;
   const box = { x:x - 2, y:BOTTOM_Y - 2, w:w + 4, h:CONFIG.font.cap + 4 };
-  const lit = hover === side || (press && press.side === side) || navDown === side;
+  const lit = press && press.side === side;          // no hover state (the real phone has none); brief inversion only on press
   if(lit){                                         // hover / press: black block, pale text
     ctx.fillStyle = CONFIG.colors.fg; ctx.fillRect(Math.round(box.x*S), Math.round(box.y*S), Math.round(box.w*S), Math.round(box.h*S));
     text(label, x, BOTTOM_Y, {c:CONFIG.colors.bg});
@@ -458,9 +453,42 @@ function zoomOut(hold){ stageEl.classList.remove('zoom'); hover = null; navDown 
 stageEl.addEventListener('pointerleave', () => { holdOut = false; if(state === 'confirm') zoomOut(); });
 document.fonts && document.fonts.load(`40px ${CONFIG.font.family}`).then(measureCap).catch(()=>{});
 measureCap();
+function fast(on){ CONFIG.progress = on ? {...PROG0, rampMs:780, holdMs:260} : {...PROG0}; }
+const PROG0 = {...CONFIG.progress};
+/* hooks for the card demo: speeds the loader only while the demo plays */
+window.FL = { get state(){ return state; }, get pct(){ return pct; }, fast,
+  reset(){ dragging = false; press = null; go('confirm');
+    handsetEl.style.transition = 'none'; zoomOut(); handsetEl.offsetWidth; handsetEl.style.transition = ''; holdOut = false; } };
+addEventListener('pointerdown', e => { if(e.isTrusted) fast(false); }, true);
 go('confirm');
 requestAnimationFrame(loop);
 })();
 </script>
-
+<script>
+KIT.demo(async c => {
+  const lcd = (x, y) => c.at('#lcd', x/166, y/121);        // LCD pixel -> stage px
+  const REST = [24.5, 63.5];
+  const blur = () => document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  const tap = async (...a) => { await c.click(...a); blur(); };
+  const fling = async (pull, ms) => {
+    await c.move(...lcd(...REST), 650); await c.wait(150);
+    await c.down(); await c.drag(...lcd(REST[0] - pull, REST[1] + pull), ms || 750); await c.wait(260); await c.up(); blur();
+  };
+  await c.move(...c.at('#kRight'), 900); await c.wait(250);
+  await tap();                                         // SEND (right soft key) -> camera leans in
+  await c.wait(2300);
+  await fling(8);                                          // hits the wall early on
+  await c.wait(1500);
+  await fling(8);                                          // further along now, still stopped
+  while (FL.pct < 100) await c.wait(100);
+  await c.wait(350);
+  await c.move(...c.at('#kRight'), 700); await c.wait(150);
+  await tap();                                         // LAUNCH: wall is gone, lands in the mailbox
+  while (FL.state !== 'sent') await c.wait(100);
+  await c.wait(700);
+  await tap(...c.at('#kRight'), 500);                  // OK on MESSAGE SENT
+  await c.wait(400); await c.leave(); await c.wait(1400);
+  FL.fast(false);
+}, { tint: '#232E21', reset() { FL.reset(); FL.fast(true); } });
+</script>
 </body></html>

@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weighted Radio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --card: #ffffff;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --ink: #17181b;
+  --muted: #62666d;
+  --line: #dfe0e4;
+  --press: #eeeef1;
+  --track: #ffffff;
+  --track-on: #1b1c20;
+  --knob: #eeeef1;
+  --knob-on: #ffffff;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+#stage { color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.demo { display: flex; flex-direction: column; gap: 8px; }
+.group-label { margin: 0; padding-left: 16px; font: 500 11px/16px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.list { position: relative; width: 320px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--card-shadow); transform-origin: 50% 50%; }
+.row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 12px 0 16px; border-radius: 16px; transition: background-color 140ms ease; user-select: none; -webkit-user-select: none; touch-action: none; cursor: pointer; }
+.row:active, .row.is-pressed { background: var(--press); }
+.label { flex: 1; min-width: 0; font: 400 16px/24px var(--sans); color: var(--ink); letter-spacing: -0.005em; }
+.count { margin-left: 8px; font: 500 12px/24px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.group-label .count { margin-left: 6px; font-size: 11px; line-height: 16px; color: var(--ink); }
+.hint { position: absolute; left: 0; right: 0; bottom: 22px; margin: 0 auto; min-height: 18px; max-width: 380px; text-align: center; color: var(--muted); font-size: 13px; line-height: 18px; transition: color 160ms ease; }
+.hint.is-nudge { color: var(--ink); }
+#list-radio .ch { display: inline-block; will-change: transform; }
+#list-radio .sp { display: inline-block; width: 0.28em; }
+/* Radio: 22 ring, 10 ball. The ball is one object for the whole group and moves between rings. */
+.rdo { appearance: none; position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.rdo:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.ring { display: block; width: 22px; height: 22px; border-radius: 11px; box-shadow: inset 0 0 0 1.5px var(--line); transition: box-shadow 120ms ease; }
+.ring.on { box-shadow: inset 0 0 0 1.5px var(--track-on); }
+.ball { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 5px; background: var(--track-on); pointer-events: none; z-index: 2; }
+</style>
+</head><body>
+<div id="stage" data-w="460" data-h="340">
+  <div class="wrap">
+    <div class="demo">
+      <p class="group-label" id="g-view">Who can view</p>
+      <div class="list" id="list-radio" role="radiogroup" aria-labelledby="g-view">
+        <div class="row" data-w="heavy">
+          <button class="rdo" type="button" role="radio" aria-checked="false" tabindex="-1" aria-labelledby="r1"><span class="ring" aria-hidden="true"></span></button>
+          <span class="label" id="r1">Anyone with the link</span>
+        </div>
+        <div class="row" data-w="medium" data-on="true">
+          <button class="rdo" type="button" role="radio" aria-checked="true" tabindex="0" aria-labelledby="r2"><span class="ring" aria-hidden="true"></span></button>
+          <span class="label" id="r2">People you invite</span>
+        </div>
+        <div class="row" data-w="light">
+          <button class="rdo" type="button" role="radio" aria-checked="false" tabindex="-1" aria-labelledby="r3"><span class="ring" aria-hidden="true"></span></button>
+          <span class="label" id="r3">Only me</span>
+        </div>
+        <span class="ball" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+  <p class="hint" id="hint" aria-live="polite"></p>
+</div>
+<script src="kit.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = () => mq.matches;
+  let speed = 1;
+  const rad = d => d * Math.PI / 180;
+
+  /* ---------- The list: takes each landing ---------- */
+  // Like the Week 2 bar under a badge: the card tips toward where a knob lands, the other rows skid a little,
+  // and it all settles. A heavier setting tips it further.
+  // Each list can be tipped (rot, deg) and pushed down (dip, px); both spring back. Rows slide with the tip.
+  function makeKnocker(list) {
+    const rows = [...list.querySelectorAll('.row')];
+    let la = 0, lv = 0, ly = 0, vy = 0, raf = 0, last = 0, src = 0, base = 0;   // base: where the list rests (px down)
+    let baseRot = 0;                                           // resting tilt of the card (deg)
+    const rowRot = rows.map(() => ({ a: 0, v: 0, target: 0 })); // resting tilt of each row (deg), sprung
+    const labels = rows.map(r => r.querySelector('.label'));
+    let contents = null;                                       // (slope deg, row index) => lays out the loose contents of the row
+    const paint = () => {
+      const t = [], y = base + ly, rot = baseRot + la;
+      if (Math.abs(y) > 0.01) t.push(`translateY(${y.toFixed(2)}px)`);
+      if (Math.abs(rot) > 0.002) t.push(`rotate(${rot.toFixed(3)}deg)`);
+      list.style.transform = t.join(' ');
+    };
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000) * speed; last = now;
+      lv += (-230 * la - 14 * lv) * dt; la += lv * dt;
+      vy += (-260 * ly - 16 * vy) * dt; ly += vy * dt;
+      let rowsMoving = false;
+      rowRot.forEach(q => { q.v += (-150 * (q.a - q.target) - 13 * q.v) * dt; q.a += q.v * dt; if (Math.abs(q.a - q.target) > 0.002 || Math.abs(q.v) > 0.01) rowsMoving = true; });
+      paint();
+      rows.forEach((r, i) => {
+        const s = i === src ? 0 : la * 2.2 * (1 - 0.25 * Math.abs(i - src));   // skid downhill, nearest most
+        const t = [];
+        if (Math.abs(s) > 0.01) t.push(`translateX(${s.toFixed(2)}px)`);
+        if (Math.abs(rowRot[i].a) > 0.002) t.push(`rotate(${rowRot[i].a.toFixed(3)}deg)`);
+        r.style.transform = t.join(' ');
+        if (contents) contents(baseRot + la, i, baseRot);
+      });
+      if (!rowsMoving && Math.abs(la) < 0.002 && Math.abs(lv) < 0.01 && Math.abs(ly) < 0.01 && Math.abs(vy) < 0.05) {
+        rowRot.forEach(q => { q.a = q.target; q.v = 0; });
+        la = lv = ly = vy = 0; paint();
+        rows.forEach((r, i) => {
+          r.style.transform = Math.abs(rowRot[i].a) > 0.002 ? `rotate(${rowRot[i].a.toFixed(3)}deg)` : '';
+          if (contents) contents(baseRot, i, baseRot);
+        });
+        raf = 0; return;
+      }
+      raf = requestAnimationFrame(step);
+    }
+    const knock = (rotKick, from, dipKick = 0) => {
+      if (reduced()) return;
+      src = from; lv += rotKick; vy += dipKick;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    const wakeK = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } };
+    knock.setRest = (cardDeg, rowDegs, instant) => {   // where the card and each row rest, tilted by what they carry
+      if (instant || reduced()) {
+        baseRot = cardDeg; rowRot.forEach((q, i) => { q.a = q.target = rowDegs[i]; q.v = 0; }); la = 0; paint();
+        rows.forEach((r, i) => { r.style.transform = Math.abs(q0(i)) > 0.002 ? `rotate(${q0(i).toFixed(3)}deg)` : ''; if (contents) contents(baseRot, i, baseRot); });
+        return;
+      }
+      la += baseRot - cardDeg; baseRot = cardDeg;               // the card swings over to its new rest
+      rowRot.forEach((q, i) => { q.target = rowDegs[i]; });
+      wakeK();
+    };
+    const q0 = i => rowRot[i].a;
+    knock.setContents = fn => { contents = fn; };
+    knock.tilt = () => baseRot + la;                // the card's current tilt (deg)
+    knock.rest = () => baseRot;
+    knock.setBase = (v, instant) => {                 // move where it rests; it settles there with the same spring
+      if (instant || reduced()) { base = v; ly = 0; paint(); return; }
+      ly += base - v; base = v;
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    };
+    return knock;
+  }
+  // A small hop: the element jumps a few px and lands, with one smaller hop after. Used when a heavy landing
+  // ripples through the neighbouring controls. dirY: -1 up (default), +1 down; or 'x' with a sign for sideways.
+  function hop(el, px, delay = 0, axis = 'y', sign = -1) {
+    if (reduced() || px < 0.05) return;
+    let t = -delay, last = performance.now();
+    const H1 = 200, H2 = 120;
+    const f = now => {
+      t += (now - last) * speed; last = now;
+      let v = 0;
+      if (t > 0 && t < H1) { const p = t / H1; v = 4 * px * p * (1 - p); }
+      else if (t >= H1 && t < H1 + H2) { const q = (t - H1) / H2; v = 4 * px * 0.3 * q * (1 - q); }
+      el.style.transform = v > 0.01 ? (axis === 'y' ? `translateY(${(sign * v).toFixed(2)}px)` : `translateX(${(sign * v).toFixed(2)}px)`) : '';
+      if (t < H1 + H2) requestAnimationFrame(f); else el.style.transform = '';
+    };
+    requestAnimationFrame(f);
+  }
+
+  /* ---------- The hint ---------- */
+  const hint = $('hint'), HINT = hint.textContent;
+  let hintTimer = 0;
+  function nudgeHint(text = 'Hold to tip it.') {
+    hint.textContent = text;
+    hint.classList.add('is-nudge');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => { hint.textContent = HINT; hint.classList.remove('is-nudge'); }, 2600);
+  }
+
+  const SHAKE_MS = 360, TAP_S = 0.3;
+  const shakeShape = u => Math.sin(2 * Math.PI * u * SHAKE_MS / 170) * Math.exp(-3.2 * u) * (1 - u);
+  const shakeNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(shakeShape(i / 200))); return m; })();
+  const JOLT_MS = 430, joltShape = u => Math.exp(-2.2 * u) * Math.pow(1 - u, 1.4) * Math.sin(2 * Math.PI * 2.1 * u * JOLT_MS / 1000);
+  const joltNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(joltShape(i / 200))); return m; })();
+  const joltAt = ms => (ms <= 0 || ms >= JOLT_MS) ? 0 : joltShape(ms / JOLT_MS) / joltNorm;
+
+  /* ---------- Radio: lift the ball ---------- */
+  // One ball serves the whole group. The more public options sit higher. Choosing one means lifting the ball up
+  // to it: hold the option and the ball rises out of its ring, trembling, slower for a heavier choice; let go
+  // before it gets there and it drops back. Choosing a lower, more private option is a tap: the ball simply
+  // falls under gravity and bounces in its new ring. Each landing dips the list and jolts the label.
+  const RD = { light: { lift: 220, rot: 16, dip: 22, shake: 1.2 }, medium: { lift: 140, rot: 32, dip: 36, shake: 2.0 }, heavy: { lift: 90, rot: 42, dip: 50, shake: 3.0 } };
+  const GRAV = 2600;
+  const radioList = $('list-radio'), rRows = [...radioList.querySelectorAll('.row')], ball = radioList.querySelector('.ball');
+  const knockR = makeKnocker(radioList);
+  const rings = rRows.map(r => r.querySelector('.ring')), rBtns = rRows.map(r => r.querySelector('.rdo')), rLabels = rRows.map(r => r.querySelector('.label'));
+  const initialSel = rRows.findIndex(r => r.dataset.on === 'true');
+  let sel = initialSel, by = 0, bvy = 0, mode = 'rest', target = sel, rHold = null, rTease = null, rRaf = 0, rLast = 0, rShake = -1, rShakeIdx = 0, rJolt = null;
+  const ringY = i => rRows[i].offsetTop + rRows[i].offsetHeight / 2;
+  // The labels' letters stand loose on their row's floor, so a landing shakes them.
+  const rLetters = rLabels.map(l => {
+    const text = l.textContent; l.textContent = ''; l.setAttribute('aria-label', text);
+    return [...text].map(ch => {
+      const el = document.createElement('span');
+      el.className = ch === ' ' ? 'sp' : 'ch'; el.textContent = ch === ' ' ? '' : ch;
+      l.appendChild(el); return ch === ' ' ? null : el;
+    }).filter(Boolean);
+  });
+  // The ball hits the floor of a row: every letter on it jumps a little, each by a different amount and a beat
+  // apart, nearer the ring first, so the shake reads as irregular. Heavier landings shake harder.
+  function shakeRow(i, amp) {
+    if (reduced()) return;
+    rLetters[i].forEach((el, k) => {
+      const near = 1 - 0.45 * k / Math.max(1, rLetters[i].length - 1);   // the far end of the word shakes less
+      hop(el, amp * near * (0.35 + 0.65 * Math.random()), 12 * k + 40 * Math.random());
+    });
+  }
+  let prevBy = null;
+  function brush() {                                   // the ball brushes past a ring: that ring wobbles the way it went
+    if (prevBy != null) rRows.forEach((r, i) => {
+      const y = ringY(i);
+      if (i !== sel && (prevBy - y) * (by - y) < 0) { hop(rBtns[i], 1.2, 0, 'y', by < prevBy ? -1 : 1); shakeRow(i, 0.6); }   // and its letters tremble
+    });
+    prevBy = by;
+  }
+  const ringX = () => rRows[0].offsetLeft + 16 + 11;
+  function rDraw(tremble) {
+    const x = ringX() + (tremble || 0);
+    ball.style.transform = `translate(${(x - 5).toFixed(2)}px, ${(by - 5).toFixed(2)}px)`;
+    rings.forEach((g, i) => {
+      g.classList.toggle('on', i === sel && mode === 'rest');
+      const sh = (rShake >= 0 && i === rShakeIdx) ? 0.8 * shakeShape(rShake / SHAKE_MS) / shakeNorm : 0;
+      g.style.transform = Math.abs(sh) > 0.01 ? `translateY(${sh.toFixed(2)}px)` : '';
+    });
+    rLabels.forEach((l, i) => {
+      const v = rJolt && rJolt.i === i ? rJolt.amp * joltAt(rJolt.ms) : 0;
+      l.style.transform = Math.abs(v) > 0.01 ? `translateY(${v.toFixed(2)}px)` : '';
+    });
+  }
+  function setSel(i) {
+    sel = i;
+    rBtns.forEach((b, j) => { b.setAttribute('aria-checked', String(j === i)); b.tabIndex = j === i ? 0 : -1; });
+  }
+  function rRest() { cancelAnimationFrame(rRaf); rRaf = 0; prevBy = null; mode = 'rest'; rHold = rTease = rJolt = null; rShake = -1; by = ringY(sel); bvy = 0; rDraw(); }
+  function land(i) {
+    const w = RD[rRows[i].dataset.w], speedIn = Math.abs(bvy), hit = Math.min(1, speedIn / 500);
+    // How hard the floor shakes is how hard the ball hits it: a long drop (Anyone → Only me, two rows) lands
+    // fastest and shakes the most; a ball lifted into place arrives slowly and shakes by the option's weight.
+    const impact = Math.min(4, 4 * speedIn / 760);
+    setSel(i); mode = 'settle';
+    bvy = -Math.abs(bvy) * 0.3;                       // bounces in the ring
+    knockR(-w.rot * (0.5 + 0.5 * hit), i, (w.dip + 30 * hit) * (0.5 + 0.5 * hit));   // the list dips (harder for a long drop) and tips toward the rings
+    shakeRow(i, Math.max(w.shake * 0.7, impact));    // the floor shakes the letters
+  }
+  function rStep(now) {
+    const dt = Math.min(0.032, (now - rLast) / 1000) * speed; rLast = now;
+    if (rShake >= 0) { rShake += dt * 1000; if (rShake >= SHAKE_MS) rShake = -1; }
+    if (rJolt) { rJolt.ms += dt * 1000; if (rJolt.ms >= JOLT_MS) rJolt = null; }
+    let tremble = 0;
+    const lifting = (rHold && rHold.up && !rHold.done) || (rTease && rTease.ms < 260);
+    if (rTease) rTease.ms += dt * 1000;
+    if (lifting) {                                    // held: it rises, picking up speed, toward the chosen ring
+      const tgt = rHold ? rHold.to : rTease.to, w = RD[rRows[tgt].dataset.w];
+      if (rHold) rHold.t += dt;
+      const t = rHold ? rHold.t : rTease.ms / 1000;
+      const vUp = w.lift * Math.min(1, 0.25 + t * 2.5);
+      by -= vUp * dt; bvy = -vUp;
+      tremble = Math.sin(now / 18) * 0.6;
+      mode = 'lift';
+      knockR(-3 * dt, tgt, 30 * dt);                  // holding it up bears down on the list a little
+      if (by <= ringY(tgt)) { by = ringY(tgt); bvy = 160; land(tgt); if (rHold) rHold.done = true; rTease = null; }
+    } else if (mode === 'lift' || mode === 'fall' || mode === 'settle') {
+      if (rTease && rTease.ms >= 260) { rTease = null; nudgeHint('Hold to lift it.'); }   // a tap was not enough
+      const home = mode === 'fall' ? target : sel;    // let go mid-lift: it drops back into its own ring
+      bvy += GRAV * dt; by += bvy * dt;
+      if (by >= ringY(home)) {
+        by = ringY(home);
+        if (mode === 'fall' && home !== sel) land(home);
+        else if (Math.abs(bvy) > 60) { bvy = -bvy * 0.3; mode = 'settle'; }
+        else { bvy = 0; mode = 'rest'; }
+      }
+    }
+    brush();
+    rDraw(tremble);
+    if (mode === 'rest' && !rHold && !rTease && !rJolt && rShake < 0) { rRest(); return; }
+    rRaf = requestAnimationFrame(rStep);
+  }
+  function rWake() { if (!rRaf) { rLast = performance.now(); rRaf = requestAnimationFrame(rStep); } }
+  function rPress(i) {
+    rShake = 0; rShakeIdx = i;
+    if (reduced()) { setSel(i); rRest(); return; }
+    if (i === sel && mode === 'rest') { rWake(); return; }
+    if (i > sel || (mode !== 'rest' && ringY(i) > by)) {   // lower = more private: let it drop
+      target = i; mode = 'fall'; rHold = null; rWake(); return;
+    }
+    rHold = { up: true, to: i, t: 0, done: false }; rTease = null; rWake();
+  }
+  function rRelease() {
+    if (!rHold) return;
+    const was = rHold; rHold = null;
+    if (was.up && !was.done) {
+      if (was.t < TAP_S) rTease = { to: was.to, ms: was.t * 1000 };
+      else nudgeHint('Hold to lift it.');
+      if (mode === 'lift' && !rTease) bvy = 0;
+    }
+    rWake();
+  }
+  rRows.forEach((row, i) => {
+    row.addEventListener('pointerdown', e => { e.preventDefault(); row.setPointerCapture(e.pointerId); rPress(i); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => row.addEventListener(t, rRelease));
+    rBtns[i].addEventListener('click', e => e.preventDefault());
+    rBtns[i].addEventListener('keydown', e => {
+      const k = e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : 0;
+      if (!k) return;
+      e.preventDefault();
+      const j = Math.max(0, Math.min(rRows.length - 1, sel + k));
+      if (j === sel) return;
+      rBtns[j].focus();
+      if (k > 0) rPress(j);
+      else { rPress(j); const id = setInterval(() => { if (mode === 'rest' || !rHold) { clearInterval(id); rRelease(); } else if (sel === j) { clearInterval(id); rRelease(); } }, 30); }
+    });
+  });
+  rRest();
+  window.__card = { reset() { setSel(initialSel); rRest(); clearTimeout(hintTimer); hint.textContent = HINT; hint.classList.remove('is-nudge'); } };
+  // press feedback (:active) for the demo's synthetic pointer
+  document.querySelectorAll('#stage .row').forEach(r => { r.addEventListener('pointerdown', () => r.classList.add('is-pressed')); ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => r.addEventListener(t, () => r.classList.remove('is-pressed'))); });
+})();
+</script>
+<script>
+KIT.demo(async c => {
+  const until = async (fn, max) => { const t0 = performance.now(); while (!fn() && performance.now() - t0 < max) await c.wait(30); };
+  const anyone = c.el('.row:nth-child(1) .rdo');
+  // hold "Anyone with the link" to lift the ball up a row
+  const [rx, ry] = c.at(anyone);
+  await c.move(rx + 110, ry + 60, 700);
+  await c.move(rx + 70, ry, 520);
+  await c.wait(160);
+  await c.down();
+  await until(() => anyone.getAttribute('aria-checked') === 'true', 2400);
+  await c.wait(100);
+  await c.up();
+  await c.wait(1000);
+  // a tap on "Only me" lets it drop two rows
+  const [ox, oy] = c.at('.row:nth-child(3) .rdo');
+  await c.move(ox + 60, oy, 650);
+  await c.wait(140);
+  await c.click();
+  await c.wait(1200);
+  await c.leave();
+}, { tint: '#1b1c20', reset() { window.__card.reset(); } });
+</script>
+</body></html>
