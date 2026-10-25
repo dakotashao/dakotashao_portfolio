@@ -131,7 +131,7 @@
     const dt = clamp(t - lastT, 0, .1); lastT = t;
     const amp = calm ? .35 : (0.9 + 2.0*Math.sin(Math.PI*clamp(lv,0,1))) * (1 - .75*clamp((lv-.9)/.1, 0, 1));
 
-    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = (window.KIT && KIT.dark) ? '#242424' : '#fff'; ctx.fillRect(0,0,size,size);
 
     for (let r=0; r<ROWS; r++){
       // water arrives as thin flat strips; their ends trace one continuous wave contour,
