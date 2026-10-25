@@ -200,3 +200,8 @@
     if (d.type === "demo") d.on ? KIT.start() : KIT.stop();
   });
 })();
+
+/* ⌘K / Ctrl+K inside a block still reaches the gallery's search */
+addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); try { parent.postMessage({ type: "search" }, "*"); } catch (err) {} }
+});

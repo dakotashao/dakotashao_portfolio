@@ -929,16 +929,18 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
     pgRender(false);
   }
   // page-level listeners, set once; they do nothing unless the playground is on screen
+  const pgSearch = () => { if (pg.cur >= 0) pgClose(); const q = pgEl("pg-q"); q.focus(); q.select(); };
   addEventListener("message", (e) => {
     if (!pgEl("pg-wall")) return;
     const d = e.data || {}, df = pgEl("pg-d-frame");
+    if (d.type === "search") return pgSearch();
     const cardOf = (src) => [...document.querySelectorAll(".pg-card")].find((c) => c.querySelector("iframe")?.contentWindow === src);
     if (d.type === "demo-avail") { const btn = e.source === df.contentWindow ? pgEl("pg-d-play") : cardOf(e.source)?.querySelector(".play"); if (btn) btn.hidden = !d.on; }
     if (d.type === "demo-state") { if (e.source === df.contentWindow) pgSetPlay(pgEl("pg-d-play"), d.on); else pgSetPlay(pg.frames.get(e.source), d.on); }
     if (d.type === "open-detail" && e.source !== df.contentWindow) { const card = cardOf(e.source); if (card) pgOpen(+card.dataset.i); }
   });
   addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && pgEl("pg-q") && pg.cur < 0) { e.preventDefault(); pgEl("pg-q").focus(); pgEl("pg-q").select(); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && pgEl("pg-q")) { e.preventDefault(); pgSearch(); return; }
     if (pg.cur < 0 || !pgEl("pg-dtl")) return;
     if (e.key === "Escape") pgClose();
     if (e.target.matches?.("input")) return;
