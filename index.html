@@ -348,6 +348,245 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
   .cs-meta > div { flex: 1 1 40%; }
 }
 
+/* 24 Hour Home Care case study: the page built in its own artifact, set inside the site's case-study frame.
+   Brand accents (navy, blue, orange) stay; text, frames and lines follow the site's tokens, so dark mode works. */
+.cs24{--frame:var(--card);--body:rgba(0,0,0,.52);--navy:#011c62;--cs:#0c65c3;--cs-t:#dbe8f8;--ds:#9a5a00;--ds-t:#fde9c7;--c24-circle:#e6e6e6;--ease:cubic-bezier(.32,.72,0,1);letter-spacing:-.011em}
+:root[data-theme="dark"] .cs24{--body:var(--muted);--navy:#7d9be6;--c24-circle:#2a2a2a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cs24{--body:var(--muted);--navy:#7d9be6;--c24-circle:#2a2a2a}}
+.cs24 > .sec:first-child{margin-top:0}
+#app .cs-body.cs24{max-width:none}
+/* the outcome confetti spills past the column; keep it from adding a sideways scroll */
+#app .view:has(.cs24){overflow-x:clip}
+.cs24 .text{max-width:560px;margin:0 auto}
+.cs24 .label{font-size:14px;line-height:20.5px}
+.cs24 h2{font-size:32px;line-height:38.5px;font-weight:500;letter-spacing:-.04em;margin-top:9px;max-width:480px}
+.cs24 .body{font-size:16px;line-height:24px;color:var(--body);margin-top:19px}
+@media (max-width:560px){.cs24 h2{font-size:26px;line-height:32px}}
+.cs24 .sec{margin-top:110px}
+.cs24 .body b{font-weight:600}
+.cs24 .p2{margin-top:24px}
+.cs24 .co{color:var(--body);text-decoration:none;white-space:nowrap;border-radius:4px;transition:color .2s ease}
+.cs24 .co:hover{color:var(--fg)}
+.cs24 .co i{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;vertical-align:-4px;border-radius:5px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.cs24 .co i svg{width:16px;height:16px}
+.cs24 .co:focus-visible{outline:2px solid var(--cs);outline-offset:2px}
+.cs24 .goals{max-width:640px;margin:32px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,auto);column-gap:12px}
+.cs24 .goal{--tint:var(--frame);--ink:var(--body);--rule:rgba(0,0,0,.08);background:var(--tint);border-radius:16px;padding:16px 18px 24px 16px;display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:0}
+.cs24 .goal .who{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--body)}
+.cs24 .goal .who i{width:24px;height:24px;border-radius:50%;background:var(--c24-circle);display:grid;place-items:center;flex:none}
+.cs24 .goal .who svg{width:12px;height:12px}
+.cs24 .goal ul{display:contents}
+.cs24 .goal li{list-style:none;display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:8px}
+.cs24 .goal li:first-child{margin-top:32px}
+.cs24 .goal li+li{margin-top:24px}
+.cs24 .goal li i{font-style:normal;font-size:13px;line-height:26px;color:var(--ink);font-variant-numeric:tabular-nums}
+.cs24 .goal b{display:block;font-size:16px;line-height:24px;font-weight:500;color:var(--fg)}
+.cs24 .goal span{display:block;margin-top:2px;font-size:15px;line-height:22px;color:var(--body)}
+@media (max-width:560px){.cs24 .goals{grid-template-columns:minmax(0,1fr);grid-template-rows:none;row-gap:12px}
+.cs24 .goal{grid-row:auto;grid-template-rows:none;display:block}}
+.cs24 .co:focus-visible{outline:2px solid var(--cs);outline-offset:1px}
+.cs24 .intro{font-size:20px;line-height:30px;letter-spacing:-.015em;color:var(--fg);margin-top:72px}
+.cs24 .fig{position:relative;max-width:640px;margin:28px auto 0;aspect-ratio:640/220}
+.cs24 .st{position:absolute;left:0;top:0;width:640px;height:220px;transform-origin:0 0;transform:scale(var(--s,1))}
+.cs24 .card{position:absolute;top:0;width:314px;height:220px;background:var(--frame);border-radius:16px;overflow:hidden}
+.cs24 .card.l{left:0}
+.cs24 .card.r{left:326px}
+.cs24 .hd{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--body);white-space:nowrap}
+.cs24 .hd i{width:24px;height:24px;border-radius:50%;background:var(--c24-circle);display:grid;place-items:center}
+.cs24 .hd svg{width:12px;height:12px}
+.cs24 .b{position:absolute;left:0;top:0;height:32px;display:inline-flex;align-items:center;white-space:nowrap;
+  border-radius:14px 14px 14px 4px;font-size:13.5px;font-weight:500;padding:0 13px;transform-origin:50% 50%;
+  transition:transform .7s var(--ease),opacity .45s ease}
+.cs24 .t1{background:#dbe8f8;color:#0c65c3}
+.cs24 .t2{background:#d6dbe8;color:#011c62}
+.cs24 .t3{background:#fde9c7;color:#9a5a00}
+.cs24 .sum{position:absolute;left:0;right:0;top:40px;bottom:0;display:flex;align-items:center;justify-content:center}
+.cs24 .bk{display:flex;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
+.cs24 .parts{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.cs24 .chip{display:inline-flex;align-items:center;gap:5px;height:27px;padding:0 10px;border-radius:14px;font-size:13.5px;
+  opacity:0;transform:translateX(-8px);transition:opacity .45s ease,transform .6s var(--ease)}
+.cs24 .chip b{font-weight:600;letter-spacing:-.02em}
+.cs24 .chip small{font-size:9px;font-weight:600;letter-spacing:.06em;opacity:.7}
+.cs24 .cs{background:var(--cs-t);color:var(--cs)}
+.cs24 .ds{background:var(--ds-t);color:var(--ds)}
+.cs24 .bk svg path{stroke-dasharray:80;stroke-dashoffset:80;transition:stroke-dashoffset .5s ease .25s}
+.cs24 .total{display:flex;flex-direction:column}
+.cs24 .total b{font-size:32px;line-height:34px;font-weight:600;color:var(--navy);letter-spacing:-.03em;min-width:5.2ch}
+.cs24 .total em{font-style:normal;font-size:12px;line-height:16px;color:var(--body);opacity:0;transition:opacity .4s ease}
+.cs24 .go .chip{opacity:1;transform:none}
+.cs24 .go .chip.ds{transition-delay:.12s}
+.cs24 .go .bk svg path{stroke-dashoffset:0}
+.cs24 .go .total em{opacity:1;transition-delay:1.6s}
+.cs24 .arr{position:absolute;left:320px;top:130px;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;background:var(--navy);box-shadow:0 0 0 6px var(--bg);display:grid;place-items:center;z-index:30}
+.cs24 .arr svg{width:15px;height:15px}
+.cs24 .sol{max-width:560px;margin:72px auto 0}
+.cs24 .sol .eb{font-size:14px;line-height:20px;color:var(--body)}
+.cs24 .sol h3{font-size:20px;line-height:26px;font-weight:500;letter-spacing:-.025em;margin-top:6px}
+.cs24 .sol p.s{font-size:16px;line-height:24px;color:var(--body);margin-top:6px}
+.cs24 .demo{max-width:640px;margin:24px auto 0;background:var(--frame);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:28px;padding:56px 40px 36px}
+.cs24 .phone{position:relative;justify-self:center;width:268px;padding:9px;border-radius:47px;background:linear-gradient(150deg,#4a4a4d 0%,#1a1a1c 18%,#0d0d0e 50%,#1a1a1c 82%,#4a4a4d 100%);box-shadow:inset 0 0 0 1.5px #5a5a5e,inset 0 0 0 3.5px #0b0b0c,0 2px 4px rgba(0,0,0,.12),0 32px 60px -26px rgba(0,0,0,.42)}
+.cs24 .phone::before, .cs24 .phone::after{content:"";position:absolute;width:3px;border-radius:2px;background:linear-gradient(90deg,#2a2a2c,#4a4a4d)}
+.cs24 .phone::before{left:-2px;top:118px;height:22px;box-shadow:0 46px 0 0 #333,0 98px 0 0 #333}
+.cs24 .phone::after{right:-2px;top:178px;height:70px;background:linear-gradient(270deg,#2a2a2c,#4a4a4d)}
+.cs24 .screen{position:relative;width:100%;aspect-ratio:402/872;border-radius:38px;background:#fff;overflow:hidden;transform:translateZ(0)}
+.cs24 .scr{position:absolute;inset:0;opacity:0;z-index:1;transition:opacity 0s linear .3s}
+.cs24 .scr.on{opacity:1;z-index:2;transition:opacity .3s ease}
+.cs24 .scr.img img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.cs24 .tap{position:absolute;z-index:4;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(255,255,255,.4);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.14),0 6px 16px rgba(0,0,0,.28);opacity:0;transform:scale(1.3);transition:opacity .25s ease,transform .3s var(--ease);pointer-events:none}
+.cs24 .tap.in{opacity:1;transform:scale(1)}
+.cs24 .tap.down{transform:scale(.72);transition-duration:.15s}
+.cs24 .steps{list-style:none;position:relative;display:flex;justify-content:center;align-items:center;gap:0;padding-bottom:30px}
+.cs24 .steps button{all:unset;position:relative;display:block;padding:10px 3px;cursor:pointer}
+.cs24 .steps button:focus-visible .bar{outline:2px solid var(--cs);outline-offset:3px}
+.cs24 .steps .n{display:none}
+.cs24 .steps .l{position:absolute;left:-120px;right:-120px;top:28px;text-align:center;font-size:14px;line-height:20px;color:var(--body);opacity:0;transform:translateY(3px);transition:opacity .3s ease,transform .3s var(--ease);pointer-events:none;white-space:nowrap}
+.cs24 .steps li.on .l{opacity:1;transform:none}
+.cs24 .steps .bar{display:block;width:6px;height:6px;border-radius:3px;background:#c5cddf;overflow:hidden;transition:width .45s var(--ease),background-color .2s}
+.cs24 .steps li.on .bar{width:36px}
+.cs24 .steps button:hover .bar{background:#b9c2d8}
+.cs24 .steps .bar i{display:block;height:100%;width:0;background:var(--navy);border-radius:3px}
+.cs24 .steps li.held .bar i{width:100%!important}
+.cs24 .steps button::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 2px);transform:translate(-50%,4px);padding:5px 9px;border-radius:7px;background:var(--navy);color:#fff;font-size:12px;line-height:16px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .25s var(--ease)}
+.cs24 .steps button:hover::after{opacity:1;transform:translate(-50%,0)}
+.cs24 .steps li.on button::after{display:none}
+@media (max-width:560px){.cs24 .demo{grid-template-columns:1fr;padding:40px 20px}
+.cs24 .phone{width:232px}}
+.cs24 .flows{max-width:720px;margin:48px auto 0;display:flex;flex-direction:column;gap:48px}
+.cs24 .flow{display:grid;grid-template-columns:432px minmax(0,1fr);gap:36px;align-items:end}
+.cs24 .flow .demo{max-width:none;margin:0;aspect-ratio:1;padding:0;gap:14px;justify-content:center}
+.cs24 .flow .phone{width:172px;padding:6px;border-radius:31px}
+.cs24 .flow .screen{border-radius:25px}
+.cs24 .flow .phone::before{top:76px;height:14px;box-shadow:0 29px 0 0 #333,0 62px 0 0 #333;width:2.5px;left:-2px}
+.cs24 .flow .phone::after{top:114px;height:45px;width:2.5px;right:-2px}
+.cs24 .flow .tap{width:26px;height:26px;margin:-13px 0 0 -13px;border-width:1.5px}
+.cs24 .flow .steps{padding-bottom:0}
+.cs24 .flow .steps .l{display:none}
+.cs24 .flow .ft h3{font-size:16px;line-height:24px;font-weight:500;letter-spacing:-.015em}
+.cs24 .flow .ft p{font-size:15px;line-height:22.5px;color:var(--body);margin-top:4px}
+.cs24 .flow .ft p.g{font-size:13px;line-height:18px;color:var(--faint);margin:0 0 6px;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.cs24 .flow{grid-template-columns:1fr;gap:16px}
+.cs24 .flow .demo{aspect-ratio:auto;padding:36px 0 24px}}
+.cs24 .fd{max-width:640px;margin:56px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cs24 .fd>div{background:var(--frame);border-radius:16px;padding:22px 22px 24px}
+.cs24 .fd .k{font-size:13px;line-height:18px;color:var(--faint)}
+.cs24 .fd h3{font-size:17px;line-height:24px;font-weight:500;letter-spacing:-.02em;margin-top:8px}
+.cs24 .fd p.s{font-size:15px;line-height:22.5px;color:var(--body);margin-top:6px}
+.cs24 .fd q{display:block;margin-top:12px;padding-left:12px;border-left:2px solid #d6dbe8;font-size:14px;line-height:21px;color:var(--fg);quotes:none}
+.cs24 .fd q small{display:block;font-size:12px;color:var(--faint);margin-top:2px}
+.cs24 .dfig{max-width:720px;margin:16px auto 0;background:var(--frame);border-radius:16px;padding:32px}
+.cs24 .dfig .row{display:flex;gap:12px;justify-content:center;align-items:flex-start}
+.cs24 .dfig .cap{font-size:13px;line-height:18px;color:var(--faint);margin-bottom:12px}
+.cs24 .slot{flex:1;max-width:150px;aspect-ratio:3/4;border:1.5px dashed #c5cddf;border-radius:14px;display:grid;place-items:center;text-align:center;font-size:12px;line-height:16px;color:rgba(1,28,98,.55);padding:10px}
+.cs24 .crop{width:240px;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 36px -20px rgba(1,28,98,.35);background:#fff}
+.cs24 .crop img{display:block;width:100%}
+.cs24 .dfig .sep{height:1px;background:var(--line);margin:28px 0 24px}
+.cs24 .split{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
+.cs24 .apps{display:flex;flex-direction:column;gap:22px}
+.cs24 .apps .ln{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cs24 .apps .t{width:52px;font-size:12px;color:var(--faint)}
+.cs24 .app{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.07);font-size:13px;color:var(--fg)}
+.cs24 .app i{width:18px;height:18px;border-radius:5px;background:#d6dbe8;flex:none}
+.cs24 .app.one i{background:var(--navy)}
+.cs24 .sw{font-size:16px;color:var(--faint)}
+.cs24 .role{display:inline-flex;height:24px;align-items:center;padding:0 9px;border-radius:12px;background:#dbe8f8;color:#0c65c3;font-size:12px}
+.cs24 .dfig .phone{width:172px;padding:6px;border-radius:31px}
+.cs24 .dfig .phone::before, .cs24 .dfig .phone::after{display:none}
+.cs24 .dfig .screen{border-radius:25px}
+.cs24 .dfig .screen img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+@media (max-width:640px){.cs24 .fd{grid-template-columns:1fr}
+.cs24 .split{grid-template-columns:1fr;justify-items:center}
+.cs24 .dfig{padding:24px 16px}
+.cs24 .dfig .row{flex-wrap:wrap}}
+.cs24 .desk{max-width:720px;margin:32px auto 0}
+.cs24 .desk img{display:block;width:100%;height:auto;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 48px -28px rgba(1,28,98,.35)}
+.cs24 .desk2{max-width:720px;margin:12px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cs24 .desk2 img{display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+.cs24 .dsfig{max-width:720px;margin:32px auto 0;background:var(--frame);border-radius:16px;padding:24px}
+.cs24 .dsfig img{display:block;width:100%;height:auto}
+.cs24 .tokens{max-width:720px;margin:12px auto 0;display:grid;grid-template-columns:repeat(3,1fr) 1.6fr;gap:12px}
+.cs24 .tok{border-radius:12px;padding:14px 16px;min-height:88px;display:flex;flex-direction:column;justify-content:flex-end;font-size:13px;line-height:18px;color:#fff}
+.cs24 .tok b{font-weight:500}
+.cs24 .tok.type{background:var(--frame);color:var(--fg);justify-content:space-between}
+.cs24 .tok.type span{font-size:28px;line-height:32px;letter-spacing:-.02em}
+.cs24 .tok.type small{font-size:13px;color:var(--body)}
+.cs24 .refl{max-width:560px;margin:28px auto 0;display:flex;flex-direction:column;gap:24px}
+.cs24 .refl h3{font-size:16px;line-height:24px;font-weight:500;letter-spacing:-.015em}
+.cs24 .refl p{font-size:15px;line-height:22.5px;color:var(--body);margin-top:4px}
+@media (max-width:640px){.cs24 .desk2{grid-template-columns:1fr}
+.cs24 .tokens{grid-template-columns:1fr 1fr}}
+.cs24 .kf{max-width:560px;margin:32px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.cs24 .kf .big{font-size:28px;line-height:34px;font-weight:500;letter-spacing:-.03em;color:var(--navy)}
+.cs24 .kf p{font-size:15px;line-height:22.5px;color:var(--body);margin-top:8px}
+.cs24 .kf p.big{margin-top:0}
+.cs24 .dec{max-width:560px;margin:28px auto 0}
+.cs24 .dec+.dfig, .cs24 .dec+.evo{margin-top:20px}
+.cs24 .evo+.dec, .cs24 .dfig+.dec{margin-top:64px}
+.cs24 .dec .n{font-size:13px;line-height:18px;color:var(--faint);font-variant-numeric:tabular-nums}
+.cs24 .dec h3{font-size:20px;line-height:26px;font-weight:500;letter-spacing:-.025em;margin-top:4px}
+.cs24 .dec p:not(.n){font-size:15px;line-height:22.5px;color:var(--body);margin-top:4px}
+.cs24 .evo{max-width:720px;margin:20px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.cs24 .evo figure{display:flex;flex-direction:column;gap:10px}
+.cs24 .evo .im{height:250px;background:var(--frame);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px;overflow:hidden}
+.cs24 .evo .im img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.cs24 .evo .fin .im{background:#dbe8f8}
+.cs24 .evo figcaption{font-size:13px;line-height:18px;color:var(--body)}
+.cs24 .evo figcaption b{font-weight:400;color:var(--faint);margin-right:6px}
+@media (max-width:640px){.cs24 .kf{grid-template-columns:1fr;gap:24px}
+.cs24 .evo{grid-template-columns:repeat(5,150px);overflow-x:auto;scroll-snap-type:x mandatory}
+.cs24 .evo figure{scroll-snap-align:start}}
+.cs24 .dfig .demo{max-width:none;margin:0;padding:0;background:none;gap:14px}
+.cs24 .dfig .demo .steps .l{display:none}
+.cs24 .dfig .demo .steps{padding-bottom:0}
+.cs24 .dfig .demo .tap{width:26px;height:26px;margin:-13px 0 0 -13px;border-width:1.5px}
+.cs24 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cs24 .g2 img, .cs24 .g3 img{display:block;width:100%;height:auto;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.cs24 .g2.fin img{border-radius:16px}
+.cs24 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.cs24 .g2 figure, .cs24 .g3 figure{display:flex;flex-direction:column;gap:10px}
+.cs24 .g2 figcaption, .cs24 .g3 figcaption{font-size:13px;line-height:18px;color:var(--body)}
+.cs24 .g3 figcaption b{font-weight:400;color:var(--faint);margin-right:6px}
+@media (max-width:640px){.cs24 .g2, .cs24 .g3{grid-template-columns:1fr}}
+.cs24 .dfig .split{grid-template-columns:1fr 1fr;gap:24px;align-items:center;justify-items:center;padding:16px 0}
+.cs24 .dfig .apps{align-items:center;gap:14px;text-align:center}
+.cs24 .blk{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cs24 .blk .t{font-size:12px;line-height:16px;color:var(--faint);width:auto}
+.cs24 .blk .note{font-size:12px;line-height:16px;color:var(--faint)}
+.cs24 .row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.cs24 .down{font-size:16px;color:var(--faint);line-height:1}
+@media (max-width:640px){.cs24 .dfig .split{grid-template-columns:1fr;gap:32px}}
+.cs24 .shift{max-width:720px;margin:28px auto 0;background:var(--frame);border-radius:16px;padding:24px 24px 20px;display:grid;grid-template-columns:180px 1fr;gap:24px;align-items:center}
+.cs24 .shift .k{font-size:12px;line-height:16px;color:var(--faint)}
+.cs24 .shift h4{font-size:15px;line-height:21px;font-weight:500;letter-spacing:-.01em;margin-top:6px}
+.cs24 .shift .sht p:not(.k){font-size:13px;line-height:19px;color:var(--body);margin-top:6px}
+.cs24 .shift .shr{display:flex;align-items:center;gap:10px;justify-content:center}
+.cs24 .shift figure{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
+.cs24 .shift .im{height:200px;display:flex;align-items:center;justify-content:center;width:100%}
+.cs24 .shift .im img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 8px 20px -12px rgba(0,0,0,.2);background:#fff}
+.cs24 .shift figcaption{font-size:12px;line-height:16px;color:var(--faint);text-align:center}
+.cs24 .shift .fin figcaption{color:var(--navy)}
+.cs24 .shift .ar{color:var(--faint);font-size:14px;flex:none}
+.cs24 .shift+.shift{margin-top:12px}
+.cs24 .shift+.dec{margin-top:64px}
+@media (max-width:640px){.cs24 .shift{grid-template-columns:1fr}
+.cs24 .shift .im{height:160px}}
+.cs24 .outc{position:relative;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.cs24 .seal{position:relative;width:132px;height:132px;margin:0;opacity:0;transform:scale(1.35) rotate(-14deg)}
+.cs24 .seal.in{animation:cs24stamp .55s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes cs24stamp{to{opacity:1;transform:scale(1) rotate(-6deg)}}
+.cs24 .badge{position:absolute;inset:0;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 9px #e8552b,0 12px 24px -10px rgba(232,85,43,.35);display:flex;flex-direction:column;justify-content:center;padding-left:38px;font-size:12px;line-height:13.5px;letter-spacing:-.01em}
+.cs24 .badge b{font-weight:700;color:#111}
+.cs24 .badge b em{font-style:normal;margin-left:-9px;margin-right:2px}
+.cs24 .badge s{text-decoration:none;font-weight:700;color:#8a8a8a}
+.cs24 .burst{position:absolute;left:50%;top:50%;width:0;height:0}
+.cs24 .burst i{position:absolute;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--c);opacity:0;transform:rotate(var(--a)) translateY(0)}
+.cs24 .seal.in .burst i{animation:cs24pop .9s .28s ease-out forwards}
+@keyframes cs24pop{0%{opacity:1;transform:rotate(var(--a)) translateY(-30px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-1*var(--d))) scale(.4)}}
+@media (prefers-reduced-motion:reduce){.cs24 .seal{opacity:1;transform:rotate(-6deg)}
+.cs24 .seal.in{animation:none}
+.cs24 .seal.in .burst i{animation:none}}
+@media (max-width:560px){.cs24 .outc{grid-template-columns:1fr}
+.cs24 .seal{justify-self:start}}
+.cs24 .confetti{position:absolute;left:-80px;top:-200px;pointer-events:none;z-index:5}
 /* Playground — blocks wall (from the Interface Playground artifact), in the site's grid: full-bleed, 3 columns, 8px gutters, 16px corners */
 /* search: pinned top centre */
 .pg-search { position: fixed; top: 16px; left: 50%; translate: -50% 0; z-index: 40; width: min(320px, 34vw); height: 40px; padding: 0 14px; border-radius: 999px; background: var(--card); display: flex; align-items: center; gap: 9px; color: var(--muted); cursor: text; transition: background .25s, box-shadow .25s; }
@@ -549,7 +788,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
   }
 
   // ---------- content (copied from home2 / about-2) ----------
-  const PROJECTS = [{"slug": "btob", "name": "24 Hour Home Care", "tags": ["Service Design", "2026"], "desc": "A self-service family portal that turns phone-call care coordination into a clear, transparent digital experience.", "cat": "24 Hour Home Care", "title": "A portfolio that feels personal, not corporate.", "hero": "img/FnrSI16JhOnY4g9JePQeupNBikY.webp", "ratio": 1.7778, "meta": [["Role", "Dakota Shao"], ["Team", "Dakota Shao Keller Wang"], ["Tools used", "Figma"], ["Year", "2026"]], "year": "2026", "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "Building a portfolio that feels less like a showcase and more like a conversation."}, {"t": "p", "text": ["This project began with a simple objective: create a digital presence that communicates both capability and character. Rather than treating the website as a collection of projects, the goal was to design an experience that introduces the person behind the work and creates a genuine connection with visitors."]}, {"t": "label", "text": "Challenge"}, {"t": "h2", "text": "Finding the balance between professionalism and personality."}, {"t": "p", "text": ["Many portfolio websites excel at showcasing work but struggle to communicate the values and perspective behind it. The challenge was creating a website that feels credible and polished without becoming impersonal or overly corporate."]}, {"t": "label", "text": "Approach"}, {"t": "h2", "text": "Turning those constraints into a clear direction."}, {"t": "p", "text": ["Rather than relying on visual complexity, the project focused on creating a strong foundation through typography, spacing, and structure. The design process centered around reducing distractions and allowing content to become the primary point of focus."]}, {"t": "img", "src": "img/zyvsbMETnR5FCHSNNTXkB2LF8.webp", "r": 1.925}, {"t": "label", "text": "Research"}, {"t": "h2", "text": "Understanding what makes digital experiences memorable."}, {"t": "p", "text": ["Research focused on studying independent designers, creative studios, and personal brands whose websites successfully balanced presentation and personality. The goal was to identify common patterns and understand what contributes to a lasting impression."]}, {"t": "sub", "text": "Competitor Analysis"}, {"t": "p", "text": ["By analyzing a range of portfolios and studio websites, several opportunities became apparent. Many experiences either prioritized aesthetics over usability or presented information without a clear narrative structure."]}, {"t": "img", "src": "img/7PzfK1rvfwOauy3jzBps1l5eU0.webp", "r": 1.7778}, {"t": "sub", "text": "Visual Direction"}, {"t": "p", "text": ["The visual direction combines minimal layouts with subtle expressive elements. Typography became the primary design tool, supported by generous spacing, restrained color choices, and carefully selected imagery."]}, {"t": "img", "src": "img/ISAdHKkTACBmHJ9xCsFpzEwxw8.webp", "r": 1.4953}, {"t": "label", "text": "Design solutions"}, {"t": "h2", "text": "Every detail should have a reason to exist."}, {"t": "p", "text": ["A successful experience is often defined by the quality of small decisions. From hierarchy and spacing to motion and component behavior, every element contributes to the overall clarity of the website."]}, {"t": "sub", "text": "Typography"}, {"t": "p", "text": ["Typography serves as the foundation of the visual hierarchy. A clear type scale and consistent spacing system help organize information while creating rhythm throughout the experience."]}, {"t": "img", "src": "img/ymceQwQ8jWHg3v1LtOFctGXcDjU.webp", "r": 1.8768}, {"t": "sub", "text": "Layout System"}, {"t": "p", "text": ["The layout was designed around a structured grid and generous whitespace. This approach improves readability, creates visual balance, and allows individual sections to breathe."]}, {"t": "img", "src": "img/XJLfn3M5u3EQb1bZusySYCLZI.webp", "r": 1.5623}, {"t": "sub", "text": "Components"}, {"t": "p", "text": ["Components were built to be flexible, reusable, and easy to maintain. Buttons, cards, and content blocks follow a unified design language that supports consistency without limiting creativity."]}, {"t": "img", "src": "img/Q6QaXvqV10c7987dhbZ5UFJwMLQ.webp", "r": 1.64}, {"t": "label", "text": "Outcome"}, {"t": "h2", "text": "A portfolio designed to evolve over time."}, {"t": "p", "text": ["The final experience successfully balances clarity, personality, and functionality. It provides a framework for showcasing work while creating meaningful connections with visitors through thoughtful design and storytelling."]}], "live": "img/FnrSI16JhOnY4g9JePQeupNBikY.webp", "thumb": "img/FnrSI16JhOnY4g9JePQeupNBikY.webp", "locked": true}, {"slug": "wildlink", "name": "Wildlink", "tags": ["Game Design"], "desc": "An interactive puzzle game developed with the Arroyos & Foothills Conservancy.", "cat": "Wildlink", "title": "An interactive puzzle game developed with the Arroyos & Foothills Conservancy.", "hero": "img/wl-cover.webp", "thumb": "img/wl-cover.webp", "ratio": "16/9", "meta": [["My role", "Research, game design, puzzle design, video production & editing"], ["Project", "Team project (Dakota, Louise, Leta)"], ["Timeline", "7 weeks"], ["Tools used", "Figma, Illustrator, After Effects, laser lab, CapCut"]], "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "Connecting puzzle pieces to solve mountain lion issues."}, {"t": "p", "text": ["The game highlights the survival challenges faced by mountain lions, an iconic species in Los Angeles County, and uses mixed media to engage middle and high school students and visitors to the AFC Education Center in wildlife conservation."]}, {"t": "label", "text": "Game rule"}, {"t": "h2", "text": "You play as a Protector of Mountain Lions, helping them survive in the wild areas near cities."}, {"t": "img", "src": "img/wl-game-rule.webp", "r": "16/9", "alt": "Puzzle pieces connecting a corridor for a mountain lion"}, {"t": "label", "text": "Problem"}, {"t": "h2", "text": "Mountain lions are at risk of separation and inbreeding."}, {"t": "p", "text": ["Habitat fragmentation and road development cut through the large, contiguous habitats they need to survive."]}, {"t": "cards", "items": [{"h": "Deaths from vehicle collisions", "p": "Each year, about 70 mountain lions are killed by vehicle collisions on California highways."}, {"h": "Wildfire", "p": "The 2018 Woolsey Fire burned nearly 100,000 acres in Los Angeles and Ventura counties, forcing mountain lions into riskier areas to find new habitats."}, {"h": "First-order inbreeding", "p": "Researchers found a 93% sperm deformity rate in 9 Santa Monica mountain lions, indicating inbreeding."}, {"h": "Poison", "p": "In the Santa Monica Mountains, 21 of 22 mountain lions tested positive for exposure and four died from poisoning."}]}, {"t": "label", "text": "Users"}, {"t": "cards", "items": [{"h": "Education center visitors", "p": "People who visit the AFC Education Center."}, {"h": "Students", "p": "Junior high and high school students."}]}, {"t": "label", "text": "Key learning goals"}, {"t": "sub", "text": "What are wildlife corridors?"}, {"t": "p", "text": ["Safe paths that animals use to move between habitats."]}, {"t": "sub", "text": "How can we help?"}, {"t": "p", "text": ["By understanding mountain lions' needs and challenges, see how human actions can transform the environment to be diverse, balanced, and connected."]}, {"t": "img", "src": "img/wl-corridors.webp", "r": "16/9", "alt": "When the game is over, all the corridors light up"}, {"t": "label", "text": "Prototype"}, {"t": "h2", "text": "Walkthrough video"}, {"t": "video", "yt": "L8b917ESDvs", "title": "Wildlink walkthrough video"}, {"t": "label", "text": "Inspiration"}, {"t": "gallery", "cols": 1, "items": [{"src": "img/wl-insp-puzzle.webp", "r": "1400/348", "alt": "Puzzle inspiration"}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/wl-insp-board.webp", "r": "3/4", "alt": "Board game"}, {"src": "img/wl-insp-map.webp", "r": "3/4", "alt": "Illustrated map"}, {"src": "img/wl-insp-animals.webp", "r": "3/4", "alt": "Flat animal illustrations"}, {"src": "img/wl-insp-palette.webp", "r": "3/4", "alt": "Color palette"}]}, {"t": "label", "text": "Design exploration"}, {"t": "gallery", "cols": 3, "items": [{"src": "img/wl-exp-physical.webp", "r": "4/3", "cap": "Physical"}, {"src": "img/wl-exp-digital.webp", "r": "4/3", "cap": "Digital"}, {"src": "img/wl-exp-mix.webp", "r": "4/3", "cap": "Mix"}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/wl-exp-wood.webp", "r": "1/1", "alt": "Laser-cut wood puzzle prototype"}, {"src": "img/wl-exp-acrylic.webp", "r": "1/1", "alt": "Acrylic puzzle piece"}, {"src": "img/wl-exp-cut-a.webp", "r": "1/1", "fit": "contain", "alt": "Laser cut file"}, {"src": "img/wl-exp-cut-b.webp", "r": "1/1", "fit": "contain", "alt": "Laser cut file"}]}, {"t": "label", "text": "Design decision"}, {"t": "p", "text": ["Our visual style uses flat vector design to align with our target audience."]}, {"t": "gallery", "cols": 2, "items": [{"src": "img/wl-dec-pieces.webp", "r": "1/1", "fit": "contain", "cap": "Puzzle pieces"}, {"src": "img/wl-dec-map.webp", "r": "1/1", "cap": "Map, buttons and color"}]}, {"t": "label", "text": "Game flow"}, {"t": "steps", "items": [{"h": "Onboard: Start", "p": "Choose a start piece to begin. Different start pieces lead to different missions."}, {"h": "Game: Clue", "p": "Match the clue piece to the start piece's theme to learn more about the mountain lions' situation."}, {"h": "Game: Problem", "p": "Find the problem the mountain lions face in this situation."}, {"h": "Game: Data", "p": "Relevant data on the challenges mountain lions face."}, {"h": "Game: Fact", "p": "How building corridors and crossings can help mountain lions overcome their challenges."}, {"h": "Activate: Action", "p": "An action that is already happening and supports corridor building."}]}], "live": null, "art": "wildlink"}, {"slug": "sante", "cat": "Sante", "title": "A brand identity built on calm confidence.", "hero": "img/H6Kl3tacfV4SMP5TOhzwWRZO6E.webp", "ratio": 1.6, "meta": [["Role", "Branding\nGraphic Design"], ["Team", ""], ["Tools used", "Figma\nIllustrator"], ["Year", "2024"]], "year": "2024", "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "Creating a wellness identity that feels calm without becoming quiet."}, {"t": "p", "text": ["Sante needed a visual language that felt clinical yet human. We built a wordmark and identity system around a single saturated blue, balancing medical trust with an approachable warmth across every touchpoint."]}, {"t": "label", "text": "Challenge"}, {"t": "h2", "text": "Making trust feel immediate in a crowded wellness space."}, {"t": "p", "text": ["The brand needed to communicate care, clarity, and credibility from the first impression. The challenge was avoiding the expected wellness clichés while still creating a visual language that felt soft, approachable, and reassuring."]}, {"t": "label", "text": "Approach"}, {"t": "h2", "text": "Building the system around restraint, rhythm, and warmth."}, {"t": "p", "text": ["The direction focused on a quiet but confident identity system. Every choice, from spacing to type scale, was shaped to feel intentional and composed rather than decorative."]}, {"t": "img", "src": "img/zyvsbMETnR5FCHSNNTXkB2LF8.webp", "r": 1.925}, {"t": "label", "text": "Research"}, {"t": "h2", "text": "Studying how calm brands earn attention."}, {"t": "p", "text": ["Research looked at wellness platforms, clinical care brands, and lifestyle studios to understand how visual systems can signal support without feeling generic or overly medical."]}, {"t": "sub", "text": "Competitor Analysis"}, {"t": "p", "text": ["Most competitors leaned heavily on muted palettes, soft photography, and familiar wellness language. That opened an opportunity to create something more structured, precise, and memorable while keeping the emotional tone gentle."]}, {"t": "img", "src": "img/7PzfK1rvfwOauy3jzBps1l5eU0.webp", "r": 1.7778}, {"t": "sub", "text": "Visual Direction"}, {"t": "p", "text": ["The visual direction combines clean typography, soft contrast, and measured spacing. The identity avoids loud gestures and instead relies on proportion, tone, and consistency to create recognition."]}, {"t": "img", "src": "img/ISAdHKkTACBmHJ9xCsFpzEwxw8.webp", "r": 1.4953}, {"t": "label", "text": "Design solutions"}, {"t": "h2", "text": "Designing a system that makes calm feel deliberate."}, {"t": "p", "text": ["The final design uses a restrained set of components and layouts that can flex across digital touchpoints while keeping the brand feeling composed and trustworthy."]}, {"t": "sub", "text": "Typography"}, {"t": "p", "text": ["Typography carries much of the brand’s personality. The type treatment is clear and understated, with enough warmth in scale and spacing to keep the experience feeling human."]}, {"t": "img", "src": "img/ymceQwQ8jWHg3v1LtOFctGXcDjU.webp", "r": 1.8768}, {"t": "sub", "text": "Layout System"}, {"t": "p", "text": ["Layouts are intentionally open and balanced, giving content room to breathe while guiding attention through a clear visual sequence."]}, {"t": "img", "src": "img/XJLfn3M5u3EQb1bZusySYCLZI.webp", "r": 1.5623}, {"t": "sub", "text": "Components"}, {"t": "p", "text": ["Reusable components were designed to feel light, functional, and consistent. Tags, cards, and content blocks share the same calm rhythm so the system stays cohesive as it expands."]}, {"t": "img", "src": "img/Q6QaXvqV10c7987dhbZ5UFJwMLQ.webp", "r": 1.64}, {"t": "label", "text": "Outcome"}, {"t": "h2", "text": "A wellness brand with clarity, softness, and staying power."}, {"t": "p", "text": ["The result is an identity that feels approachable without losing credibility. It gives Sante a calm digital presence that can grow across services, campaigns, and future product touchpoints."]}], "live": "img/H6Kl3tacfV4SMP5TOhzwWRZO6E.webp"}, {"slug": "echos", "name": "Echos", "tags": ["AI Voice Assistant"], "desc": "An AI voice tour assistant for The Getty Museum, with personalized guidance and interactive storytelling.", "cat": "Echos", "title": "An AI voice tour assistant for The Getty Museum.", "hero": "img/echos-cover.webp", "thumb": "img/echos-cover.webp", "ratio": "16/9", "meta": [["My role", "Research, user testing, design & prototype for Elias, video production"], ["Project", "Team project (Dakota, Louise, Leta)"], ["Timeline", "7 weeks"], ["Tools used", "Figma, ProtoPie, NFC smart tag, ElevenLabs (AI voice)"]], "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "A museum guide you can talk to."}, {"t": "p", "text": ["Echos is an AI voice tour assistant based on The Getty Museum, offering an immersive visiting experience through personalized guidance and interactive storytelling."]}, {"t": "label", "text": "User type"}, {"t": "h2", "text": "Four kinds of visitors, mapped by how long they stay and how deep they go."}, {"t": "p", "text": ["We placed visitors on two axes: a long or short time period at the museum, and an interest in general information or in detail."]}, {"t": "cards", "items": [{"h": "Explorers", "p": "Love wandering around, discovering new things, and embracing the unknown."}, {"h": "Immersive visitors", "p": "Seek deep, atmosphere-driven engagement with art or history."}, {"h": "Social visitors", "p": "Enjoy sharing cultural experiences with friends or family to strengthen bonds."}, {"h": "Researchers", "p": "Pursue detailed information on specific themes or exhibits."}]}, {"t": "label", "text": "AI bot persona"}, {"t": "h2", "text": "Two kinds of AI voice assistants for different visitors and artifacts."}, {"t": "p", "text": ["Main Tourist AI (Joey for explorers, Elias for researchers) offers primary guidance, while Artifact Dedicated AI is tailored for specific museum pieces. As an example, we developed a specialized version for The Getty’s “Golden Ticket.”"]}, {"t": "cards", "items": [{"h": "Joey · Main Tourist AI", "p": "The knowledgeable art companion, for explorers."}, {"h": "Elias · Main Tourist AI", "p": "The expert guide on demand, for researchers."}, {"h": "The Golden Ticket · Artifact Dedicated AI", "p": "The artifact itself tells its story."}, {"h": "The Creator · Artifact Dedicated AI", "p": "The anonymous artist behind the piece."}]}, {"t": "sub", "text": "For explorers: Joey"}, {"t": "p", "text": ["Quick assistance and directions: “Can you show me the nearest restroom?”", "Related artwork suggestions: “Are there any similar pieces I might like?”, also triggered by unintentional interaction."]}, {"t": "sub", "text": "For researchers: Elias"}, {"t": "p", "text": ["In-depth exploration: “Tell me more about this.”, plus more detailed follow-up questions.", "Clarification: “Can you clarify more on this?”"]}, {"t": "sub", "text": "Artifact + Creator"}, {"t": "p", "text": ["The Golden Ticket answers questions about the Greek belief in an afterlife, the legend of the Fountain of Memory, artifacts about afterlife and death from other cultures, and the inscriptions on its surface.", "The Creator talks about production tools, craftsmanship and materials."]}, {"t": "sub", "text": "Conversation flows"}, {"t": "gallery", "cols": 3, "items": [{"src": "img/echos-flow-joey.webp", "r": "1100/2610", "cap": "Joey"}, {"src": "img/echos-flow-elias.webp", "r": "1100/2106", "cap": "Elias"}, {"src": "img/echos-flow-artifact.webp", "r": "996/4096", "cap": "Artifact + Creator"}], "scroll": true}, {"t": "label", "text": "Prototype"}, {"t": "h2", "text": "Prototype showcase"}, {"t": "video", "yt": "s4v0EKhHiQg", "title": "Echos prototype showcase"}, {"t": "label", "text": "User tests"}, {"t": "h2", "text": "Three rounds of testing to validate, refine and decide."}, {"t": "p", "text": ["In our user testing, we focused on three key areas: validating core features and design, refining the overall user flow, and finalizing feature and design choices."]}, {"t": "img", "src": "img/echos-test-setup.webp", "r": "1175/661", "alt": "User test setup"}, {"t": "img", "src": "img/echos-test-photos.webp", "r": "1600/606", "alt": "User test sessions"}, {"t": "sub", "text": "General features"}, {"t": "steps", "items": [{"h": "Tap input or voice input (A/B)", "p": "3 of 6 said voice is a more immersive and smooth way to tour a museum; 3 of 6 said text is the more polite way to get information in a museum."}, {"h": "Switching between tap and voice", "p": "Round 1: 8 of 10 had strong preferences and kept their own method. Round 3: 7 of 10 read the switch as a click, so we changed it to a long press to prevent accidental touches."}, {"h": "Tap mode button", "p": "Round 1: 9 of 10 felt too much typing breaks the immersion. Round 2: 9 of 10 found the options didn’t fit their mental model. Round 3: 7 of 10 read the new options as clickable."}, {"h": "Visit route", "p": "Round 1: 6 of 10 felt the route was incomplete. Round 2: 2 of 10 couldn’t tell how to close the side bar, even with an animated hint."}]}, {"t": "gallery", "cols": 5, "items": [{"src": "img/echos-mode-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-mode-2.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-mode-3.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-2.webp", "r": "393/852", "fit": "contain"}]}, {"t": "gallery", "cols": 5, "items": [{"src": "img/echos-tap-3.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-4.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-2.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-3.webp", "r": "393/852", "fit": "contain"}]}, {"t": "sub", "text": "Main Tourist AI"}, {"t": "steps", "items": [{"h": "Navigation", "p": "Round 1: 9 of 10 wanted the map both small and full screen. Round 2: 6 of 10 wanted a bigger map while still being able to chat. Round 3: 7 of 10 preferred a map that adapts its size."}, {"h": "Export PDF", "p": "10 of 10 found it helpful and easy to follow; researchers said it lightens their memory load."}, {"h": "Elias’ communication style", "p": "Round 2: 8 of 10 found long messages hard to read and asked for highlights. Round 3: 10 of 10 said bold keywords made reading easier."}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/echos-nav.webp", "r": "632/816", "fit": "contain"}, {"src": "img/echos-pdf.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-style-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-style-2.webp", "r": "393/852", "fit": "contain"}]}, {"t": "sub", "text": "Artifact Dedicated AI"}, {"t": "gallery", "cols": 2, "items": [{"src": "img/echos-ai-1.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-2.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-3.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-4.webp", "r": "16/9", "fit": "cover"}]}, {"t": "gallery", "cols": 2, "items": [{"src": "img/echos-ai-5.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-6.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-7.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-8.webp", "r": "16/9", "fit": "cover"}]}], "live": null}];
+  const PROJECTS = [{"slug": "btob", "name": "24 Hour Home Care", "tags": ["Service Design", "2026"], "desc": "A self-service family portal that turns phone-call care coordination into a clear, transparent digital experience.", "cat": "24 Hour Home Care", "title": "A simpler way for families to manage home care.", "hero": "img/btob/hero.webp", "ratio": 1.7778, "meta": [["Role", "UI/UX Design,\nUXR, Prototyping,\nVisual Design"], ["Team", "Dakota Shao\nJoan Yu\nKeller Wang\nMaitreyi Verma"], ["Tools used", "Figma\nClaude\nVariant AI"], ["Timeline", "Jan – Apr 2026"]], "year": "2026", "blocks": [], "thumb": "img/FnrSI16JhOnY4g9JePQeupNBikY.webp", "custom": "btob"}, {"slug": "wildlink", "name": "Wildlink", "tags": ["Game Design"], "desc": "An interactive puzzle game developed with the Arroyos & Foothills Conservancy.", "cat": "Wildlink", "title": "An interactive puzzle game developed with the Arroyos & Foothills Conservancy.", "hero": "img/wl-cover.webp", "thumb": "img/wl-cover.webp", "ratio": "16/9", "meta": [["My role", "Research, game design, puzzle design, video production & editing"], ["Project", "Team project (Dakota, Louise, Leta)"], ["Timeline", "7 weeks"], ["Tools used", "Figma, Illustrator, After Effects, laser lab, CapCut"]], "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "Connecting puzzle pieces to solve mountain lion issues."}, {"t": "p", "text": ["The game highlights the survival challenges faced by mountain lions, an iconic species in Los Angeles County, and uses mixed media to engage middle and high school students and visitors to the AFC Education Center in wildlife conservation."]}, {"t": "label", "text": "Game rule"}, {"t": "h2", "text": "You play as a Protector of Mountain Lions, helping them survive in the wild areas near cities."}, {"t": "img", "src": "img/wl-game-rule.webp", "r": "16/9", "alt": "Puzzle pieces connecting a corridor for a mountain lion"}, {"t": "label", "text": "Problem"}, {"t": "h2", "text": "Mountain lions are at risk of separation and inbreeding."}, {"t": "p", "text": ["Habitat fragmentation and road development cut through the large, contiguous habitats they need to survive."]}, {"t": "cards", "items": [{"h": "Deaths from vehicle collisions", "p": "Each year, about 70 mountain lions are killed by vehicle collisions on California highways."}, {"h": "Wildfire", "p": "The 2018 Woolsey Fire burned nearly 100,000 acres in Los Angeles and Ventura counties, forcing mountain lions into riskier areas to find new habitats."}, {"h": "First-order inbreeding", "p": "Researchers found a 93% sperm deformity rate in 9 Santa Monica mountain lions, indicating inbreeding."}, {"h": "Poison", "p": "In the Santa Monica Mountains, 21 of 22 mountain lions tested positive for exposure and four died from poisoning."}]}, {"t": "label", "text": "Users"}, {"t": "cards", "items": [{"h": "Education center visitors", "p": "People who visit the AFC Education Center."}, {"h": "Students", "p": "Junior high and high school students."}]}, {"t": "label", "text": "Key learning goals"}, {"t": "sub", "text": "What are wildlife corridors?"}, {"t": "p", "text": ["Safe paths that animals use to move between habitats."]}, {"t": "sub", "text": "How can we help?"}, {"t": "p", "text": ["By understanding mountain lions' needs and challenges, see how human actions can transform the environment to be diverse, balanced, and connected."]}, {"t": "img", "src": "img/wl-corridors.webp", "r": "16/9", "alt": "When the game is over, all the corridors light up"}, {"t": "label", "text": "Prototype"}, {"t": "h2", "text": "Walkthrough video"}, {"t": "video", "yt": "L8b917ESDvs", "title": "Wildlink walkthrough video"}, {"t": "label", "text": "Inspiration"}, {"t": "gallery", "cols": 1, "items": [{"src": "img/wl-insp-puzzle.webp", "r": "1400/348", "alt": "Puzzle inspiration"}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/wl-insp-board.webp", "r": "3/4", "alt": "Board game"}, {"src": "img/wl-insp-map.webp", "r": "3/4", "alt": "Illustrated map"}, {"src": "img/wl-insp-animals.webp", "r": "3/4", "alt": "Flat animal illustrations"}, {"src": "img/wl-insp-palette.webp", "r": "3/4", "alt": "Color palette"}]}, {"t": "label", "text": "Design exploration"}, {"t": "gallery", "cols": 3, "items": [{"src": "img/wl-exp-physical.webp", "r": "4/3", "cap": "Physical"}, {"src": "img/wl-exp-digital.webp", "r": "4/3", "cap": "Digital"}, {"src": "img/wl-exp-mix.webp", "r": "4/3", "cap": "Mix"}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/wl-exp-wood.webp", "r": "1/1", "alt": "Laser-cut wood puzzle prototype"}, {"src": "img/wl-exp-acrylic.webp", "r": "1/1", "alt": "Acrylic puzzle piece"}, {"src": "img/wl-exp-cut-a.webp", "r": "1/1", "fit": "contain", "alt": "Laser cut file"}, {"src": "img/wl-exp-cut-b.webp", "r": "1/1", "fit": "contain", "alt": "Laser cut file"}]}, {"t": "label", "text": "Design decision"}, {"t": "p", "text": ["Our visual style uses flat vector design to align with our target audience."]}, {"t": "gallery", "cols": 2, "items": [{"src": "img/wl-dec-pieces.webp", "r": "1/1", "fit": "contain", "cap": "Puzzle pieces"}, {"src": "img/wl-dec-map.webp", "r": "1/1", "cap": "Map, buttons and color"}]}, {"t": "label", "text": "Game flow"}, {"t": "steps", "items": [{"h": "Onboard: Start", "p": "Choose a start piece to begin. Different start pieces lead to different missions."}, {"h": "Game: Clue", "p": "Match the clue piece to the start piece's theme to learn more about the mountain lions' situation."}, {"h": "Game: Problem", "p": "Find the problem the mountain lions face in this situation."}, {"h": "Game: Data", "p": "Relevant data on the challenges mountain lions face."}, {"h": "Game: Fact", "p": "How building corridors and crossings can help mountain lions overcome their challenges."}, {"h": "Activate: Action", "p": "An action that is already happening and supports corridor building."}]}], "live": null, "art": "wildlink"}, {"slug": "sante", "cat": "Sante", "title": "A brand identity built on calm confidence.", "hero": "img/H6Kl3tacfV4SMP5TOhzwWRZO6E.webp", "ratio": 1.6, "meta": [["Role", "Branding\nGraphic Design"], ["Team", ""], ["Tools used", "Figma\nIllustrator"], ["Year", "2024"]], "year": "2024", "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "Creating a wellness identity that feels calm without becoming quiet."}, {"t": "p", "text": ["Sante needed a visual language that felt clinical yet human. We built a wordmark and identity system around a single saturated blue, balancing medical trust with an approachable warmth across every touchpoint."]}, {"t": "label", "text": "Challenge"}, {"t": "h2", "text": "Making trust feel immediate in a crowded wellness space."}, {"t": "p", "text": ["The brand needed to communicate care, clarity, and credibility from the first impression. The challenge was avoiding the expected wellness clichés while still creating a visual language that felt soft, approachable, and reassuring."]}, {"t": "label", "text": "Approach"}, {"t": "h2", "text": "Building the system around restraint, rhythm, and warmth."}, {"t": "p", "text": ["The direction focused on a quiet but confident identity system. Every choice, from spacing to type scale, was shaped to feel intentional and composed rather than decorative."]}, {"t": "img", "src": "img/zyvsbMETnR5FCHSNNTXkB2LF8.webp", "r": 1.925}, {"t": "label", "text": "Research"}, {"t": "h2", "text": "Studying how calm brands earn attention."}, {"t": "p", "text": ["Research looked at wellness platforms, clinical care brands, and lifestyle studios to understand how visual systems can signal support without feeling generic or overly medical."]}, {"t": "sub", "text": "Competitor Analysis"}, {"t": "p", "text": ["Most competitors leaned heavily on muted palettes, soft photography, and familiar wellness language. That opened an opportunity to create something more structured, precise, and memorable while keeping the emotional tone gentle."]}, {"t": "img", "src": "img/7PzfK1rvfwOauy3jzBps1l5eU0.webp", "r": 1.7778}, {"t": "sub", "text": "Visual Direction"}, {"t": "p", "text": ["The visual direction combines clean typography, soft contrast, and measured spacing. The identity avoids loud gestures and instead relies on proportion, tone, and consistency to create recognition."]}, {"t": "img", "src": "img/ISAdHKkTACBmHJ9xCsFpzEwxw8.webp", "r": 1.4953}, {"t": "label", "text": "Design solutions"}, {"t": "h2", "text": "Designing a system that makes calm feel deliberate."}, {"t": "p", "text": ["The final design uses a restrained set of components and layouts that can flex across digital touchpoints while keeping the brand feeling composed and trustworthy."]}, {"t": "sub", "text": "Typography"}, {"t": "p", "text": ["Typography carries much of the brand’s personality. The type treatment is clear and understated, with enough warmth in scale and spacing to keep the experience feeling human."]}, {"t": "img", "src": "img/ymceQwQ8jWHg3v1LtOFctGXcDjU.webp", "r": 1.8768}, {"t": "sub", "text": "Layout System"}, {"t": "p", "text": ["Layouts are intentionally open and balanced, giving content room to breathe while guiding attention through a clear visual sequence."]}, {"t": "img", "src": "img/XJLfn3M5u3EQb1bZusySYCLZI.webp", "r": 1.5623}, {"t": "sub", "text": "Components"}, {"t": "p", "text": ["Reusable components were designed to feel light, functional, and consistent. Tags, cards, and content blocks share the same calm rhythm so the system stays cohesive as it expands."]}, {"t": "img", "src": "img/Q6QaXvqV10c7987dhbZ5UFJwMLQ.webp", "r": 1.64}, {"t": "label", "text": "Outcome"}, {"t": "h2", "text": "A wellness brand with clarity, softness, and staying power."}, {"t": "p", "text": ["The result is an identity that feels approachable without losing credibility. It gives Sante a calm digital presence that can grow across services, campaigns, and future product touchpoints."]}], "live": "img/H6Kl3tacfV4SMP5TOhzwWRZO6E.webp"}, {"slug": "echos", "name": "Echos", "tags": ["AI Voice Assistant"], "desc": "An AI voice tour assistant for The Getty Museum, with personalized guidance and interactive storytelling.", "cat": "Echos", "title": "An AI voice tour assistant for The Getty Museum.", "hero": "img/echos-cover.webp", "thumb": "img/echos-cover.webp", "ratio": "16/9", "meta": [["My role", "Research, user testing, design & prototype for Elias, video production"], ["Project", "Team project (Dakota, Louise, Leta)"], ["Timeline", "7 weeks"], ["Tools used", "Figma, ProtoPie, NFC smart tag, ElevenLabs (AI voice)"]], "blocks": [{"t": "label", "text": "Overview"}, {"t": "h2", "text": "A museum guide you can talk to."}, {"t": "p", "text": ["Echos is an AI voice tour assistant based on The Getty Museum, offering an immersive visiting experience through personalized guidance and interactive storytelling."]}, {"t": "label", "text": "User type"}, {"t": "h2", "text": "Four kinds of visitors, mapped by how long they stay and how deep they go."}, {"t": "p", "text": ["We placed visitors on two axes: a long or short time period at the museum, and an interest in general information or in detail."]}, {"t": "cards", "items": [{"h": "Explorers", "p": "Love wandering around, discovering new things, and embracing the unknown."}, {"h": "Immersive visitors", "p": "Seek deep, atmosphere-driven engagement with art or history."}, {"h": "Social visitors", "p": "Enjoy sharing cultural experiences with friends or family to strengthen bonds."}, {"h": "Researchers", "p": "Pursue detailed information on specific themes or exhibits."}]}, {"t": "label", "text": "AI bot persona"}, {"t": "h2", "text": "Two kinds of AI voice assistants for different visitors and artifacts."}, {"t": "p", "text": ["Main Tourist AI (Joey for explorers, Elias for researchers) offers primary guidance, while Artifact Dedicated AI is tailored for specific museum pieces. As an example, we developed a specialized version for The Getty’s “Golden Ticket.”"]}, {"t": "cards", "items": [{"h": "Joey · Main Tourist AI", "p": "The knowledgeable art companion, for explorers."}, {"h": "Elias · Main Tourist AI", "p": "The expert guide on demand, for researchers."}, {"h": "The Golden Ticket · Artifact Dedicated AI", "p": "The artifact itself tells its story."}, {"h": "The Creator · Artifact Dedicated AI", "p": "The anonymous artist behind the piece."}]}, {"t": "sub", "text": "For explorers: Joey"}, {"t": "p", "text": ["Quick assistance and directions: “Can you show me the nearest restroom?”", "Related artwork suggestions: “Are there any similar pieces I might like?”, also triggered by unintentional interaction."]}, {"t": "sub", "text": "For researchers: Elias"}, {"t": "p", "text": ["In-depth exploration: “Tell me more about this.”, plus more detailed follow-up questions.", "Clarification: “Can you clarify more on this?”"]}, {"t": "sub", "text": "Artifact + Creator"}, {"t": "p", "text": ["The Golden Ticket answers questions about the Greek belief in an afterlife, the legend of the Fountain of Memory, artifacts about afterlife and death from other cultures, and the inscriptions on its surface.", "The Creator talks about production tools, craftsmanship and materials."]}, {"t": "sub", "text": "Conversation flows"}, {"t": "gallery", "cols": 3, "items": [{"src": "img/echos-flow-joey.webp", "r": "1100/2610", "cap": "Joey"}, {"src": "img/echos-flow-elias.webp", "r": "1100/2106", "cap": "Elias"}, {"src": "img/echos-flow-artifact.webp", "r": "996/4096", "cap": "Artifact + Creator"}], "scroll": true}, {"t": "label", "text": "Prototype"}, {"t": "h2", "text": "Prototype showcase"}, {"t": "video", "yt": "s4v0EKhHiQg", "title": "Echos prototype showcase"}, {"t": "label", "text": "User tests"}, {"t": "h2", "text": "Three rounds of testing to validate, refine and decide."}, {"t": "p", "text": ["In our user testing, we focused on three key areas: validating core features and design, refining the overall user flow, and finalizing feature and design choices."]}, {"t": "img", "src": "img/echos-test-setup.webp", "r": "1175/661", "alt": "User test setup"}, {"t": "img", "src": "img/echos-test-photos.webp", "r": "1600/606", "alt": "User test sessions"}, {"t": "sub", "text": "General features"}, {"t": "steps", "items": [{"h": "Tap input or voice input (A/B)", "p": "3 of 6 said voice is a more immersive and smooth way to tour a museum; 3 of 6 said text is the more polite way to get information in a museum."}, {"h": "Switching between tap and voice", "p": "Round 1: 8 of 10 had strong preferences and kept their own method. Round 3: 7 of 10 read the switch as a click, so we changed it to a long press to prevent accidental touches."}, {"h": "Tap mode button", "p": "Round 1: 9 of 10 felt too much typing breaks the immersion. Round 2: 9 of 10 found the options didn’t fit their mental model. Round 3: 7 of 10 read the new options as clickable."}, {"h": "Visit route", "p": "Round 1: 6 of 10 felt the route was incomplete. Round 2: 2 of 10 couldn’t tell how to close the side bar, even with an animated hint."}]}, {"t": "gallery", "cols": 5, "items": [{"src": "img/echos-mode-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-mode-2.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-mode-3.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-2.webp", "r": "393/852", "fit": "contain"}]}, {"t": "gallery", "cols": 5, "items": [{"src": "img/echos-tap-3.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-tap-4.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-2.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-route-3.webp", "r": "393/852", "fit": "contain"}]}, {"t": "sub", "text": "Main Tourist AI"}, {"t": "steps", "items": [{"h": "Navigation", "p": "Round 1: 9 of 10 wanted the map both small and full screen. Round 2: 6 of 10 wanted a bigger map while still being able to chat. Round 3: 7 of 10 preferred a map that adapts its size."}, {"h": "Export PDF", "p": "10 of 10 found it helpful and easy to follow; researchers said it lightens their memory load."}, {"h": "Elias’ communication style", "p": "Round 2: 8 of 10 found long messages hard to read and asked for highlights. Round 3: 10 of 10 said bold keywords made reading easier."}]}, {"t": "gallery", "cols": 4, "items": [{"src": "img/echos-nav.webp", "r": "632/816", "fit": "contain"}, {"src": "img/echos-pdf.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-style-1.webp", "r": "393/852", "fit": "contain"}, {"src": "img/echos-style-2.webp", "r": "393/852", "fit": "contain"}]}, {"t": "sub", "text": "Artifact Dedicated AI"}, {"t": "gallery", "cols": 2, "items": [{"src": "img/echos-ai-1.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-2.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-3.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-4.webp", "r": "16/9", "fit": "cover"}]}, {"t": "gallery", "cols": 2, "items": [{"src": "img/echos-ai-5.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-6.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-7.webp", "r": "16/9", "fit": "cover"}, {"src": "img/echos-ai-8.webp", "r": "16/9", "fit": "cover"}]}], "live": null}];
   const projDesc = "Assisted in product design and feature iteration for enterprise healthcare systems developed for hospital research and data management";
   const TESTIMONIALS = [{"img": "data:image/webp;base64,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", "name": "Yongqiang Zhang", "role": "Senior UX Designer, Baidu", "quote": "“Dakota joined our team to work on a complex digital product and quickly proved that she could learn fast and take ownership of her work. She was easy to communicate with, always willing to ask questions, and brought a lot of positive energy to the team. It was a pleasure to mentor her and watch her grow.”"}, {"img": "data:image/webp;base64,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", "name": "Yi Wang", "role": "UX Designer, Tiktok", "quote": "“We struggled for months to scale our ad spend without tanking our conversion rates. Within 30 days of launching OptiFlow.io, our customer acquisition costs dropped by 35% while our inbound pipeline doubled. The automated campaign optimization handles the heavy lifting, finally allowing our growth team to focus on big-picture strategy instead of manual tweaking.”"}, {"img": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23e0e0e0'/%3E%3C/svg%3E", "name": "Name", "role": "Role, Company", "quote": "“Testimonial placeholder. A short quote from a teammate, mentor, or client will go here.”"}];
   const faqs = [["What kind of designer are you?", "I like stepping into unfamiliar systems, figuring out what actually matters, and choosing the right approach from there."], ["What do you care about most in a project?", "Clarity. I like turning something messy, technical, or overwhelming into something people can actually understand and use."], ["What kinds of projects excite you?", "Projects where there’s a real system to unpack—healthcare, mobility, AI, public experiences, or anything that goes beyond just making another app."], ["What are you like to work with?", "Curious, direct, and pretty involved. I ask a lot of questions, catch small inconsistencies, and usually keep pushing until the logic feels right."], ["Do you code?", "Enough to prototype ideas, understand what’s feasible, and have much better conversations with engineers."], ["What do you do outside of design?", "I dance, play guitar, recently started learning drums, and I’m usually picking up something new just because I want to know how it works."], ["What’s something people don’t expect about you?", "I can be very systems-oriented in my work, but I’m also drawn to playful, weird, and slightly unexpected interactions."]];
@@ -651,9 +890,217 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
   };
   const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const slugify = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  // ---------- 24 Hour Home Care: custom case-study body (ported from its own artifact) ----------
+  const CUSTOM = { btob: `
+  <section class="text sec">
+    <p class="label" id="sec-overview">Overview</p>
+    <h2>A family portal for managing a loved one’s home care</h2>
+    <p class="body"><a class="co" href="https://www.24hrcares.com" target="_blank" rel="noopener"><i><svg viewBox="-6 -9 78 76" aria-hidden="true"><path fill="#F89A35" d="M0.863988 16.418C0.431939 16.418 0.0616103 16.0477 0.123332 15.5539C1.41948 7.03636 8.82605 0.493896 17.7139 0.493896C22.7751 0.493896 27.5276 2.46898 30.7371 5.92538C33.8232 9.19661 35.3662 13.7023 35.0576 18.4548C34.6873 24.0097 29.873 29.8733 29.1324 30.7374L14.1958 49.1921C13.7638 49.7476 14.1341 50.4882 14.813 50.4882H34.6873C35.1194 50.4882 35.4897 50.8585 35.4897 51.2906V56.5369C35.4897 56.969 35.1194 57.3393 34.6873 57.3393H2.09842C1.66637 57.3393 1.29604 56.969 1.29604 56.5369V54.6235C1.29604 54.4384 1.35776 54.2532 1.4812 54.1298L23.9478 26.3552C25.5525 24.5035 28.0831 20.6151 28.2683 18.0845C28.4534 15.1219 27.5893 12.5913 25.7994 10.6162C23.8861 8.5794 20.9234 7.34497 17.7139 7.34497C12.5293 7.34497 8.20883 10.9248 7.09785 15.7391C6.97441 16.1711 6.6658 16.418 6.23375 16.418H0.863988ZM39.1931 38.5143H53.8828C54.3148 38.5143 54.6852 38.1439 54.6852 37.7119V19.5658C54.6852 18.8251 53.7593 18.4548 53.2656 19.072L38.5759 37.2181C38.1438 37.7119 38.5141 38.5143 39.1931 38.5143ZM58.9439 1.04939C59.808 0.000125408 61.4745 0.617339 61.4745 1.97521V37.7119C61.4745 38.1439 61.8448 38.5143 62.2769 38.5143H64.6223C65.0543 38.5143 65.4247 38.8846 65.4247 39.3166V44.563C65.4247 44.995 65.0543 45.3653 64.6223 45.3653H62.2769C61.8448 45.3653 61.4745 45.7357 61.4745 46.1677V56.5986C61.4745 57.0307 61.1042 57.401 60.6721 57.401H55.4258C54.9938 57.401 54.6234 57.0307 54.6234 56.5986V46.1677C54.6234 45.7357 54.2531 45.3653 53.8211 45.3653L26.4168 45.3036C25.9847 45.3036 25.6144 44.9333 25.6144 44.5012V42.5879C25.6144 42.4027 25.6761 42.2175 25.7995 42.0941L58.9439 1.04939Z"/></svg></i><span>24 Hour Home Care</span></a> coordinates in-home care for 30.5K clients across California, many with developmental disabilities. We partnered with the agency to design a mobile-first portal, with a desktop version, for the family members who coordinate that care and often provide it themselves. The agency later acquired the design IP.</p>
+  </section>
+
+  <div class="text sec">
+    <p class="label" id="sec-problem">Problem</p>
+    <h2>Families manage a budget of care hours they can’t see.</h2>
+    <p class="body">To find out how many hours they have left, when their caregiver is coming, or whether their care will be renewed, they have to call 24 Hour Home Care. Without that picture, hours go unused, and staff answer the same questions every day.</p>
+  </div>
+
+  <div class="fig" role="img" aria-label="Families ask basic questions one after another; the support team takes 2,500 Community Supports calls plus about 10,000 Disability Services calls, about 12,500 a week"><div class="st">
+    <div class="card l"><div class="hd"><i><svg viewBox="0 0 24 24" fill="none" stroke="#011c62" stroke-width="2.3" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3.5 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M14.5 14.6c.7-.4 1.6-.6 2.5-.6 2.2 0 3.9 1.6 4.4 4"/></svg></i>Families</div></div>
+    <div class="card r"><div class="hd"><i><svg viewBox="0 0 24 24" fill="none" stroke="#011c62" stroke-width="2.3" stroke-linecap="round"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/></svg></i>Support Team</div>
+      <div class="sum"><div class="bk">
+        <div class="parts"><span class="chip cs"><b>2,500</b><small>CS</small></span><span class="chip ds"><b>~10,000</b><small>DS</small></span></div>
+        <svg width="9" height="62" viewBox="0 0 9 62" fill="none"><path d="M1 1H3.5Q8 1 8 5.5V56.5Q8 61 3.5 61H1" stroke="#c4c4c4" stroke-width="1.5"/></svg>
+        <div class="total"><b class="cnt">12,500</b><em>calls a week</em></div>
+      </div></div>
+    </div>
+    <span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </div></div>
+
+  <section class="text sec">
+    <p class="label" id="sec-design-goals">Design goals</p>
+    <h2>How might we give families visibility into their care, so they book more of their hours and need less manual support?</h2>
+  </section>
+  <div class="goals">
+    <div class="goal"><p class="who hd2">For families</p><ul><li><i>01</i><div><b>Visibility into their care.</b><span>Hours, shifts and renewals, clear at a glance.</span></div></li><li><i>02</i><div><b>Keep track in one place.</b><span>No more piecing it together from calls and paperwork.</span></div></li></ul></div>
+    <div class="goal ag"><p class="who hd2">For 24 Hour Home Care</p><ul><li><i>03</i><div><b>Reduce routine calls.</b><span>Help families find answers without calling.</span></div></li><li><i>04</i><div><b>Authorized hours, fully used.</b><span>Help families spot unused hours and book them in time.</span></div></li></ul></div>
+  </div>
+
+  <section class="text sec">
+    <p class="label" id="sec-key-solutions">Key solutions</p>
+    <h2>How the design meets the goals</h2>
+  </section>
+
+  <div class="flows"><div class="flow"><div class="demo" data-step="1900"><div class="phone"><div class="screen"><span class="tap" aria-hidden="true"></span><div class="scr img on"><img src="img/btob/screens/s1a.webp" alt="Hours left on Home" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s2a.webp" alt="“Behind pace”" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/sc1.webp" alt="Pick a plan" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/sc2.webp" alt="Date, time, address" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/sc3.webp" alt="Usual caregivers busy" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/sc4.webp" alt="Filter by needs" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/sc5.webp" alt="Caregivers apply" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s2b.webp" alt="Review profile" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s2c.webp" alt="Booked" loading="lazy"></div></div></div><ol class="steps"><li class="on" data-tap=".81,.52"><button type="button"><span class="n">01</span><span class="l">Hours left on Home</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".5,.893"><button type="button"><span class="n">02</span><span class="l">“Behind pace”</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".5,.938"><button type="button"><span class="n">03</span><span class="l">Pick a plan</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".56,.938"><button type="button"><span class="n">04</span><span class="l">Date, time, address</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".5,.43"><button type="button"><span class="n">05</span><span class="l">Usual caregivers busy</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".56,.938"><button type="button"><span class="n">06</span><span class="l">Filter by needs</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".45,.64"><button type="button"><span class="n">07</span><span class="l">Caregivers apply</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".5,.939"><button type="button"><span class="n">08</span><span class="l">Review profile</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">09</span><span class="l">Booked</span><span class="bar"><i></i></span></button></li></ol></div><div class="ft"><p class="g">Goals 01 · 04</p><h3>See the hours left, and book them in time.</h3><p>Home opens on the hours left in each plan. When a family falls behind, they can book an agency caregiver in three steps: plan, time, and someone who fits their needs.</p></div></div><div class="flow"><div class="demo"><div class="phone"><div class="screen"><span class="tap" aria-hidden="true"></span><div class="scr img on"><img src="img/btob/screens/s3a.webp" alt="Live on the lock screen" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s3b.webp" alt="Activity log" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s3c.webp" alt="Rate the shift" loading="lazy"></div></div></div><ol class="steps"><li class="on" data-tap=".5,.77"><button type="button"><span class="n">01</span><span class="l">Live on the lock screen</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">02</span><span class="l">Activity log</span><span class="bar"><i></i></span></button></li><li class="" data-tap=".72,.495"><button type="button"><span class="n">03</span><span class="l">Rate the shift</span><span class="bar"><i></i></span></button></li></ol></div><div class="ft"><p class="g">Goals 01 · 03</p><h3>Follow a shift without picking up the phone.</h3><p>A live card on the lock screen and in the app shows the caregiver’s time and tasks. When the shift ends, they rate it.</p></div></div><div class="flow"><div class="demo"><div class="phone"><div class="screen"><span class="tap" aria-hidden="true"></span><div class="scr img on"><img src="img/btob/screens/s4a.webp" alt="Expiring alert" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s4b.webp" alt="What to do next" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s4c.webp" alt="Ask support" loading="lazy"></div></div></div><ol class="steps"><li class="on" data-tap=".5,.80"><button type="button"><span class="n">01</span><span class="l">Expiring alert</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">02</span><span class="l">What to do next</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">03</span><span class="l">Ask support</span><span class="bar"><i></i></span></button></li></ol></div><div class="ft"><p class="g">Goals 02 · 03</p><h3>Renew care before it runs out.</h3><p>A notification arrives before a plan expires. Plan details explain what to do next and who to contact.</p></div></div></div>
+
+  <section class="text sec">
+    <p class="label" id="sec-key-findings">Key findings</p>
+    <h2>What we learned from families</h2>
+  </section>
+  <div class="kf">
+    <div><p class="big">95%</p><p>of caregivers are family or friends the client chose. The person managing care is often the one giving it.</p></div>
+    <div><p class="big">“Am I maximizing the hours?”</p><p>Families plan around a budget of hours, but can’t see the balance.</p></div>
+  </div>
+
+  <section class="text sec">
+    <p class="label" id="sec-design-decisions">Design decisions</p>
+  </section>
+  <div class="dec">
+    <p class="n">01</p><h3>Show hours left, and whether that’s on pace.</h3>
+  </div>
+
+  <div class="shift">
+    <div class="sht"><p class="k">Low-fi → Mid-fi</p><h4>From a ratio to a pace</h4><p>A mark shows where usage should be today.</p></div>
+    <div class="shr"><figure class=""><div class="im"><img src="img/btob/evo/l1.webp" alt="Low-fi Home: a ring showing 34 of 52 hours remaining and hours used this week" loading="lazy"></div><figcaption>Low-fi · ring, 34 / 52</figcaption></figure><span class="ar" aria-hidden="true">→</span><figure class=""><div class="im"><img src="img/btob/evo/p2.webp" alt="Mid-fi: 28 of 40 hours with a mark for where usage should be today, and the rule for behind pace" loading="lazy"></div><figcaption>Mid-fi · pace mark + rule</figcaption></figure></div>
+  </div>
+
+  <div class="shift">
+    <div class="sht"><p class="k">Mid-fi → Testing</p><h4>From a tick mark to a sentence</h4><p>The card says it: 10 hours will go unused.</p></div>
+    <div class="shr"><figure class=""><div class="im"><img src="img/btob/evo/p2.webp" alt="Mid-fi card with a pace tick and a behind-pace tag" loading="lazy"></div><figcaption>Mid-fi · tick + tag</figcaption></figure><span class="ar" aria-hidden="true">→</span><figure class=""><div class="im"><img src="img/btob/evo/t1.webp" alt="Tested card: at this rate, 10 authorized hours will go unused this period; schedule more hours" loading="lazy"></div><figcaption>Testing · hours at stake, one button</figcaption></figure></div>
+  </div>
+
+  <div class="shift">
+    <div class="sht"><p class="k">High-fi → Final</p><h4>From hours used to hours left</h4><p>No math needed. Hours left comes first.</p></div>
+    <div class="shr"><figure class=""><div class="im"><img src="img/btob/evo/e3.webp" alt="High-fi: 28 of 40 hours with a progress bar" loading="lazy"></div><figcaption>High-fi · 28 / 40</figcaption></figure><span class="ar" aria-hidden="true">→</span><figure class=""><div class="im"><img src="img/btob/evo/e4.webp" alt="High-fi: 8 hours left above a gauge" loading="lazy"></div><figcaption>Tried · gauge</figcaption></figure><span class="ar" aria-hidden="true">→</span><figure class="fin"><div class="im"><img src="img/btob/evo/e5.webp" alt="Final: 16 hours left with segmented bars and a pace note" loading="lazy"></div><figcaption>Final</figcaption></figure></div>
+  </div>
+
+  <div class="dec">
+    <p class="n">02</p><h3>Warn early, in hours, with a way to fix it.</h3>
+    <p>When a family falls behind, the app says how many hours may go unused by the end date, how many more a week would close the gap, and lets them book from the same sheet.</p>
+  </div>
+  <div class="dfig">
+    <div class="g3">
+      <figure><img src="img/btob/evo/f-behind.webp" alt="Home card with a note that some hours may go unused" loading="lazy"><figcaption><b>1</b>Note on Home</figcaption></figure>
+      <figure><img src="img/btob/evo/w-sheet.webp" alt="Behind pace sheet: about 6 hours may go unused by Apr 1; book 2 more hours a week" loading="lazy"><figcaption><b>2</b>How many, and how to catch up</figcaption></figure>
+      <figure><img src="img/btob/evo/w-booked.webp" alt="Appointment confirmed with an agency caregiver" loading="lazy"><figcaption><b>3</b>Booked</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="dec">
+    <p class="n">03</p><h3>One app with roles, not two portals.</h3>
+    <p>Managers and caregivers sign in to the same app. The header shows who you’re acting for, and one tap switches.</p>
+  </div>
+  <div class="dfig">
+    <div class="split">
+      <div class="apps">
+        <div class="blk"><p class="t">Before</p><div class="row2"><span class="app"><i></i>Family portal</span><span class="sw">⇄</span><span class="app"><i></i>Caregiver app</span></div><p class="note">Same person, two sign-ins</p></div>
+        <div class="down" aria-hidden="true">↓</div>
+        <div class="blk"><p class="t">After</p><div class="row2"><span class="app one"><i></i>24 Hour Home Care</span></div><div class="row2 roles"><span class="role">Point of contact</span><span class="role">Caregiver</span></div><p class="note">One sign-in, the role sets what you see</p></div>
+      </div>
+      <div class="demo"><div class="phone"><div class="screen"><span class="tap" aria-hidden="true"></span><div class="scr img on"><img src="img/btob/screens/s5a.webp" alt="Switch account" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s5b.webp" alt="Another person’s plan" loading="lazy"></div><div class="scr img"><img src="img/btob/screens/s5c.webp" alt="Timesheet" loading="lazy"></div></div></div><ol class="steps"><li class="on" data-tap=".42,.82"><button type="button"><span class="n">01</span><span class="l">Switch account</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">02</span><span class="l">Another person’s plan</span><span class="bar"><i></i></span></button></li><li class=""><button type="button"><span class="n">03</span><span class="l">Timesheet</span><span class="bar"><i></i></span></button></li></ol></div>
+    </div>
+  </div>
+
+  <section class="text sec">
+    <p class="label" id="sec-design-system">Design system</p>
+    <h2>Built on the agency’s Salesforce components</h2>
+    <p class="body">The portal runs on Salesforce Lightning, so we started from its stock components, adapting them to match 24 Hour Home Care’s brand and make information easier to read. We documented the changes and the reasons behind them for the agency’s development team.</p>
+  </section>
+  <figure class="dsfig"><img src="img/btob/ds/components.webp" alt="Stock versus modified Lightning components (button, search field, chat bubbles) with a table of each property changed and why" loading="lazy"></figure>
+  <div class="tokens">
+    <div class="tok" style="background:#011c62"><b>Navy</b>#011C62</div>
+    <div class="tok" style="background:#0c65c3"><b>Blue</b>#0C65C3</div>
+    <div class="tok" style="background:#f79000"><b>Orange</b>#F79000</div>
+    <div class="tok type"><span>DM Sans</span><small>Regular · Semibold · Bold, 14–40px</small></div>
+  </div>
+
+  <section class="text sec outc">
+    <div>
+      <p class="label" id="sec-outcome">Outcome</p>
+      <h2>24 Hour Home Care acquired the design IP.</h2>
+      <p class="body">At the end of the studio, the agency bought the rights to the portal designs.</p>
+    </div>
+    <figure class="seal" role="img" aria-label="ArtCenter + 24 Hour Home Care Sponsored Studio badge">
+      <span class="burst"><i style="--a:0deg;--d:74px;--c:#e8552b"></i><i style="--a:30deg;--d:86px;--c:#011c62"></i><i style="--a:60deg;--d:98px;--c:#f79000"></i><i style="--a:90deg;--d:74px;--c:#e8552b"></i><i style="--a:120deg;--d:86px;--c:#011c62"></i><i style="--a:150deg;--d:98px;--c:#f79000"></i><i style="--a:180deg;--d:74px;--c:#e8552b"></i><i style="--a:210deg;--d:86px;--c:#011c62"></i><i style="--a:240deg;--d:98px;--c:#f79000"></i><i style="--a:270deg;--d:74px;--c:#e8552b"></i><i style="--a:300deg;--d:86px;--c:#011c62"></i><i style="--a:330deg;--d:98px;--c:#f79000"></i></span>
+      <span class="badge"><b>ArtCenter</b><b><em>+</em>24 Hour</b><b>Home Care</b><s>Sponsored</s><s>Studio</s></span>
+    </figure>
+  </section>
+
+  <section class="text sec">
+    <p class="label" id="sec-reflection">Reflection</p>
+  </section>
+  <div class="refl">
+    <div><h3>Ask who else the user is.</h3><p>We started by designing for a family member who manages care. Midway, we learned most of them also work the shifts. That one fact turned two products into one.</p></div>
+    <div><h3>A number needs a sentence.</h3><p>Showing 16 hours left wasn’t enough. Families needed to know whether that was on track, so we added a line that says what the number means.</p></div>
+  </div>
+` };
+  const CUSTOM_SECS = { btob: ["Overview", "Problem", "Design goals", "Key solutions", "Key findings", "Design decisions", "Design system", "Outcome", "Reflection"] };
+  function btobMount(root) {
+
+  var still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // key solutions: chaptered demos
+  var STEP0=2300;
+  [].slice.call(root.querySelectorAll('.demo')).forEach(function(d){
+    var lis=[].slice.call(d.querySelectorAll('.steps li')), scr=[].slice.call(d.querySelectorAll('.scr')), dot=d.querySelector('.tap');
+    var cur=0, held=false, timers=[], visible=false, STEP=+d.getAttribute('data-step')||STEP0;
+    function clear(){timers.forEach(clearTimeout);timers=[];dot.classList.remove('in','down');}
+    function later(f,t){timers.push(setTimeout(f,t));}
+    function show(k){cur=k;lis.forEach(function(l,j){l.classList.toggle('on',j===k);var b=l.querySelector('.bar i');b.style.transition='none';b.style.width=j<k?'100%':'0';});scr.forEach(function(x,j){x.classList.toggle('on',j===k);});}
+    function go(){clear();if(held||!visible||still)return;var li=lis[cur],b=li.querySelector('.bar i');b.offsetWidth;b.style.transition='width '+STEP+'ms linear';b.style.width='100%';
+      var t=li.getAttribute('data-tap');
+      if(t){t=t.split(',');dot.style.left=(t[0]*100)+'%';dot.style.top=(t[1]*100)+'%';
+        later(function(){dot.classList.add('in');},STEP-760);
+        later(function(){dot.classList.add('down');},STEP-360);
+        later(function(){dot.classList.remove('down');},STEP-180);}
+      later(function(){dot.classList.remove('in');show((cur+1)%lis.length);go();},STEP);}
+    lis.forEach(function(l){var bt=l.querySelector('button');bt.setAttribute('data-tip',l.querySelector('.l').textContent);bt.setAttribute('aria-label',l.querySelector('.l').textContent);});
+    lis.forEach(function(l,j){l.querySelector('button').addEventListener('click',function(){
+      if(held&&cur===j){held=false;l.classList.remove('held');go();return;}
+      lis.forEach(function(x){x.classList.remove('held');});clear();show(j);held=true;l.classList.add('held');});});
+    if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){visible=e.isIntersecting;if(visible)go();else clear();});},{threshold:.5}).observe(d);}
+    else{visible=true;go();}
+  });
+
+
+  // outcome: stamp the badge and throw confetti each time the block scrolls into view
+  var outc=root.querySelector('.outc'), seal=root.querySelector('.seal');
+  if(outc&&seal){
+    var cv=document.createElement('canvas');cv.className='confetti';cv.setAttribute('aria-hidden','true');outc.appendChild(cv);
+    var cx=cv.getContext('2d'),raf=0,parts=[];
+    var COL=['#e8552b','#011c62','#f79000','#0c65c3','#9fc2ec'];
+    function fire(){
+      var r=outc.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),W=r.width+160,H=r.height+460;
+      cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';cx.setTransform(dpr,0,0,dpr,0,0);
+      parts=[];for(var i=0;i<100;i++){var ribbon=i%3===0,left=i%2===0,sp=Math.random();parts.push({x:left?80:80+r.width,y:H-230,vx:(left?1:-1)*(2+sp*5),vy:-(8+Math.random()*5.5),w:ribbon?3:7,h:ribbon?16:5,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,ph:Math.random()*6.28,c:COL[i%COL.length],d:Math.random()*.2});}
+      cancelAnimationFrame(raf);var t0=performance.now();
+      (function step(now){var t=(now-t0)/1000;cx.clearRect(0,0,W,H);
+        var K=.55,DR=Math.pow(.975,K);parts.forEach(function(p){if(t<p.d)return;p.ph+=.12*K;p.vx*=DR;p.vy=p.vy*DR+.24*K;p.x+=(p.vx+(p.vy>0?Math.sin(p.ph)*.8:0))*K;p.y+=p.vy*K;p.r+=p.vr*K;
+          var a=Math.max(0,1-Math.max(0,t-4.4)/1.4);cx.save();cx.globalAlpha=a;cx.translate(p.x,p.y);cx.rotate(p.r);cx.scale(1,Math.cos(p.ph*.7));cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();});
+        if(t<5.9)raf=requestAnimationFrame(step);else cx.clearRect(0,0,W,H);})(t0);
+    }
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){es.forEach(function(e){
+        if(e.isIntersecting){seal.classList.remove('in');void seal.offsetWidth;seal.classList.add('in');if(!still)fire();}
+        else{seal.classList.remove('in');}
+      });},{threshold:.55}).observe(outc);
+    } else seal.classList.add('in');
+  }
+
+  var Q=['How many hours are left?','Who’s coming tomorrow?','Is our renewal approved?','Did the shift get logged?','What’s our weekly limit?'];
+  var T=['t1','t2','t3'];
+  var fig=root.querySelector('.fig'), st=fig.firstElementChild, L=st.querySelector('.card.l'), R=st.querySelector('.card.r'), cnt=R.querySelector('.cnt');
+  function fit(){st.style.setProperty('--s',Math.min(1,fig.clientWidth/640));}
+  fit(); window.addEventListener('resize',fit);
+  var CY=130; // bubble, arrow and total share this line
+  function make(i){var b=document.createElement('div');b.className='b '+T[i%3];b.textContent=Q[i];L.appendChild(b);b._x=157-b.offsetWidth/2;return b;}
+  function at(b,dy,k,o,instant){if(instant)b.style.transition='none';b.style.transform='translate('+b._x+'px,'+(CY-16+dy)+'px) scale('+k+')';b.style.opacity=o;if(instant){b.offsetWidth;b.style.transition='';}}
+  var i=0,cur=make(0);at(cur,0,1,1,true);
+
+  // count-up plays each time the figure scrolls into view
+  var raf;
+  function count(){var t0=null,D=1400,END=12500;cancelAnimationFrame(raf);
+    (function f(t){if(!t0)t0=t;var k=Math.min((t-t0)/D,1),e=1-Math.pow(1-k,3);cnt.textContent=Math.round(END*e).toLocaleString('en-US');if(k<1)raf=requestAnimationFrame(f);})(performance.now());}
+  function play(){R.classList.remove('go');cnt.textContent='0';R.offsetWidth;R.classList.add('go');setTimeout(count,450);}
+  if(still){R.classList.add('go');return;}
+  if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)play();else R.classList.remove('go');});},{threshold:.6}).observe(fig);}
+  else play();
+
+  var iv=setInterval(function(){if(!root.isConnected){clearInterval(iv);return;}var old=cur;i=(i+1)%Q.length;cur=make(i);at(cur,24,.94,0,true);at(old,-24,.94,0);setTimeout(function(){at(cur,0,1,1);},90);setTimeout(function(){old.remove();},800);},2200);
+  }
   const caseStudy = (p) => {
     const open = PROJECTS.filter((q) => !q.locked), i = open.indexOf(p), prev = open[i - 1], next = open[i + 1];
-    const body = p.blocks.map((b) => {
+    const body = p.custom ? CUSTOM[p.custom] : p.blocks.map((b) => {
       if (b.t === "label") return `<p class="cs-label" id="sec-${slugify(b.text)}">${esc(b.text)}</p>`;
       if (b.t === "h2") return `<h2 class="cs-h2">${esc(b.text)}</h2>`;
       if (b.t === "sub") return `<p class="cs-sub">${esc(b.text)}</p>`;
@@ -668,8 +1115,9 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
     const pn = (q, dir, cls) => q
       ? `<a class="${cls}" href="#work-${q.slug}"><span>${dir}</span><b>${esc(q.cat)}</b></a>`
       : `<div class="${cls}"><span>${dir}</span><b>More projects soon…</b></div>`;
-    const map = p.blocks.filter((b) => b.t === "label").map((b) =>
-      `<a href="#work-${p.slug}" data-target="sec-${slugify(b.text)}">${esc(b.text.replace(/\b\w/g, (c) => c.toUpperCase()))}</a>`).join("");
+    const labels = p.custom ? CUSTOM_SECS[p.custom] : p.blocks.filter((b) => b.t === "label").map((b) => b.text);
+    const map = labels.map((t) =>
+      `<a href="#work-${p.slug}" data-target="sec-${slugify(t)}">${esc(t.replace(/\b\w/g, (c) => c.toUpperCase()))}</a>`).join("");
     return `
     <aside class="works-map" aria-label="Sections">
       <a class="wm-back" href="#works"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M6 2.5 1.5 7 6 11.5M1.5 7h11" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Back</a>
@@ -683,7 +1131,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
       </header>
       ${p.art ? `<div class="cs-hero cs-art" style="aspect-ratio:${p.ratio}">${HERO[p.art]}</div>` : `<img class="cs-hero" src="${p.hero}" alt="${esc(p.cat)}" style="aspect-ratio:${p.ratio}">`}
       <dl class="cs-meta" style="--n:${p.meta.length}">${p.meta.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v).replace(/\n/g, "<br>") || "&nbsp;"}</dd></div>`).join("")}</dl>
-      <div class="cs-body">${body}</div>
+      <div class="cs-body${p.custom ? " cs24" : ""}">${body}</div>
       ${p.live ? `<div class="cs-live"><p class="cs-label">Live website</p>
         <div class="monitor"><div class="screen"><img src="${p.live}" alt=""></div></div>
         <div class="stand"><i></i><b></b></div></div>` : ""}
@@ -1055,6 +1503,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--bg) 88%, tran
     } : null;
     if (spy) spy();
     if (h === "playground") pgMount(); else pgClose();
+    if (work && work.custom === "btob") btobMount(app.querySelector(".cs24"));
     app.querySelectorAll(".inst").forEach((b) => {
       const d = kit.find((x) => x.k === b.dataset.k);
       b.addEventListener("pointerdown", (e) => hit(b, d, e));
