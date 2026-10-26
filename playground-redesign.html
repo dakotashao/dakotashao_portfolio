@@ -686,34 +686,41 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 .pg-lay button[aria-pressed="true"] { background: #fff; color: #0d0d0d; }
 .pg-edge { display: none; }
 .pg-wide .tx { display: none; }
-/* A: stage on top, one information bar under it.
-   Row 1 reads as one line: name, its tags, then the actions on the right. Row 2 is the story, kept to the text column width.
-   Variants move onto the stage (bottom left, as on the wall); the arrows become one control with a counter. */
+/* A: one frame, three bands — a viewer bar (where you are, and the window controls), the stage, and a caption.
+   Navigation and window controls sit together at the top; what the piece is sits under it, in fixed slots:
+   name and story on the left, the facts in labelled columns, the one action on the right. */
 .pg-count { display: none; }
-.lay-a .pg-shell { width: min(1040px, 100%); height: min(740px, 100%); grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 0; }
-.lay-a .pg-side { background: none; border-radius: 0; padding: 20px 4px 0; overflow: visible; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "title tags acts" "say say ."; column-gap: 12px; row-gap: 6px; align-items: center; }
+.pg-bar { display: none; }
+.lay-a .pg-shell { width: min(1040px, 100%); height: min(780px, 100%); grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 0; background: var(--card); border-radius: 20px; overflow: hidden; }
+.lay-a .pg-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 0; }
+.lay-a .pg-bar > div { display: flex; align-items: center; gap: 4px; }
+.lay-a .pg-bar .pg-tools { position: static; display: flex; gap: 4px; }
+.lay-a .pg-bar .pg-tool { width: 32px; height: 32px; border-radius: 8px; background: none; color: var(--muted); }
+.lay-a .pg-bar .pg-tool:hover { background: var(--chip); color: var(--fg); }
+.lay-a .pg-pager { display: flex; gap: 0; align-items: center; height: 32px; }
+.lay-a .pg-pager .pg-wide { flex: none; width: 32px; height: 32px; padding: 0; border-radius: 8px; background: none; color: var(--muted); }
+.lay-a .pg-pager .pg-wide:hover { background: var(--chip); color: var(--fg); }
+.lay-a .pg-count { display: block; min-width: 56px; text-align: center; font-size: 14px; letter-spacing: -0.011em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lay-a .pg-block { border-radius: 0; background: none; }
+.lay-a .pg-side { background: none; border-radius: 0; margin: 0 24px; padding: 20px 0 24px; border-top: 1px solid var(--line); overflow: visible;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "title facts acts" "say facts acts"; column-gap: 40px; row-gap: 4px; align-items: start; }
 .lay-a .pg-head { grid-area: title; }
-.lay-a .pg-head h2 { white-space: nowrap; }
-.lay-a .pg-head .pg-tool { position: absolute; top: 12px; right: 52px; margin: 0; background: #fff; color: #0d0d0d; }
-.lay-a .pg-rows { grid-area: tags; display: flex; flex-wrap: wrap; gap: 4px; }
-.lay-a .pg-row { border: 0; padding: 4px 10px; border-radius: 40px; background: var(--card); color: var(--muted); font-size: 14px; line-height: 14px; letter-spacing: -0.04em; }
-.lay-a .pg-row span:first-child { display: none; }
+.lay-a .pg-head h2 { font-size: 18px; font-weight: 600; line-height: 21.5px; letter-spacing: -0.02em; }
+.lay-a .pg-say { grid-area: say; margin: 0; max-width: 480px; font-size: 14.5px; line-height: 19px; letter-spacing: -0.011em; color: var(--muted); }
+.lay-a .pg-rows { grid-area: facts; display: flex; gap: 32px; }
+.lay-a .pg-row { flex-direction: column; justify-content: flex-start; gap: 2px; padding: 0; border: 0; font-size: 14px; line-height: 20px; letter-spacing: -0.011em; }
 .lay-a .pg-row:last-child { border: 0; }
-.lay-a .pg-say { grid-area: say; margin: 0; max-width: 560px; font-size: 16px; line-height: 24px; letter-spacing: -0.011em; color: var(--muted); }
-.lay-a .pg-acts { grid-area: acts; margin: 0; padding: 0; display: flex; align-items: center; gap: 8px; }
-.lay-a .pg-pager { gap: 0; align-items: center; height: 35px; padding: 0 2px; border-radius: 10px; background: var(--card); }
-.lay-a .pg-pager .pg-wide { flex: none; width: 32px; height: 31px; padding: 0; border-radius: 8px; background: none; }
-.lay-a .pg-pager .pg-wide:hover { background: var(--chip); }
-.lay-a .pg-count { display: block; min-width: 52px; text-align: center; font-size: 14px; letter-spacing: -0.011em; color: var(--muted); font-variant-numeric: tabular-nums; }
-.lay-a #pg-d-open { height: 35px; }
-.lay-a .pg-block #pg-d-vsw { position: absolute; left: 12px; bottom: 12px; z-index: 3; }
+.lay-a .pg-row span:first-child { font-size: 13px; color: var(--muted); }
+.lay-a .pg-row span:last-child { color: var(--fg); }
+.lay-a .pg-acts { grid-area: acts; margin: 0; padding: 2px 0 0; display: flex; }
+.lay-a #pg-d-open { padding: 6px 14px; }
+.lay-a .pg-block #pg-d-vsw { position: absolute; left: 12px; bottom: 12px; z-index: 3; display: flex; gap: 6px; }
 .lay-a .pg-block .pg-ctl { margin: 0; }
 .lay-a .pg-block .pg-ctl-label { display: none; }
 .lay-a .pg-block .pg-ctl .pg-seg { background: rgba(0, 0, 0, .04); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .lay-a .pg-block .pg-ctl .pg-seg .thumb { background: #fff; }
 .lay-a .pg-block .pg-ctl .pg-seg button { color: rgba(0, 0, 0, .4); }
 .lay-a .pg-block .pg-ctl .pg-seg button[aria-pressed="true"] { color: #0d0d0d; }
-.lay-a .pg-block > #pg-d-vsw { display: flex; gap: 6px; }
 /* B: a small case-study page that scrolls, like 24 Hour Home Care and Echos */
 .lay-b { overflow-y: auto; place-items: start center; padding: 64px 24px 96px; }
 .lay-b .pg-scrim { position: fixed; }
@@ -762,7 +769,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 .lay-c .pg-block .pg-rnd { right: 16px; bottom: 16px; }
 @media (max-width: 759px) {
   .pg-lay span { display: none; }
-  .lay-a .pg-side { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "tags" "say" "acts"; row-gap: 10px; }
+  .lay-a .pg-side { margin: 0 16px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "say" "facts" "acts"; row-gap: 12px; }
   .lay-b .pg-rows { grid-template-columns: repeat(2, auto); justify-content: start; }
   .lay-c .pg-side { left: 8px; right: 8px; width: auto; bottom: 8px; max-height: 50%; }
 }
@@ -1445,8 +1452,19 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   }
   function pgPlaceVsw() {
     const v = pgEl("pg-d-vsw"), d = pgEl("pg-dtl"); if (!v || !d) return;
-    if (d.classList.contains("lay-a")) d.querySelector(".pg-block").appendChild(v);
-    else d.querySelector(".pg-side").insertBefore(v, pgEl("pg-d-rows"));
+    const shell = d.querySelector(".pg-shell"), side = d.querySelector(".pg-side"), block = d.querySelector(".pg-block");
+    const pager = pgEl("pg-d-pager"), tools = d.querySelector(".pg-tools"), x = pgEl("pg-d-x"), acts = d.querySelector(".pg-acts");
+    let bar = d.querySelector(".pg-bar");
+    if (d.classList.contains("lay-a")) {
+      if (!bar) { bar = document.createElement("div"); bar.className = "pg-bar"; bar.innerHTML = '<div class="l"></div><div class="r"></div>'; }
+      shell.insertBefore(bar, block);
+      bar.firstChild.appendChild(pager); bar.lastChild.append(tools, x);
+      block.appendChild(v);
+    } else {
+      if (bar) bar.remove();
+      acts.insertBefore(pager, acts.firstChild); block.appendChild(tools); d.querySelector(".pg-head").appendChild(x);
+      side.insertBefore(v, pgEl("pg-d-rows"));
+    }
     requestAnimationFrame(() => pgThumbs(v, true));
   }
   function pgClose() {
