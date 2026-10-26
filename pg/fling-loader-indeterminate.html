@@ -16,7 +16,7 @@
 }
 *{box-sizing:border-box}
 /* stage = the whole handset at its natural size + 40px air; the lean-in may spill past it and is framed by the card */
-#stage{overflow:hidden}
+#stage{overflow:visible} /* the zoom used to crop at the stage box, which sits inside the card; the card edge does the cropping now */
 
 
 /* ---------- handset: photo, with the LCD placed in its screen window ---------- */
