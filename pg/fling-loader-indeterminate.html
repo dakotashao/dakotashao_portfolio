@@ -465,7 +465,7 @@ hw('kLeft', 'left'); hw('kRight', 'right'); hw('kNavi', 'right');
 /* ---------- camera: pressing SEND leans in; OK at the end pulls back ---------- */
 const stageEl = document.getElementById('stage'), handsetEl = document.getElementById('handset');
 let holdOut = false;                               // after OK, stay out until the pointer leaves once
-function zoomIn(force){ if(force) holdOut = false; if(!holdOut) stageEl.classList.add('zoom'); }
+function zoomIn(force){ if(new URLSearchParams(location.search).has('detail')) return; /* detail view: the stage is big enough to read the screen, keep the whole phone */ if(force) holdOut = false; if(!holdOut) stageEl.classList.add('zoom'); }
 function zoomOut(hold){ stageEl.classList.remove('zoom'); hover = null; navDown = null; if(hold) holdOut = true; }
 stageEl.addEventListener('pointerleave', () => { holdOut = false; if(state === 'confirm') zoomOut(); });
 document.fonts && document.fonts.load(`40px ${CONFIG.font.family}`).then(measureCap).catch(()=>{});

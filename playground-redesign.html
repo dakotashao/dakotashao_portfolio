@@ -1413,7 +1413,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       if (f) { pg.frames.delete(f.contentWindow); f.src = pgSrc(pgSlug(it)); f.addEventListener("load", () => pg.frames.set(f.contentWindow, card.querySelector(".play")), { once: true }); }
       pgSetPlay(card.querySelector(".play"), false);
     }
-    if (pg.cur >= 0 && pg.shown[pg.cur] === it) { pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1"); pgSetPlay(pgEl("pg-d-play"), false); pgSyncSegs(pgEl("pg-d-vsw"), it); }
+    if (pg.cur >= 0 && pg.shown[pg.cur] === it) { pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1&detail=1"); pgSetPlay(pgEl("pg-d-play"), false); pgSyncSegs(pgEl("pg-d-vsw"), it); }
   }
   function pgOpen(i) {
     if (pg.cur < 0) pg.opener = document.activeElement;
@@ -1423,7 +1423,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     pgEl("pg-d-say").textContent = it.say;
     pgEl("pg-d-rows").hidden = !!it.minimal; pgEl("pg-d-pager").hidden = !!it.minimal;
     pgEl("pg-d-rows").innerHTML = [["Interaction", it.verb], ["Component", it.type], ["Tone", it.tone]].filter((r) => r[1]).map(([k, v]) => `<div class="pg-row"><span>${k}</span><span>${v}</span></div>`).join("");
-    pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1"); pgEl("pg-d-frame").title = it.name;
+    pgEl("pg-d-frame").src = pgSrc(pgSlug(it), "&max=1&detail=1"); pgEl("pg-d-frame").title = it.name;
     pgEl("pg-d-vsw").innerHTML = it.axes ? pgSegs(it, true) : ""; pgEl("pg-d-vsw").hidden = !it.axes;
     requestAnimationFrame(() => pgThumbs(pgEl("pg-d-vsw"), true));
     const link = it.href || (it.url ? PG_GH + it.url : "");
