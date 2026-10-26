@@ -16,7 +16,7 @@
   css.textContent = `
     html,body{margin:0;height:100%;overflow:hidden;background:transparent}
     body{display:block;position:relative}
-    #stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;transform-origin:50% 50%}
+    #stage{position:absolute;left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0}
     .kit-cursor{position:absolute;left:0;top:0;width:32px;height:32px;margin:-3.87px 0 0 -7.33px;pointer-events:none;z-index:2147483647;
       filter:drop-shadow(rgba(0,0,0,.3) 0 2px 3px);overflow:visible;transition:scale .12s cubic-bezier(.28,1.2,.36,1);animation:kit-in .2s cubic-bezier(.28,1.2,.36,1) both}
     .kit-cursor[data-down="true"]{scale:.88}
@@ -30,7 +30,10 @@
     const max = +(Q.get("max") || 1);
     const s = Math.min((innerWidth - pad * 2) / W, (innerHeight - pad * 2) / H, max) * +(Q.get("zoom") || 1);
     KIT.scale = s;
-    stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+    // whole-pixel placement: centring with translate(-50%) can land on half pixels and soften text
+    stage.style.left = Math.round((innerWidth - W * s) / 2) + "px";
+    stage.style.top = Math.round((innerHeight - H * s) / 2) + "px";
+    stage.style.transform = s === 1 ? "none" : `scale(${s})`;
   }
   addEventListener("resize", fit); fit();
 

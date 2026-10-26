@@ -15,7 +15,7 @@
 // full bleed: the film always covers the whole card, whatever its shape
 (function(){
   const st=document.getElementById('stage'), v=st.querySelector('video');
-  function cover(){ const s=Math.max(innerWidth/1280, innerHeight/720); st.style.transform=`translate(-50%,-50%) scale(${s})`; }
+  function cover(){ const s=Math.max(innerWidth/1280, innerHeight/720); st.style.left=Math.round((innerWidth-1280*s)/2)+'px'; st.style.top=Math.round((innerHeight-720*s)/2)+'px'; st.style.transform=`scale(${s})`; }
   addEventListener('resize', cover); cover();
   v.play && v.play().catch(()=>{});
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); }
