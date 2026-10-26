@@ -736,7 +736,15 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 .lay-b .pg-wide .tx { display: inline; }
 /* C: the stage is the whole view; name and story sit on it in a small card, arrows at the edges */
 .lay-c .pg-shell { width: min(1100px, 100%); height: min(720px, 100%); grid-template-columns: minmax(0, 1fr); }
-.lay-c .pg-side { position: absolute; left: 16px; bottom: 16px; z-index: 4; width: 320px; max-height: calc(100% - 32px); background: var(--bg); border-radius: 16px; padding: 20px; }
+/* no card on the stage: a white card is the same material as the components and competes with them. Plain text, glass tags. */
+.lay-c .pg-side { position: absolute; left: 24px; bottom: 20px; z-index: 4; width: 340px; max-height: calc(100% - 40px); background: none; border-radius: 0; padding: 0; overflow: visible; }
+.lay-c .pg-head h2 { font-size: 16px; font-weight: 500; line-height: 20px; letter-spacing: -0.04em; color: #0d0d0d; }
+.lay-c .pg-say { font-size: 14px; line-height: 19px; color: rgba(0, 0, 0, .45); margin: 4px 0 10px; }
+.lay-c .pg-row { border: 0; padding: 4px 10px; border-radius: 40px; background: rgba(0, 0, 0, .04); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: rgba(0, 0, 0, .4); font-size: 14px; line-height: 14px; letter-spacing: -0.04em; }
+.lay-c .pg-row span:first-child { display: none; }
+.lay-c .pg-row:last-child { border: 0; }
+.lay-c .pg-acts { padding-top: 12px; display: flex; }
+.lay-c #pg-d-open { padding: 6px 12px; }
 .lay-c .pg-head .pg-tool { position: fixed; top: 16px; right: 16px; margin: 0; background: var(--card); }
 .lay-c .pg-tools { right: 16px; }
 .lay-c .pg-say { margin: 6px 0 16px; }
