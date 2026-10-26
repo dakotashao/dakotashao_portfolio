@@ -679,6 +679,18 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 }
 @media (prefers-reduced-motion: reduce) { .pg-shell, .pg-scrim { animation: none; } }
 
+
+/* filter styles to compare (preview only) */
+.fs-b .pg-chips { gap: 6px; }
+.fs-b .pg-chip { font-size: 12px; line-height: 17.5px; letter-spacing: normal; padding: 4px 10px; border-radius: 20px; background: var(--card); color: var(--muted); }
+.fs-b .pg-chip:hover { background: var(--chip); color: var(--fg); }
+.fs-b .pg-chip[aria-pressed="true"] { background: var(--chip); color: var(--fg); }
+.fs-c .pg-chips { gap: 4px; }
+.fs-c .pg-chip { font-size: 14px; line-height: 14px; letter-spacing: -0.04em; padding: 4px 10px; border-radius: 40px; background: rgba(0, 0, 0, .04); color: rgba(0, 0, 0, .4); }
+.fs-c .pg-chip:hover { color: rgba(0, 0, 0, .7); }
+.fs-c .pg-chip[aria-pressed="true"] { background: rgba(0, 0, 0, .08); color: var(--fg); }
+:root[data-theme="dark"] .fs-c .pg-chip { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .45); }
+:root[data-theme="dark"] .fs-c .pg-chip[aria-pressed="true"] { background: rgba(255, 255, 255, .12); color: var(--fg); }
 /* ---- preview only: switch between three detail layouts ---- */
 .pg-lay { position: fixed; left: 50%; bottom: 20px; translate: -50% 0; z-index: 80; display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; border-radius: 12px; background: #0d0d0d; color: #fff; font-size: 13px; letter-spacing: -0.011em; }
 .pg-lay span { color: rgba(255,255,255,.5); margin-right: 6px; }
@@ -1333,11 +1345,11 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   const playground = () => `
     <section class="pg" aria-label="Playground">
       <label class="pg-search" for="pg-q"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pg-q" type="search" placeholder="Search" autocomplete="off" aria-label="Search blocks"><kbd>⌘K</kbd></label>
-      <div class="pg-chips" id="pg-chips" role="group" aria-label="Filter">${TYPES.map((t) => `<button class="pg-chip" aria-pressed="false">${t}</button>`).join("")}</div>
+      <div class="pg-chips" id="pg-chips" role="group" aria-label="Filter"><button class="pg-chip" data-all aria-pressed="true">All</button>${TYPES.map((t) => `<button class="pg-chip" aria-pressed="false">${t}</button>`).join("")}</div>
       <div class="pg-wall" id="pg-wall"></div>
       <p class="pg-empty" id="pg-empty" hidden>No block matches that.</p>
     </section>
-    <div class="pg-lay" role="group" aria-label="Detail layout (preview only)"><span>Detail layout</span><button data-l="a" aria-pressed="true">A · Info bar</button><button data-l="b">B · Case page</button><button data-l="c">C · On the stage</button></div>
+    <div class="pg-lay" role="group" aria-label="Detail layout (preview only)"><span>Detail layout</span><button data-l="a" aria-pressed="true">A · Info bar</button><button data-l="b">B · Case page</button><button data-l="c">C · On the stage</button><span style="margin-left:10px">Filter</span><button data-f="b" aria-pressed="true">B</button><button data-f="c">C</button></div>
     <div class="pg-dtl lay-a" id="pg-dtl" hidden role="dialog" aria-modal="true" aria-labelledby="pg-d-title">
       <button class="pg-scrim" id="pg-d-scrim" aria-label="Close" tabindex="-1"></button>
       <div class="pg-shell">
@@ -1475,11 +1487,11 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   function pgMount() {
     pg.cur = -1; document.body.style.overflow = "";
     const chips = pgEl("pg-chips");
-    [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.textContent === pg.filter));
+    [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.dataset.all !== undefined ? !pg.filter : c.textContent === pg.filter));
     chips.addEventListener("click", (e) => {
       const b = e.target.closest(".pg-chip"); if (!b) return;
-      pg.filter = pg.filter === b.textContent ? null : b.textContent;
-      [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.textContent === pg.filter));
+      pg.filter = b.dataset.all !== undefined || pg.filter === b.textContent ? null : b.textContent;
+      [...chips.children].forEach((c) => c.setAttribute("aria-pressed", c.dataset.all !== undefined ? !pg.filter : c.textContent === pg.filter));
       pgRender(true);
     });
     const q = pgEl("pg-q"); q.value = pg.query;
@@ -1498,8 +1510,13 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     pgEl("pg-d-x").onclick = pgClose; pgEl("pg-d-scrim").onclick = pgClose;
     pgEl("pg-d-prev").onclick = pgEl("pg-e-prev").onclick = () => pgOpen(pg.cur - 1);
     pgEl("pg-e-next").onclick = () => pgOpen(pg.cur + 1);
-    document.querySelectorAll(".pg-lay button").forEach((b) => b.addEventListener("click", () => {
-      document.querySelectorAll(".pg-lay button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    const pgSec = document.querySelector(".pg"); pgSec.classList.add("fs-b");
+    document.querySelectorAll(".pg-lay button[data-f]").forEach((b) => b.addEventListener("click", () => {
+      document.querySelectorAll(".pg-lay button[data-f]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      pgSec.classList.remove("fs-b", "fs-c"); pgSec.classList.add("fs-" + b.dataset.f);
+    }));
+    document.querySelectorAll(".pg-lay button[data-l]").forEach((b) => b.addEventListener("click", () => {
+      document.querySelectorAll(".pg-lay button[data-l]").forEach((x) => x.setAttribute("aria-pressed", x === b));
       const d = pgEl("pg-dtl"); d.classList.remove("lay-a", "lay-b", "lay-c"); d.classList.add("lay-" + b.dataset.l);
       if (pg.cur < 0) pgOpen(0); else { d.scrollTop = 0; pgPlaceVsw(); }
     }));
