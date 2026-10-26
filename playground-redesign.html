@@ -1349,7 +1349,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       <div class="pg-wall" id="pg-wall"></div>
       <p class="pg-empty" id="pg-empty" hidden>No block matches that.</p>
     </section>
-    <div class="pg-lay" role="group" aria-label="Detail layout (preview only)"><span>Detail layout</span><button data-l="a" aria-pressed="true">A · Info bar</button><button data-l="b">B · Case page</button><button data-l="c">C · On the stage</button><span style="margin-left:10px">Filter</span><button data-f="b" aria-pressed="true">B</button><button data-f="c">C</button></div>
+    <div class="pg-lay" role="group" aria-label="Detail layout (preview only)"><span>Detail layout</span><button data-l="a" aria-pressed="true">A · Info bar</button><button data-l="b">B · Case page</button><button data-l="c">C · On the stage</button><span style="margin-left:10px">Filter</span><button data-f="b">B</button><button data-f="c" aria-pressed="true">C</button></div>
     <div class="pg-dtl lay-a" id="pg-dtl" hidden role="dialog" aria-modal="true" aria-labelledby="pg-d-title">
       <button class="pg-scrim" id="pg-d-scrim" aria-label="Close" tabindex="-1"></button>
       <div class="pg-shell">
@@ -1510,7 +1510,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     pgEl("pg-d-x").onclick = pgClose; pgEl("pg-d-scrim").onclick = pgClose;
     pgEl("pg-d-prev").onclick = pgEl("pg-e-prev").onclick = () => pgOpen(pg.cur - 1);
     pgEl("pg-e-next").onclick = () => pgOpen(pg.cur + 1);
-    const pgSec = document.querySelector(".pg"); pgSec.classList.add("fs-b");
+    const pgSec = document.querySelector(".pg"); pgSec.classList.add("fs-c");
     document.querySelectorAll(".pg-lay button[data-f]").forEach((b) => b.addEventListener("click", () => {
       document.querySelectorAll(".pg-lay button[data-f]").forEach((x) => x.setAttribute("aria-pressed", x === b));
       pgSec.classList.remove("fs-b", "fs-c"); pgSec.classList.add("fs-" + b.dataset.f);
