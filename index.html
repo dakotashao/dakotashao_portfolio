@@ -398,7 +398,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs.cs24-page{max-width:none;padding-top:0}
 #app .view:has(.cs24){overflow-x:clip}
 /* the artifact's own page defaults (its runtime base: 14px system type, images never wider than their box) */
-#app .cs24{font-size:14px;line-height:normal}
+#app .cs24{font-size:14px;line-height:normal;--ink-rgb:0,0,0}
 #app .cs24 img{max-width:100%}
 /* the site has its own .hero, .nav, .label, .chip and link rules; undo them inside the page so only the artifact's apply */
 #app .cs24 .hero{display:block;position:static;height:auto;min-height:0;overflow:visible;place-items:normal;grid-template-columns:none}
@@ -429,13 +429,13 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .p2{margin-top:24px}
 #app .cs24 .co{color:var(--body);text-decoration:none;white-space:nowrap;border-radius:4px;transition:color .2s ease}
 #app .cs24 .co:hover{color:var(--fg)}
-#app .cs24 .co i{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;vertical-align:-4px;border-radius:5px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+#app .cs24 .co i{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;vertical-align:-4px;border-radius:5px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .co i svg{width:16px;height:16px}
 #app .cs24 .co:focus-visible{outline:2px solid var(--cs);outline-offset:2px}
 #app .cs24 .goals{max-width:640px;margin:32px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,auto);column-gap:12px}
-#app .cs24 .goal{--tint:var(--frame);--ink:var(--body);--rule:rgba(0,0,0,.08);background:var(--tint);border-radius:16px;padding:16px 18px 24px 16px;display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:0}
+#app .cs24 .goal{--tint:var(--frame);--ink:var(--body);--rule:rgba(var(--ink-rgb),.08);background:var(--tint);border-radius:16px;padding:16px 18px 24px 16px;display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:0}
 #app .cs24 .goal .who{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--body)}
-#app .cs24 .goal .who i{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center;flex:none}
+#app .cs24 .goal .who i{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center;flex:none;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .goal .who svg{width:12px;height:12px}
 #app .cs24 .goal ul{display:contents}
 #app .cs24 .goal li{list-style:none;display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:8px}
@@ -456,14 +456,14 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .card.l{left:0}
 #app .cs24 .card.r{left:326px}
 #app .cs24 .hd{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--body);white-space:nowrap}
-#app .cs24 .hd i{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center}
+#app .cs24 .hd i{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .hd svg{width:12px;height:12px}
 #app .cs24 .b{position:absolute;left:0;top:0;height:32px;display:inline-flex;align-items:center;white-space:nowrap;
   border-radius:14px 14px 14px 4px;font-size:13.5px;font-weight:500;padding:0 13px;transform-origin:50% 50%;
   transition:transform .7s var(--ease),opacity .45s ease}
-#app .cs24 .t1{background:#dbe8f8;color:#0c65c3}
-#app .cs24 .t2{background:#d6dbe8;color:#011c62}
-#app .cs24 .t3{background:#fde9c7;color:#9a5a00}
+#app .cs24 .t1{background:#dbe8f8;color:#0c65c3;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .t2{background:#d6dbe8;color:#011c62;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .t3{background:#fde9c7;color:#9a5a00;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .sum{position:absolute;left:0;right:0;top:40px;bottom:0;display:flex;align-items:center;justify-content:center}
 #app .cs24 .bk{display:flex;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
 #app .cs24 .parts{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
@@ -492,7 +492,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .phone::before, #app .cs24 .phone::after{content:"";position:absolute;width:3px;border-radius:2px;background:linear-gradient(90deg,#2a2a2c,#4a4a4d)}
 #app .cs24 .phone::before{left:-2px;top:118px;height:22px;box-shadow:0 46px 0 0 #333,0 98px 0 0 #333}
 #app .cs24 .phone::after{right:-2px;top:178px;height:70px;background:linear-gradient(270deg,#2a2a2c,#4a4a4d)}
-#app .cs24 .screen{position:relative;width:100%;aspect-ratio:402/872;border-radius:38px;background:#fff;overflow:hidden;transform:translateZ(0)}
+#app .cs24 .screen{position:relative;width:100%;aspect-ratio:402/872;border-radius:38px;background:#fff;overflow:hidden;transform:translateZ(0);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .scr{position:absolute;inset:0;opacity:0;z-index:1;transition:opacity 0s linear .3s}
 #app .cs24 .scr.on{opacity:1;z-index:2;transition:opacity .3s ease}
 #app .cs24 .scr.img img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
@@ -527,32 +527,32 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .flow .steps .l{display:none}
 #app .cs24 .flow .ft h3{font-size:16px;line-height:24px;font-weight:500;letter-spacing:-.015em}
 #app .cs24 .flow .ft p{font-size:15px;line-height:22.5px;color:var(--body);margin-top:4px}
-#app .cs24 .flow .ft p.g{font-size:13px;line-height:18px;color:rgba(0,0,0,.36);margin:0 0 6px;font-variant-numeric:tabular-nums}
+#app .cs24 .flow .ft p.g{font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.36);margin:0 0 6px;font-variant-numeric:tabular-nums}
 @media (max-width:640px){#app .cs24 .flow{grid-template-columns:1fr;gap:16px}
 #app .cs24 .flow .demo{aspect-ratio:auto;padding:36px 0 24px}}
 #app .cs24 .fd{max-width:640px;margin:56px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}
 #app .cs24 .fd>div{background:var(--frame);border-radius:16px;padding:22px 22px 24px}
-#app .cs24 .fd .k{font-size:13px;line-height:18px;color:rgba(0,0,0,.4)}
+#app .cs24 .fd .k{font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.4)}
 #app .cs24 .fd h3{font-size:17px;line-height:24px;font-weight:500;letter-spacing:-.02em;margin-top:8px}
 #app .cs24 .fd p.s{font-size:15px;line-height:22.5px;color:var(--body);margin-top:6px}
 #app .cs24 .fd q{display:block;margin-top:12px;padding-left:12px;border-left:2px solid #d6dbe8;font-size:14px;line-height:21px;color:var(--fg);quotes:none}
-#app .cs24 .fd q small{display:block;font-size:12px;color:rgba(0,0,0,.4);margin-top:2px}
+#app .cs24 .fd q small{display:block;font-size:12px;color:rgba(var(--ink-rgb),.4);margin-top:2px}
 #app .cs24 .dfig{max-width:720px;margin:16px auto 0;background:var(--frame);border-radius:16px;padding:32px}
 #app .cs24 .dfig .row{display:flex;gap:12px;justify-content:center;align-items:flex-start}
-#app .cs24 .dfig .cap{font-size:13px;line-height:18px;color:rgba(0,0,0,.4);margin-bottom:12px}
+#app .cs24 .dfig .cap{font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.4);margin-bottom:12px}
 #app .cs24 .slot{flex:1;max-width:150px;aspect-ratio:3/4;border:1.5px dashed #c5cddf;border-radius:14px;display:grid;place-items:center;text-align:center;font-size:12px;line-height:16px;color:rgba(1,28,98,.55);padding:10px}
-#app .cs24 .crop{width:240px;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 36px -20px rgba(1,28,98,.35);background:#fff}
+#app .cs24 .crop{width:240px;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 36px -20px rgba(1,28,98,.35);background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .crop img{display:block;width:100%}
-#app .cs24 .dfig .sep{height:1px;background:#e4e4e4;margin:28px 0 24px}
+#app .cs24 .dfig .sep{height:1px;background:#e4e4e4;margin:28px 0 24px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .split{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
 #app .cs24 .apps{display:flex;flex-direction:column;gap:22px}
 #app .cs24 .apps .ln{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#app .cs24 .apps .t{width:52px;font-size:12px;color:rgba(0,0,0,.4)}
-#app .cs24 .app{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.07);font-size:13px;color:var(--fg)}
-#app .cs24 .app i{width:18px;height:18px;border-radius:5px;background:#d6dbe8;flex:none}
+#app .cs24 .apps .t{width:52px;font-size:12px;color:rgba(var(--ink-rgb),.4)}
+#app .cs24 .app{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.07);font-size:13px;color:var(--fg);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .app i{width:18px;height:18px;border-radius:5px;background:#d6dbe8;flex:none;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .app.one i{background:var(--navy)}
-#app .cs24 .sw{font-size:16px;color:rgba(0,0,0,.35)}
-#app .cs24 .role{display:inline-flex;height:24px;align-items:center;padding:0 9px;border-radius:12px;background:#dbe8f8;color:#0c65c3;font-size:12px}
+#app .cs24 .sw{font-size:16px;color:rgba(var(--ink-rgb),.35)}
+#app .cs24 .role{display:inline-flex;height:24px;align-items:center;padding:0 9px;border-radius:12px;background:#dbe8f8;color:#0c65c3;font-size:12px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dfig .phone{width:172px;padding:6px;border-radius:31px}
 #app .cs24 .dfig .phone::before, #app .cs24 .dfig .phone::after{display:none}
 #app .cs24 .dfig .screen{border-radius:25px}
@@ -584,21 +584,21 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .kf p.big{margin-top:0}
 #app .cs24 .kf.kf2{grid-template-columns:1fr;gap:36px}
 #app .cs24 .kf.kfn{margin-top:72px}
-#app .cs24 .kf2 .n{display:block;font-size:13px;line-height:18px;color:rgba(0,0,0,.36);margin-bottom:8px;font-variant-numeric:tabular-nums}
+#app .cs24 .kf2 .n{display:block;font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.36);margin-bottom:8px;font-variant-numeric:tabular-nums}
 #app .cs24 .kf2 .big{font-size:20px;line-height:26px;letter-spacing:-.02em}
 #app .cs24 .dec{max-width:560px;margin:28px auto 0}
 #app .cs24 .dec+.dfig, #app .cs24 .dec+.evo{margin-top:20px}
 #app .cs24 .evo+.dec, #app .cs24 .dfig+.dec{margin-top:64px}
-#app .cs24 .dec .n{font-size:13px;line-height:18px;color:rgba(0,0,0,.36);font-variant-numeric:tabular-nums}
+#app .cs24 .dec .n{font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.36);font-variant-numeric:tabular-nums}
 #app .cs24 .dec h3{font-size:20px;line-height:26px;font-weight:500;letter-spacing:-.025em;margin-top:4px}
 #app .cs24 .dec p:not(.n){font-size:15px;line-height:22.5px;color:var(--body);margin-top:4px}
 #app .cs24 .evo{max-width:720px;margin:20px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 #app .cs24 .evo figure{display:flex;flex-direction:column;gap:10px}
 #app .cs24 .evo .im{height:250px;background:var(--frame);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px;overflow:hidden}
 #app .cs24 .evo .im img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
-#app .cs24 .evo .fin .im{background:#dbe8f8}
+#app .cs24 .evo .fin .im{background:#dbe8f8;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .evo figcaption{font-size:13px;line-height:18px;color:var(--body)}
-#app .cs24 .evo figcaption b{font-weight:400;color:rgba(0,0,0,.3);margin-right:6px}
+#app .cs24 .evo figcaption b{font-weight:400;color:rgba(var(--ink-rgb),.3);margin-right:6px}
 @media (max-width:640px){#app .cs24 .kf{grid-template-columns:1fr;gap:24px}
 #app .cs24 .evo{grid-template-columns:repeat(5,150px);overflow-x:auto;scroll-snap-type:x mandatory}
 #app .cs24 .evo figure{scroll-snap-align:start}}
@@ -607,32 +607,32 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dfig .demo .steps{padding-bottom:0}
 #app .cs24 .dfig .demo .tap{width:26px;height:26px;margin:-13px 0 0 -13px;border-width:1.5px}
 #app .cs24 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#app .cs24 .g2 img, #app .cs24 .g3 img{display:block;width:100%;height:auto;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+#app .cs24 .g2 img, #app .cs24 .g3 img{display:block;width:100%;height:auto;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.05);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .g2.fin img{border-radius:16px}
 #app .cs24 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
 #app .cs24 .g2 figure, #app .cs24 .g3 figure{display:flex;flex-direction:column;gap:10px}
 #app .cs24 .g2 figcaption, #app .cs24 .g3 figcaption{font-size:13px;line-height:18px;color:var(--body)}
-#app .cs24 .g3 figcaption b{font-weight:400;color:rgba(0,0,0,.3);margin-right:6px}
+#app .cs24 .g3 figcaption b{font-weight:400;color:rgba(var(--ink-rgb),.3);margin-right:6px}
 @media (max-width:640px){#app .cs24 .g2, #app .cs24 .g3{grid-template-columns:1fr}}
 #app .cs24 .dfig .split{grid-template-columns:1fr 1fr;gap:24px;align-items:center;justify-items:center;padding:16px 0}
 #app .cs24 .dfig .apps{align-items:center;gap:14px;text-align:center}
 #app .cs24 .blk{display:flex;flex-direction:column;align-items:center;gap:10px}
-#app .cs24 .blk .t{font-size:12px;line-height:16px;color:rgba(0,0,0,.4);width:auto}
-#app .cs24 .blk .note{font-size:12px;line-height:16px;color:rgba(0,0,0,.4)}
+#app .cs24 .blk .t{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.4);width:auto}
+#app .cs24 .blk .note{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.4)}
 #app .cs24 .row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
-#app .cs24 .down{font-size:16px;color:rgba(0,0,0,.3);line-height:1}
+#app .cs24 .down{font-size:16px;color:rgba(var(--ink-rgb),.3);line-height:1}
 @media (max-width:640px){#app .cs24 .dfig .split{grid-template-columns:1fr;gap:32px}}
 #app .cs24 .shift{max-width:720px;margin:28px auto 0;background:var(--frame);border-radius:16px;padding:24px 24px 20px;display:grid;grid-template-columns:180px 1fr;gap:24px;align-items:center}
-#app .cs24 .shift .k{font-size:12px;line-height:16px;color:rgba(0,0,0,.36)}
+#app .cs24 .shift .k{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.36)}
 #app .cs24 .shift h4{font-size:15px;line-height:21px;font-weight:500;letter-spacing:-.01em;margin-top:6px}
 #app .cs24 .shift .sht p:not(.k){font-size:13px;line-height:19px;color:var(--body);margin-top:6px}
 #app .cs24 .shift .shr{display:flex;align-items:center;gap:10px;justify-content:center}
 #app .cs24 .shift figure{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
 #app .cs24 .shift .im{height:200px;display:flex;align-items:center;justify-content:center;width:100%}
-#app .cs24 .shift .im img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 8px 20px -12px rgba(0,0,0,.2);background:#fff}
-#app .cs24 .shift figcaption{font-size:12px;line-height:16px;color:rgba(0,0,0,.45);text-align:center}
+#app .cs24 .shift .im img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 8px 20px -12px rgba(0,0,0,.2);background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .shift figcaption{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.45);text-align:center}
 #app .cs24 .shift .fin figcaption{color:var(--navy)}
-#app .cs24 .shift .ar{color:rgba(0,0,0,.3);font-size:14px;flex:none}
+#app .cs24 .shift .ar{color:rgba(var(--ink-rgb),.3);font-size:14px;flex:none}
 #app .cs24 .shift+.shift{margin-top:12px}
 #app .cs24 .shift+.dec{margin-top:64px}
 @media (max-width:640px){#app .cs24 .shift{grid-template-columns:1fr}
@@ -641,7 +641,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .seal{position:relative;width:132px;height:132px;margin:0;opacity:0;transform:scale(1.35) rotate(-14deg)}
 #app .cs24 .seal.in{animation:cs24-stamp .55s cubic-bezier(.3,1.6,.5,1) forwards}
 @keyframes cs24-stamp{to{opacity:1;transform:scale(1) rotate(-6deg)}}
-#app .cs24 .badge{position:absolute;inset:0;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 9px #e8552b,0 12px 24px -10px rgba(232,85,43,.35);display:flex;flex-direction:column;justify-content:center;padding-left:38px;font-size:12px;line-height:13.5px;letter-spacing:-.01em}
+#app .cs24 .badge{position:absolute;inset:0;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 9px #e8552b,0 12px 24px -10px rgba(232,85,43,.35);display:flex;flex-direction:column;justify-content:center;padding-left:38px;font-size:12px;line-height:13.5px;letter-spacing:-.01em;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .badge b{font-weight:700;color:#111}
 #app .cs24 .badge b em{font-style:normal;margin-left:-9px;margin-right:2px}
 #app .cs24 .badge s{text-decoration:none;font-weight:700;color:#8a8a8a}
@@ -660,8 +660,8 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .fig.v .card.r{left:0;top:232px}
 #app .cs24 .fig.v .arr{left:157px;top:226px;transform:rotate(90deg)}
 #app .cs24 .eyechip{display:inline-flex;align-items:center;gap:8px;height:36px;font-size:14px;line-height:20px;color:var(--fg);text-decoration:none;padding:0 12px 0 5px;border-radius:10px;background:var(--frame);transition:background-color .2s}
-#app .cs24 .eyechip:hover{background:#e8e8e8}
-#app .cs24 .eyechip .tile{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+#app .cs24 .eyechip:hover{background:#e8e8e8;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .eyechip .tile{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .eyechip .tile svg{width:19px;height:19px}
 #app .cs24 .eyechip .ar{width:11px;height:11px;transition:transform .25s var(--ease)}
 #app .cs24 .eyechip .wmk{height:22px;width:auto;display:block}
@@ -669,31 +669,31 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .eyechip+h1{margin-top:14px}
 #app .cs24 .hw{list-style:none;max-width:640px;margin:32px auto 0;display:grid;grid-template-columns:1fr 20px 1fr 20px 1fr;align-items:stretch}
 #app .cs24 .hw-s{background:var(--frame);border-radius:16px;padding:18px 18px 20px;display:flex;flex-direction:column}
-#app .cs24 .hw-ic{width:36px;height:36px;border-radius:10px;background:#fff;display:grid;place-items:center;color:var(--fg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+#app .cs24 .hw-ic{width:36px;height:36px;border-radius:10px;background:#fff;display:grid;place-items:center;color:var(--fg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .hw-ic svg{width:19px;height:19px}
-#app .cs24 .hw-n{font-size:12px;line-height:16px;color:rgba(0,0,0,.36);margin-top:20px;font-variant-numeric:tabular-nums}
+#app .cs24 .hw-n{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.36);margin-top:20px;font-variant-numeric:tabular-nums}
 #app .cs24 .hw-s h3{font-size:15px;line-height:21px;font-weight:500;letter-spacing:-.01em;margin-top:4px}
 #app .cs24 .hw-d{font-size:13px;line-height:19px;color:var(--body);margin-top:4px}
-#app .cs24 .hw-s.me{background:#dbe8f8}
+#app .cs24 .hw-s.me{background:#dbe8f8;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .hw-s.me .hw-ic{color:#0c65c3}
 #app .cs24 .hw-s.me .hw-n{color:rgba(12,101,195,.6)}
-#app .cs24 .hw-ar{display:grid;place-items:center;color:rgba(0,0,0,.28)}
+#app .cs24 .hw-ar{display:grid;place-items:center;color:rgba(var(--ink-rgb),.28)}
 #app .cs24 .hw-ar svg{width:14px;height:14px}
 @media (max-width:560px){#app .cs24 .hw{grid-template-columns:1fr;row-gap:0}
 #app .cs24 .hw-ar{height:24px}
 #app .cs24 .hw-ar svg{transform:rotate(90deg)}}
-#app .cs24 .stk{display:inline-block;vertical-align:-3px;margin-right:6px;padding:6px 10px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 4px rgba(0,0,0,.05),0 12px 24px -12px rgba(1,28,98,.3);transform:rotate(-4deg);transition:transform .3s var(--ease)}
+#app .cs24 .stk{display:inline-block;vertical-align:-3px;margin-right:6px;padding:6px 10px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 4px rgba(0,0,0,.05),0 12px 24px -12px rgba(1,28,98,.3);transform:rotate(-4deg);transition:transform .3s var(--ease);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .stk svg{display:block;height:27px;width:auto}
 #app .cs24 .stk:hover{transform:rotate(0) scale(1.04)}
 #app .cs24 .ovf{--bt:#dbe8f8;--ot:#fde9c7;--blue:#0c65c3;max-width:640px;margin:32px auto 0;background:var(--frame);border-radius:16px;padding:72px 24px 80px;display:flex;justify-content:center}
 #app .cs24 .ovf .v6-row{display:flex;align-items:center;gap:12px}
 #app .cs24 .ovf .v6-or{font-size:12px;color:var(--body)}
 #app .cs24 .ovf .v6-merge{width:320px;height:28px;margin-top:-1px}
-#app .cs24 .ovf .v6-merge path{fill:none;stroke:rgba(0,0,0,.4);stroke-width:2;stroke-dasharray:0 5;stroke-linecap:round}
-#app .cs24 .ovf .v6-ln{position:relative;display:block;height:48px;border-left:2px dotted rgba(0,0,0,.4)}
+#app .cs24 .ovf .v6-merge path{fill:none;stroke:rgba(var(--ink-rgb),.4);stroke-width:2;stroke-dasharray:0 5;stroke-linecap:round}
+#app .cs24 .ovf .v6-ln{position:relative;display:block;height:48px;border-left:2px dotted rgba(var(--ink-rgb),.4)}
 #app .cs24 .ovf .v6-ln em{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--body);white-space:nowrap;display:flex;align-items:center;gap:6px}
-#app .cs24 .ovf .v6-ln.up::before{content:"";position:absolute;left:-5px;top:-1px;width:7px;height:7px;border-left:2px solid rgba(0,0,0,.4);border-top:2px solid rgba(0,0,0,.4);transform:rotate(45deg)}
-#app .cs24 .ovf .p7{position:relative;display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:8px 22px 8px 8px;border-radius:28px;background:#fff;white-space:nowrap;color:var(--fg)}
+#app .cs24 .ovf .v6-ln.up::before{content:"";position:absolute;left:-5px;top:-1px;width:7px;height:7px;border-left:2px solid rgba(var(--ink-rgb),.4);border-top:2px solid rgba(var(--ink-rgb),.4);transform:rotate(45deg)}
+#app .cs24 .ovf .p7{position:relative;display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:8px 22px 8px 8px;border-radius:28px;background:#fff;white-space:nowrap;color:var(--fg);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .ovf .p7 i{width:40px;height:40px;border-radius:50%;background:var(--frame);display:grid;place-items:center;color:#444;flex:none}
 #app .cs24 .ovf .p7 i svg{width:18px;height:18px}
 #app .cs24 .ovf .p7 i.o{background:var(--ot);color:#9a5a00}
@@ -704,12 +704,12 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ovf .p7.me small{color:rgba(12,101,195,.75)}
 #app .cs24 .ovf .p7.me::after{content:"Our user";position:absolute;top:-9px;right:-6px;height:18px;padding:0 7px;border-radius:9px;background:var(--blue);color:#fff;font-size:10.5px;line-height:18px;font-weight:500}
 #app .cs24 .ovf .v6-ln.s{height:28px}
-#app .cs24 .ovf .v6-ln.dn::after{content:"";position:absolute;left:-5px;bottom:-1px;width:7px;height:7px;border-right:2px solid rgba(0,0,0,.4);border-bottom:2px solid rgba(0,0,0,.4);transform:rotate(45deg)}
+#app .cs24 .ovf .v6-ln.dn::after{content:"";position:absolute;left:-5px;bottom:-1px;width:7px;height:7px;border-right:2px solid rgba(var(--ink-rgb),.4);border-bottom:2px solid rgba(var(--ink-rgb),.4);transform:rotate(45deg)}
 #app .cs24 .ovf .v8{width:100%;max-width:592px;display:flex;flex-direction:column;align-items:center}
 #app .cs24 .ovf .v8 .hrs8{height:30px;padding:0 14px;border-radius:15px;background:var(--ot);color:#9a5a00;font-size:12.5px;line-height:30px}
 #app .cs24 .ovf .v6-ln.s2{height:34px}
-#app .cs24 .ovf .elb{position:relative;align-self:flex-start;margin-left:116px;width:calc(50% - 116px);height:34px;border-top:2px dotted rgba(0,0,0,.4);border-left:2px dotted rgba(0,0,0,.4)}
-#app .cs24 .ovf .elb::after{content:"";position:absolute;left:-6px;bottom:2px;width:7px;height:7px;border-right:2px solid rgba(0,0,0,.4);border-bottom:2px solid rgba(0,0,0,.4);transform:rotate(45deg)}
+#app .cs24 .ovf .elb{position:relative;align-self:flex-start;margin-left:116px;width:calc(50% - 116px);height:34px;border-top:2px dotted rgba(var(--ink-rgb),.4);border-left:2px dotted rgba(var(--ink-rgb),.4)}
+#app .cs24 .ovf .elb::after{content:"";position:absolute;left:-6px;bottom:2px;width:7px;height:7px;border-right:2px solid rgba(var(--ink-rgb),.4);border-bottom:2px solid rgba(var(--ink-rgb),.4);transform:rotate(45deg)}
 #app .cs24 .ovf .elb em{position:absolute;left:50%;top:-24px;transform:translateX(-50%);font-style:normal;font-size:12px;color:var(--body);white-space:nowrap}
 #app .cs24 .ovf .bot{position:relative;width:100%;display:flex;align-items:flex-start;margin-top:4px}
 #app .cs24 .ovf .bot .p7.cl{flex:none}
@@ -757,13 +757,13 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ovf .v8 .fam8{align-items:center}
 #app .cs24 .ovf .v8 .fam8 p{text-align:center;padding-left:0}}
 #app .cs24 .ovf .v6-merge path{stroke-dasharray:2 2.2;stroke-linecap:butt}
-#app .cs24 .ovf .v6-ln.dn::after{content:"";position:absolute;left:-5px;bottom:1px;width:7px;height:7px;border-right:2px solid rgba(0,0,0,.4);border-bottom:2px solid rgba(0,0,0,.4);transform:rotate(45deg)}
+#app .cs24 .ovf .v6-ln.dn::after{content:"";position:absolute;left:-5px;bottom:1px;width:7px;height:7px;border-right:2px solid rgba(var(--ink-rgb),.4);border-bottom:2px solid rgba(var(--ink-rgb),.4);transform:rotate(45deg)}
 #app .cs24 .ovf .v8 .elb{border-top-left-radius:16px}
 #app .cs24 .ovf .v8 .elb2{position:relative;width:100%;height:64px;margin-top:-64px;display:none}
 #app .cs24 .ovf .v8.ok .elb, #app .cs24 .ovf .v8.ok .v6-ln.s2{visibility:hidden}
 #app .cs24 .ovf .v8.ok .elb2{display:block}
 #app .cs24 .ovf .v8 .elb2 svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#app .cs24 .ovf .v8 .elb2 path{fill:none;stroke:rgba(0,0,0,.4);stroke-width:2}
+#app .cs24 .ovf .v8 .elb2 path{fill:none;stroke:rgba(var(--ink-rgb),.4);stroke-width:2}
 #app .cs24 .ovf .v8 .elb2 .l{stroke-dasharray:2 2.2}
 #app .cs24 .ovf .v8 .elb2 .h{stroke-linecap:round;stroke-linejoin:round}
 #app .cs24 .ovf .v8 .elb2 em{position:absolute;top:10px;transform:translateX(-50%);font-style:normal;font-size:11px;color:var(--body);white-space:nowrap}
@@ -771,9 +771,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ovf .v8.ok .v6-ln.s2{visibility:visible}}
 #app .cs24 .ovt{margin-top:32px}
 #app .cs24 .cvw{position:relative}
-#app .cs24 .cvchip{position:absolute;left:20px;bottom:20px;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;gap:12px;height:44px;border-radius:12px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:0 0 0 1px rgba(255,255,255,.5) inset;font-size:14px;line-height:20px;color:var(--fg);text-decoration:none;transition:background-color .2s}
-#app .cs24 .cvchip:hover{background:rgba(255,255,255,.9)}
-#app .cs24 .cvchip .tile{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+#app .cs24 .cvchip{position:absolute;left:20px;bottom:20px;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;gap:12px;height:44px;border-radius:12px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:0 0 0 1px rgba(255,255,255,.5) inset;font-size:14px;line-height:20px;color:var(--fg);text-decoration:none;transition:background-color .2s;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .cvchip:hover{background:rgba(255,255,255,.9);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .cvchip .tile{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .cvchip .tile svg{width:20px;height:20px}
 #app .cs24 .cvchip .wmk{height:22px;width:auto;display:block}
 #app .cs24 .cvchip .ar{width:11px;height:11px;transition:transform .25s var(--ease)}
@@ -782,13 +782,13 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .cvchip .tile{width:24px;height:24px}}
 #app .cs24 .ovf .v8 .v6-ln em{left:-1px;transform:translate(-50%,-50%);background:var(--frame);padding:3px 0;line-height:14px}
 #app .cs24 .ovf .v8 .v6-ln:has(em){height:58px}
-#app .cs24 .ovf .v8 .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(0,0,0,.5)}
+#app .cs24 .ovf .v8 .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(var(--ink-rgb),.5)}
 #app .cs24 .ovf .v8 .ar8{width:48px}
 #app .cs24 .ovf .v8 .ar8::before{border:0;transform:none;width:0;height:0;left:-3px;top:-2px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:4px solid var(--blue)}
-#app .cs24 .ovf .v8 .elb2 .h{fill:rgba(0,0,0,.5);stroke:none}
+#app .cs24 .ovf .v8 .elb2 .h{fill:rgba(var(--ink-rgb),.5);stroke:none}
 @media (max-width:640px){#app .cs24 .ovf .v8 .ar8{width:2px;height:36px}
 #app .cs24 .ovf .v8 .ar8::before{display:block;left:-2px;top:-3px;border:0;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:4px solid var(--blue)}}
-@media (max-width:640px){#app .cs24 .ovf .v8 .v6-ln.s2::after{content:"";position:absolute;left:-4px;bottom:0;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(0,0,0,.5)}}
+@media (max-width:640px){#app .cs24 .ovf .v8 .v6-ln.s2::after{content:"";position:absolute;left:-4px;bottom:0;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(var(--ink-rgb),.5)}}
 @media (min-width:641px){#app .cs24 .ovf .v8{max-width:600px}
 #app .cs24 .ovf .v8 .p7{min-height:48px;gap:11px;padding:6px 18px 6px 6px;border-radius:24px}
 #app .cs24 .ovf .v8 .p7 i{width:36px;height:36px}
@@ -826,7 +826,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ovf .v9 .v6-ln.dn::after{left:-3.5px;bottom:1px;width:4px;height:4px;border-right-width:1.5px;border-bottom-width:1.5px}
 #app .cs24 .ovf .v9 .ar9::before{left:0;top:-2px;width:4px;height:4px;border-left-width:1.5px;border-bottom-width:1.5px}
 @media (max-width:640px){#app .cs24 .ovf .v9 .ar9::before{left:-2px;top:0}}
-#app .cs24 .ovf .v9 .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(0,0,0,.5)}
+#app .cs24 .ovf .v9 .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(var(--ink-rgb),.5)}
 #app .cs24 .ovf .v9 .ar9::before{border:0;transform:none;width:0;height:0;left:-3px;top:-2px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:4px solid var(--blue)}
 @media (max-width:640px){#app .cs24 .ovf .v9 .ar9::before{left:-2px;top:-3px;border:0;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:4px solid var(--blue)}}
 #app .cs24 .ovf .v9 .p7.me small{white-space:normal;max-width:180px}
@@ -836,18 +836,18 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 @media (max-width:640px){#app .cs24 .ovf .v9 .ar9{width:2px;height:36px}}
 #app .cs24 .ovf .v8:not(.v9) .v6-ln em{left:-1px;transform:translate(-50%,-50%);background:var(--frame);padding:3px 0;line-height:14px}
 #app .cs24 .ovf .v8:not(.v9) .v6-ln:has(em){height:58px}
-#app .cs24 .ovf .v8:not(.v9) .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(0,0,0,.5)}
+#app .cs24 .ovf .v8:not(.v9) .v6-ln.dn::after{border:0;transform:none;width:0;height:0;left:-4px;bottom:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(var(--ink-rgb),.5)}
 #app .cs24 .ovf .v8:not(.v9) .ar8{width:48px}
 #app .cs24 .ovf .v8:not(.v9) .ar8::before{border:0;transform:none;width:0;height:0;left:-3px;top:-2px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:4px solid var(--blue)}
-#app .cs24 .ovf .v8:not(.v9) .elb2 .h{fill:rgba(0,0,0,.5);stroke:none}
+#app .cs24 .ovf .v8:not(.v9) .elb2 .h{fill:rgba(var(--ink-rgb),.5);stroke:none}
 @media (max-width:640px){#app .cs24 .ovf .v8:not(.v9) .ar8{width:2px;height:36px}
 #app .cs24 .ovf .v8:not(.v9) .ar8::before{display:block;left:-2px;top:-3px;border:0;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:4px solid var(--blue)}}
-@media (max-width:640px){#app .cs24 .ovf .v8:not(.v9) .v6-ln.s2::after{content:"";position:absolute;left:-4px;bottom:0;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(0,0,0,.5)}}
-#app .cs24 .hl{background:#dbe8f8;border-radius:5px;padding:1px 5px;margin:0 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+@media (max-width:640px){#app .cs24 .ovf .v8:not(.v9) .v6-ln.s2::after{content:"";position:absolute;left:-4px;bottom:0;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid rgba(var(--ink-rgb),.5)}}
+#app .cs24 .hl{background:#dbe8f8;border-radius:5px;padding:1px 5px;margin:0 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .eyet{font-size:14px;line-height:20px;color:var(--fg)}
 #app .cs24 .eyet+h1{margin-top:14px}
 #app .cs24 .dg3{list-style:none;margin:28px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
-#app .cs24 .dg3 span{display:block;font-size:13px;line-height:18px;color:rgba(0,0,0,.36);font-variant-numeric:tabular-nums}
+#app .cs24 .dg3 span{display:block;font-size:13px;line-height:18px;color:rgba(var(--ink-rgb),.36);font-variant-numeric:tabular-nums}
 #app .cs24 .dg3 p{font-size:15px;line-height:22.5px;color:var(--body);margin-top:6px}
 @media (max-width:560px){#app .cs24 .dg3{grid-template-columns:1fr;gap:18px}}
 #app .cs24 .kx{max-width:640px;margin:28px auto 0;background:var(--frame);border-radius:16px;padding:52px 40px;display:flex;justify-content:center}
@@ -859,19 +859,19 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .kx-bar{position:absolute;top:0;bottom:0;border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:12px;white-space:nowrap;overflow:hidden}
 #app .cs24 .kx-bar.c1{background:var(--cs-t);color:var(--cs)}
 #app .cs24 .kx-bar.c2{background:var(--ds-t);color:var(--ds)}
-#app .cs24 .kx-bar.c3{background:#e3e1f5;color:#4b3f9e}
-#app .cs24 .kx-mo{grid-column:2;display:flex;justify-content:space-between;font-size:11px;color:rgba(0,0,0,.36);margin-bottom:-6px;padding:0 2px}
+#app .cs24 .kx-bar.c3{background:#e3e1f5;color:#4b3f9e;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .kx-mo{grid-column:2;display:flex;justify-content:space-between;font-size:11px;color:rgba(var(--ink-rgb),.36);margin-bottom:-6px;padding:0 2px}
 #app .cs24 .kx-duo{width:100%;max-width:560px;display:grid;grid-template-columns:1fr 1fr;position:relative}
-#app .cs24 .kx-duo::before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:1px solid rgba(0,0,0,.1)}
+#app .cs24 .kx-duo::before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:1px solid rgba(var(--ink-rgb),.1)}
 #app .cs24 .kx-duo>div{padding:0 28px;display:flex;flex-direction:column;gap:14px}
 #app .cs24 .kx-duo>div:first-child{padding-left:0}
 #app .cs24 .kx-duo>div:last-child{padding-right:0}
 #app .cs24 .kx-h{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--body)}
-#app .cs24 .kx-ic{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center;flex:none}
+#app .cs24 .kx-ic{width:24px;height:24px;border-radius:50%;background:#e6e6e6;display:grid;place-items:center;flex:none;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .kx-ic svg{width:12px;height:12px}
 #app .cs24 .kx-duo q{font-size:14px;line-height:21px;color:var(--fg);quotes:"\201C" "\201D"}
 #app .cs24 .kx-duo mark{background:none;color:inherit;box-shadow:inset 0 -.45em 0 var(--cs-t)}
-#app .cs24 .kx-src{font-size:12px;line-height:16px;color:rgba(0,0,0,.36)}
+#app .cs24 .kx-src{font-size:12px;line-height:16px;color:rgba(var(--ink-rgb),.36)}
 #app .cs24 .kf2 + .kf2{margin-top:64px}
 @media (max-width:600px){#app .cs24 .kx{padding:28px 18px}
 #app .cs24 .kx-tl{grid-template-columns:120px 1fr;column-gap:12px}
@@ -881,7 +881,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .kx-duo>div{padding:0!important}}
 #app .cs24 .tagx{display:inline-block;font-size:12px;line-height:16px;font-weight:500;padding:3px 9px;border-radius:999px;margin-bottom:10px}
 #app .cs24 .tagx.ad{background:var(--cs-t);color:var(--cs)}
-#app .cs24 .tagx.pr{background:#ececec;color:rgba(0,0,0,.55)}
+#app .cs24 .tagx.pr{background:#ececec;color:rgba(0,0,0,.55);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .tagx+h3{margin-top:0}
 #app .cs24 .sec.cf{margin-top:72px}
 #app .cs24 .flows{max-width:720px;margin:24px auto 0;display:flex;flex-direction:column;gap:80px}
@@ -894,7 +894,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .flow .steps{padding-bottom:30px}
 #app .cs24 .flow .steps .l{display:block}
 #app .cs24 .flow .ft{max-width:560px;margin:0 auto 24px}
-#app .cs24 .flow .fn{display:inline-block;vertical-align:middle;font-size:13px;line-height:22px;color:rgba(0,0,0,.36);margin-right:10px;font-variant-numeric:tabular-nums}
+#app .cs24 .flow .fn{display:inline-block;vertical-align:middle;font-size:13px;line-height:22px;color:rgba(var(--ink-rgb),.36);margin-right:10px;font-variant-numeric:tabular-nums}
 #app .cs24 .flow .ft .tagx{vertical-align:middle;margin-bottom:0}
 #app .cs24 .flow .ft h3{margin-top:10px}
 #app .cs24 .flow .ft h3{font-size:20px;line-height:26px;font-weight:500;letter-spacing:-.025em}
@@ -910,10 +910,10 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .flow .ft p.feb{font-size:14px;line-height:20.5px;color:var(--fg);margin:0}
 #app .cs24 .flow .feb span{transition:background-color .2s,color .2s;display:inline-block;vertical-align:1px;margin-left:10px;font-size:12px;line-height:16px;font-weight:500;padding:2px 8px;border-radius:999px}
 #app .cs24 .flow .feb .st-ad{background:var(--cs-t);color:var(--cs)}
-#app .cs24 .flow .feb .st-pr{background:#ececec;color:rgba(0,0,0,.55)}
+#app .cs24 .flow .feb .st-pr{background:#ececec;color:rgba(0,0,0,.55);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .flow .feb+h3{margin-top:6px}
 #app .cs24 .flows{margin-top:72px}
-#app .cs24 .dsec{--mute:rgba(0,0,0,.36)}
+#app .cs24 .dsec{--mute:rgba(var(--ink-rgb),.36)}
 #app .cs24 .dsec .b{position:static;left:auto;top:auto;height:auto;display:block;align-items:normal;white-space:normal;border-radius:0;font-size:inherit;font-weight:inherit;padding:0;transform:none;transition:none}
 #app .cs24 .dsec .st{position:static;left:auto;top:auto;width:auto;height:auto;transform:none}
 #app .cs24 .dsec .ar{width:auto;height:auto;font-size:inherit;transform:none}
@@ -922,9 +922,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .bd{font-size:16px;line-height:24px;color:var(--body);margin-top:6px}
 #app .cs24 .dsec .note{max-width:560px;margin:24px auto 0;font-size:13px;line-height:19px;color:var(--mute)}
 #app .cs24 .dsec .stage{max-width:640px;margin:24px auto 0;background:var(--frame);border-radius:16px;aspect-ratio:16/10;position:relative;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding-top:32px}
-#app .cs24 .dsec .seg{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;background:#e7e7e7;border-radius:999px;padding:3px}
+#app .cs24 .dsec .seg{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;background:#e7e7e7;border-radius:999px;padding:3px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .seg button{all:unset;cursor:pointer;font-size:13px;line-height:18px;padding:6px 14px;border-radius:999px;color:var(--body);transition:background-color .25s,color .25s}
-#app .cs24 .dsec .seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+#app .cs24 .dsec .seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08);--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .seg button:focus-visible{outline:2px solid var(--cs);outline-offset:2px}
 #app .cs24 .dsec .hc{position:relative;width:340px;font-family:"DM Sans",sans-serif;border-radius:22px;padding:18px 18px 16px;color:#fff;
   background:radial-gradient(120% 90% at 30% 0%,#2a4a8f 0%,#1b3778 45%,#163a86 100%);box-shadow:0 18px 40px -18px rgba(1,28,98,.55)}
@@ -934,15 +934,15 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .hc .big b{font-size:52px;line-height:52px;font-weight:400;letter-spacing:-.03em}
 #app .cs24 .dsec .hc .big span{font-size:19px;font-weight:500}
 #app .cs24 .dsec .hc .dt{position:absolute;right:0;bottom:6px;font-size:12px;opacity:.85}
-#app .cs24 .dsec .hc .chip{position:absolute;right:0;bottom:6px;font-size:12px;font-weight:600;color:var(--navy);background:#fff;border-radius:999px;padding:3px 9px;transition:opacity .4s}
+#app .cs24 .dsec .hc .chip{position:absolute;right:0;bottom:6px;font-size:12px;font-weight:600;color:var(--navy);background:#fff;border-radius:999px;padding:3px 9px;transition:opacity .4s;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .ticks{position:relative;display:flex;gap:3.4px;height:30px;margin-top:14px}
 #app .cs24 .dsec .ticks i{flex:1;border-radius:3px;background:rgba(160,182,230,.45)}
-#app .cs24 .dsec .ticks i.u{background:#ffa930}
+#app .cs24 .dsec .ticks i.u{background:#ffa930;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .ticks i.s{background:rgba(255,160,150,.75)}
-#app .cs24 .dsec .ticks i.mark{flex:none;background:#fff}
-#app .cs24 .dsec .mark{position:absolute;top:-8px;bottom:-8px;width:2px;background:#fff;border-radius:2px;transition:opacity .4s}
+#app .cs24 .dsec .ticks i.mark{flex:none;background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .mark{position:absolute;top:-8px;bottom:-8px;width:2px;background:#fff;border-radius:2px;transition:opacity .4s;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .mark::after{content:"Today";position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;white-space:nowrap}
-#app .cs24 .dsec .wc{background:#fff;color:#2e2e2e;border-radius:16px;margin-top:16px;overflow:hidden;transition:max-height .55s var(--ease),opacity .4s;max-height:160px}
+#app .cs24 .dsec .wc{background:#fff;color:#2e2e2e;border-radius:16px;margin-top:16px;overflow:hidden;transition:max-height .55s var(--ease),opacity .4s;max-height:160px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .stats{display:flex;padding:12px 0 10px}
 #app .cs24 .dsec .stats div{flex:1;text-align:center;font-size:12px;color:#5c5c5c;line-height:16px}
 #app .cs24 .dsec .stats div+div{border-left:1px solid #ececec}
@@ -950,7 +950,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .pace{display:flex;align-items:center;gap:10px;padding:2px 12px 12px;transition:max-height .55s var(--ease),opacity .4s,padding .4s;max-height:70px;overflow:hidden}
 #app .cs24 .dsec .pace p{flex:1;font-size:13px;line-height:17px}
 #app .cs24 .dsec .pace .go{width:30px;height:30px;border-radius:50%;background:var(--navy);display:grid;place-items:center;flex:none}
-#app .cs24 .dsec .status{position:absolute;right:18px;top:18px;font-size:11px;font-weight:600;color:#7a4300;background:#ffd9a3;border-radius:999px;padding:3px 9px;transition:opacity .4s}
+#app .cs24 .dsec .status{position:absolute;right:18px;top:18px;font-size:11px;font-weight:600;color:#7a4300;background:#ffd9a3;border-radius:999px;padding:3px 9px;transition:opacity .4s;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec #d1[data-s="a"] .big.after, #app .cs24 .dsec #d1[data-s="b"] .big.before{opacity:0;transform:translateY(10px)}
 #app .cs24 .dsec #d1[data-s="a"] .chip{opacity:1}
 #app .cs24 .dsec #d1[data-s="b"] .chip{opacity:0}
@@ -975,8 +975,8 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .wc .x{outline-color:#0c65c3;outline-offset:-3px}
 #app .cs24 .dsec .side .mark{opacity:1}
 @media (max-width:600px){#app .cs24 .dsec .pair{grid-template-columns:1fr;aspect-ratio:auto;padding:24px 16px}}
-#app .cs24 .dsec .wf{width:270px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 0 0 1px rgba(0,0,0,.08);font-family:"Inter",sans-serif;color:var(--fg);align-self:start}
-#app .cs24 .dsec .wf .ln{height:8px;border-radius:4px;background:#e2e2e2}
+#app .cs24 .dsec .wf{width:270px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 0 0 1px rgba(0,0,0,.08);font-family:"Inter",sans-serif;color:var(--fg);align-self:start;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .wf .ln{height:8px;border-radius:4px;background:#e2e2e2;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .wf .t1{width:42%;height:10px;background:#cfcfcf}
 #app .cs24 .dsec .wf .rw{display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px;min-height:40px;border-radius:8px}
 #app .cs24 .dsec .wf .num{display:flex;align-items:baseline;gap:6px}
@@ -984,7 +984,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .wf .num span{font-size:14px;color:#555}
 #app .cs24 .dsec .wf .pill{font-size:11px;font-weight:600;border:1px solid #bdbdbd;border-radius:999px;padding:2px 8px;color:#444}
 #app .cs24 .dsec .wf .tk{display:flex;gap:2.5px;height:22px;margin-top:12px;position:relative}
-#app .cs24 .dsec .wf .tk i{flex:1;border-radius:2px;background:#e6e6e6}
+#app .cs24 .dsec .wf .tk i{flex:1;border-radius:2px;background:#e6e6e6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .wf .tk i.u{background:#8d8d8d}
 #app .cs24 .dsec .wf .tk .m{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--cs);flex:none}
 #app .cs24 .dsec .wf .box{margin-top:12px;border:1px solid #e3e3e3;border-radius:10px;padding:10px}
@@ -996,7 +996,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .wf .hl .st3 b{color:var(--fg)}
 #app .cs24 .dsec .wf .hl .st3 span{color:#555}
 #app .cs24 .dsec .wf .st3 .a{width:24px;height:9px;border-radius:3px;background:#cfcfcf}
-#app .cs24 .dsec .wf .st3 .b{width:36px;height:6px;border-radius:3px;background:#e6e6e6}
+#app .cs24 .dsec .wf .st3 .b{width:36px;height:6px;border-radius:3px;background:#e6e6e6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .wf .sen{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;line-height:16px;color:#333}
 #app .cs24 .dsec .wf .sen i{width:14px;height:14px;border-radius:3px;background:#cfcfcf;flex:none}
 #app .cs24 .dsec .hl{background:rgba(12,101,195,.10);box-shadow:0 0 0 1.5px rgba(12,101,195,.55);border-radius:8px}
@@ -1013,21 +1013,21 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .cmp .lb{font-size:12px;line-height:16px;color:var(--mute);text-align:left;padding-left:2px}
 #app .cs24 .dsec .cmp .lb:nth-child(2){grid-column:3}
 #app .cs24 .dsec .cmp .ar{grid-column:2;grid-row:2;display:grid;place-items:center;color:#b3b3b3}
-#app .cs24 .dsec .w{grid-row:2;background:#fff;border-radius:14px;padding:14px;font-family:"Inter",sans-serif;color:var(--fg);display:flex;flex-direction:column;gap:12px}
+#app .cs24 .dsec .w{grid-row:2;background:#fff;border-radius:14px;padding:14px;font-family:"Inter",sans-serif;color:var(--fg);display:flex;flex-direction:column;gap:12px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w.a{grid-column:1}
 #app .cs24 .dsec .w.b{grid-column:3}
 #app .cs24 .dsec .w .top{display:flex;justify-content:space-between;align-items:center;height:20px}
-#app .cs24 .dsec .w .bar0{width:44%;height:9px;border-radius:5px;background:#dcdcdc}
+#app .cs24 .dsec .w .bar0{width:44%;height:9px;border-radius:5px;background:#dcdcdc;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .num{display:flex;align-items:baseline;gap:6px;padding:4px 6px;margin:-4px -6px;border-radius:8px}
 #app .cs24 .dsec .w .num b{font-size:32px;line-height:34px;font-weight:500;letter-spacing:-.03em}
 #app .cs24 .dsec .w .num span{font-size:13px;color:#666}
-#app .cs24 .dsec .w .chip{font-size:11px;font-weight:600;color:#666;background:#efefef;border-radius:999px;padding:2px 8px;margin-left:auto;align-self:center}
+#app .cs24 .dsec .w .chip{font-size:11px;font-weight:600;color:#666;background:#efefef;border-radius:999px;padding:2px 8px;margin-left:auto;align-self:center;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .tk{position:relative;display:flex;gap:2.4px;height:20px}
-#app .cs24 .dsec .w .tk i{flex:1;border-radius:2px;background:#e9e9e9}
+#app .cs24 .dsec .w .tk i{flex:1;border-radius:2px;background:#e9e9e9;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .tk i.u{background:#a3a3a3}
 #app .cs24 .dsec .w .tk .m{position:absolute;top:-5px;bottom:-5px;width:2px;border-radius:1px;background:var(--navy)}
 #app .cs24 .dsec .w .tk .m em{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;font-style:normal;font-size:10px;font-weight:600;color:var(--navy)}
-#app .cs24 .dsec .w .st{display:flex;border-radius:10px;background:#f6f6f6;padding:8px 0}
+#app .cs24 .dsec .w .st{display:flex;border-radius:10px;background:#f6f6f6;padding:8px 0;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .st div{flex:1;text-align:center;font-size:10.5px;line-height:13px;color:#9a9a9a}
 #app .cs24 .dsec .w .st b{display:block;font-size:13px;line-height:16px;font-weight:600;color:#8a8a8a}
 #app .cs24 .dsec .w .sb{position:relative;height:30px;border-radius:9px;padding:9px 6px;margin:0 -6px}
@@ -1055,23 +1055,23 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .w.md .sb .fill{height:12px;background:linear-gradient(90deg,#3a3a3a 0 58%,#dcdcdc 58% 100%)}
 #app .cs24 .dsec .w.md .sb .pm{left:auto;right:30%;top:3px;bottom:3px;width:2.5px;background:#8c8c8c}
 #app .cs24 .dsec .w.md .tagrow{gap:6px;margin-top:-4px;padding:5px 6px;margin-left:-6px;margin-right:-6px;border-radius:8px}
-#app .cs24 .dsec .w.md .chip2{color:#2e2e2e;background:#ececec}
-#app .cs24 .dsec .w.md .tagrow.on-x .chip2{color:var(--navy);background:#fff}
-#app .cs24 .dsec .w.md .ft2{margin:auto -14px -14px;padding:9px 14px;background:#f6f6f6;font-size:11px;color:#777;border-radius:0 0 14px 14px}
+#app .cs24 .dsec .w.md .chip2{color:#2e2e2e;background:#ececec;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w.md .tagrow.on-x .chip2{color:var(--navy);background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w.md .ft2{margin:auto -14px -14px;padding:9px 14px;background:#f6f6f6;font-size:11px;color:#777;border-radius:0 0 14px 14px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .num{align-items:baseline}
 #app .cs24 .dsec .w .num .dt2{margin-left:auto;font-size:10.5px;color:#9a9a9a}
-#app .cs24 .dsec .w .sen:not(.on-x){color:#9a9a9a;background:#f6f6f6}
-#app .cs24 .dsec .w .tk3 i{background:#e6e6e6}
-#app .cs24 .dsec .w .tk3 i.u{background:#ffa930}
+#app .cs24 .dsec .w .sen:not(.on-x){color:#9a9a9a;background:#f6f6f6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w .tk3 i{background:#e6e6e6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w .tk3 i.u{background:#ffa930;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .tk3 i.s{background:rgba(255,160,150,.8)}
-#app .cs24 .dsec .w .tk3.on-x i:not(.u):not(.s){background:#fff}
+#app .cs24 .dsec .w .tk3.on-x i:not(.u):not(.s){background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .tk3.on-x{height:32px;padding:6px;margin:-6px;border-radius:9px}
-#app .cs24 .dsec .w .ph{display:block;border-radius:4px;background:#e2e2e2}
+#app .cs24 .dsec .w .ph{display:block;border-radius:4px;background:#e2e2e2;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .num .dt2.ph{align-self:center}
-#app .cs24 .dsec .w .tk3 i{background:#e9e9e9}
+#app .cs24 .dsec .w .tk3 i{background:#e9e9e9;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .tk3 i.u{background:#8a8a8a}
 #app .cs24 .dsec .w .tk3 i.s{background:#bcbcbc}
-#app .cs24 .dsec .w .tk3.on-x i:not(.u):not(.s){background:#fff}
+#app .cs24 .dsec .w .tk3.on-x i:not(.u):not(.s){background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w.md .sb .fill{background:linear-gradient(90deg,#8a8a8a 0 60%,#e2e2e2 60% 100%)}
 #app .cs24 .dsec .w.md .sb .pm{background:#555}
 #app .cs24 .dsec .w .rt:not(.on-x){color:#9a9a9a}
@@ -1088,7 +1088,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .sl .cmp{margin:0}
 #app .cs24 .dsec .nav{max-width:640px;margin:16px auto 0;display:flex;align-items:center;justify-content:center;gap:16px}
 #app .cs24 .dsec .nav button{all:unset;cursor:pointer;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--frame);color:var(--fg);transition:background-color .2s,opacity .2s}
-#app .cs24 .dsec .nav button:hover{background:#e9e9e9}
+#app .cs24 .dsec .nav button:hover{background:#e9e9e9;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .nav button:disabled{opacity:.3;cursor:default}
 #app .cs24 .dsec .nav button:focus-visible{outline:2px solid var(--cs);outline-offset:2px}
 #app .cs24 .dsec .ct{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
@@ -1101,31 +1101,31 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .w .tk3.on-x i.s{background:#9db2d8}
 #app .cs24 .dsec .w.md .sb.on-x .fill{background:linear-gradient(90deg,#3f5a8f 0 60%,#fff 60% 100%)}
 #app .cs24 .dsec .w.md .sb.on-x .pm{background:var(--navy)}
-#app .cs24 .dsec .w .rt.on-x .lf{background:#fff}
+#app .cs24 .dsec .w .rt.on-x .lf{background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .on-x .pj{color:#3f5a8f}
 #app .cs24 .dsec .sec2{margin-top:120px}
-#app .cs24 .dsec .stp{display:inline-block;vertical-align:3px;margin-left:10px;font-size:12px;line-height:16px;font-weight:500;padding:2px 8px;border-radius:999px;background:#ececec;color:rgba(0,0,0,.55);letter-spacing:0}
-#app .cs24 .dsec .w .av{width:26px;height:26px;border-radius:50%;background:#e2e2e2;flex:none}
-#app .cs24 .dsec .w .need{border-radius:10px;padding:10px;background:#f6f6f6}
+#app .cs24 .dsec .stp{display:inline-block;vertical-align:3px;margin-left:10px;font-size:12px;line-height:16px;font-weight:500;padding:2px 8px;border-radius:999px;background:#ececec;color:rgba(0,0,0,.55);letter-spacing:0;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w .av{width:26px;height:26px;border-radius:50%;background:#e2e2e2;flex:none;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w .need{border-radius:10px;padding:10px;background:#f6f6f6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .need .q{font-size:12px;font-weight:600;color:#9a9a9a;margin-bottom:8px}
 #app .cs24 .dsec .w .chips{display:flex;flex-wrap:wrap;gap:5px}
-#app .cs24 .dsec .w .chips span{font-size:10.5px;line-height:14px;padding:3px 8px;border-radius:999px;background:#fff;color:#8a8a8a;box-shadow:inset 0 0 0 1px #e2e2e2}
+#app .cs24 .dsec .w .chips span{font-size:10.5px;line-height:14px;padding:3px 8px;border-radius:999px;background:#fff;color:#8a8a8a;box-shadow:inset 0 0 0 1px #e2e2e2;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .chips.sm span{font-size:9.5px;padding:2px 6px}
 #app .cs24 .dsec .w .on-x .q, #app .cs24 .dsec .w .on-x .nm{color:var(--navy)}
 #app .cs24 .dsec .w .on-x .chips span{color:var(--navy);box-shadow:none}
-#app .cs24 .dsec .w .btn{height:26px;border-radius:999px;background:#dcdcdc;margin-top:auto}
+#app .cs24 .dsec .w .btn{height:26px;border-radius:999px;background:#dcdcdc;margin-top:auto;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .app{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px;margin:0 -8px}
 #app .cs24 .dsec .w .app .nm{font-size:12px;font-weight:600;color:#9a9a9a;margin-bottom:4px}
 #app .cs24 .dsec .w .clock{text-align:center;font-size:30px;line-height:32px;font-weight:500;color:#c4c4c4;margin-top:-4px}
-#app .cs24 .dsec .w .live{margin-top:auto;border-radius:12px;padding:10px 12px;background:#f6f6f6}
+#app .cs24 .dsec .w .live{margin-top:auto;border-radius:12px;padding:10px 12px;background:#f6f6f6;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .live .tm{font-size:22px;line-height:26px;font-weight:500;color:var(--navy)}
 #app .cs24 .dsec .w .live .lg{display:flex;align-items:center;gap:6px;font-size:11px;line-height:16px;color:#3f5a8f;margin-top:3px}
 #app .cs24 .dsec .w .live .lg i{width:7px;height:7px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #3f5a8f}
 #app .cs24 .dsec .w .chat{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px}
 #app .cs24 .dsec .w .chat p{font-size:11px;line-height:15px;padding:7px 9px;border-radius:12px;max-width:85%}
 #app .cs24 .dsec .w .chat .me{align-self:flex-end;background:var(--navy);color:#fff;border-bottom-right-radius:4px}
-#app .cs24 .dsec .w .chat .them{align-self:flex-start;background:#fff;color:var(--navy);border-bottom-left-radius:4px}
-#app .cs24 .dsec .w .inp{margin-top:auto;height:26px;border-radius:999px;background:#efefef}
+#app .cs24 .dsec .w .chat .them{align-self:flex-start;background:#fff;color:var(--navy);border-bottom-left-radius:4px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
+#app .cs24 .dsec .w .inp{margin-top:auto;height:26px;border-radius:999px;background:#efefef;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .rate{border-radius:12px;padding:10px;text-align:center}
 #app .cs24 .dsec .w .rate .q{font-size:11.5px;line-height:15px;color:var(--navy);margin-bottom:6px}
 #app .cs24 .dsec .w .stars{display:flex;justify-content:center;gap:4px;font-size:18px;line-height:20px;color:var(--navy)}
@@ -1137,7 +1137,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .w .live .as{display:flex;align-items:center;gap:6px;font-size:11px;color:#3f5a8f}
 #app .cs24 .dsec .w .live .as i{width:6px;height:6px;border-radius:50%;background:#3f5a8f}
 #app .cs24 .dsec .w .cg{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#9a9a9a;margin-top:6px}
-#app .cs24 .dsec .w .cg .av{width:20px;height:20px;background:#fff}
+#app .cs24 .dsec .w .cg .av{width:20px;height:20px;background:#fff;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .live{margin-top:0}
 #app .cs24 .dsec .w .lgs p{display:flex;align-items:center;gap:8px;margin-top:8px}
 #app .cs24 .dsec .w .lgs i{width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #cfcfcf}
@@ -1151,10 +1151,10 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .w .stars{color:#cfcfcf}
 #app .cs24 .dsec .w .chips.g{justify-content:center}
 #app .cs24 .dsec .tl{position:relative;max-width:640px;margin:0 auto 36px;display:grid;grid-template-columns:repeat(3,1fr)}
-#app .cs24 .dsec .tl .ln{position:absolute;left:16.667%;right:16.667%;top:5px;height:2px;border-radius:1px;background:#e6e6e6;overflow:hidden}
+#app .cs24 .dsec .tl .ln{position:absolute;left:16.667%;right:16.667%;top:5px;height:2px;border-radius:1px;background:#e6e6e6;overflow:hidden;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .tl .ln i{position:absolute;inset:0;background:var(--navy);transform-origin:left;transform:scaleX(0);transition:transform .5s var(--ease)}
 #app .cs24 .dsec .tl .st{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative}
-#app .cs24 .dsec .tl .dt{width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2px #d6d6d6;transition:background .3s,box-shadow .3s}
+#app .cs24 .dsec .tl .dt{width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2px #d6d6d6;transition:background .3s,box-shadow .3s;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .tl .st.done .dt{background:var(--navy);box-shadow:none}
 #app .cs24 .dsec .tl .st.on .dt{background:var(--navy);box-shadow:0 0 0 4px var(--cs-t)}
 #app .cs24 .dsec .tl .tx{font-size:13px;line-height:18px;color:var(--mute);transition:color .3s}
@@ -1171,7 +1171,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .d2 .pair{display:flex;gap:20px;align-items:flex-start;justify-content:center}
 #app .cs24 .dsec .d2 .cp{display:block;width:272px;height:auto;border-radius:15px}
 #app .cs24 .dsec .d2 .cp.sh{width:252px;border-radius:18px}
-#app .cs24 .dsec .d2 .chat2{width:272px;background:#fff;border-radius:15px;padding:14px 0 12px;display:flex;flex-direction:column;gap:6px}
+#app .cs24 .dsec .d2 .chat2{width:272px;background:#fff;border-radius:15px;padding:14px 0 12px;display:flex;flex-direction:column;gap:6px;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .d2 .chat2 img{display:block;height:auto}
 #app .cs24 .dsec .d2 .chat2 .m1{width:242px;margin-left:auto;margin-right:12px}
 #app .cs24 .dsec .d2 .chat2 .m2{width:272px}
@@ -1179,13 +1179,13 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .d2 .sl{height:auto;padding:24px 0}}
 #app .cs24 .dsec .stp.ad{background:var(--cs-t);color:var(--cs)}
 #app .cs24 .dsec .hd3 .why{margin-top:10px;font-size:14px;line-height:21px;color:var(--mute)}
-#app .cs24 .dsec .d2 .crm{width:272px;background:#fff;border-radius:15px;padding:14px 0}
+#app .cs24 .dsec .d2 .crm{width:272px;background:#fff;border-radius:15px;padding:14px 0;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .d2 .crm img{display:block;width:100%;height:auto}
 #app .cs24 .dsec .d2 .frm{padding:0}
 #app .cs24 .dsec .d2 .sl{height:470px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start}
 #app .cs24 .dsec .d2 .sl .pair{flex:1;align-items:center;padding-top:8px}
 #app .cs24 .dsec .d2 .tk2{position:relative;height:72px;flex:none}
-#app .cs24 .dsec .d2 .tk2::before{content:"";position:absolute;left:0;right:0;top:20px;height:1px;background:#d4d4d4}
+#app .cs24 .dsec .d2 .tk2::before{content:"";position:absolute;left:0;right:0;top:20px;height:1px;background:#d4d4d4;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .d2 .tk2.first::before{left:50%}
 #app .cs24 .dsec .d2 .tk2.last::before{right:50%}
 #app .cs24 .dsec .d2 .tk2 i{position:absolute;left:50%;top:16px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--navy)}
@@ -1220,7 +1220,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .dsec .w .hr p b{font-size:16px;font-weight:500;color:#8a8a8a}
 #app .cs24 .dsec .w .hr2{display:flex;justify-content:space-between;font-size:9.5px;color:#9a9a9a;margin-top:-6px}
 #app .cs24 .dsec .w .lg3 p{display:flex;align-items:center;gap:6px;font-size:10px;line-height:15px;color:#9a9a9a}
-#app .cs24 .dsec .w .lg3 i{width:6px;height:6px;border-radius:50%;background:#ececec}
+#app .cs24 .dsec .w .lg3 i{width:6px;height:6px;border-radius:50%;background:#ececec;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .dsec .w .lg3 i.u{background:#9a9a9a}
 #app .cs24 .dsec .w .lg3 i.s{background:#cfcfcf}
 #app .cs24 .dsec .w .lg3 b{margin-left:auto;font-weight:500;color:#8a8a8a}
@@ -1244,6 +1244,12 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 @media (max-width:560px){#app .cs24 .dsec .hc{transform:scale(.82)}}
 /* the site's case-study column already gives the side margins */
 #app .cs24{padding-left:0;padding-right:0}
+/* dark mode follows the site: the page itself (background, type, frames) turns dark; the product mock-ups inside stay as designed */
+:root[data-theme="dark"] #app .cs24{--bg:#0b0b0b;--fg:#f2f2f2;--body:rgba(255,255,255,.52);--frame:#171717;--ink-rgb:255,255,255}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #app .cs24{--bg:#0b0b0b;--fg:#f2f2f2;--body:rgba(255,255,255,.52);--frame:#171717;--ink-rgb:255,255,255}}
+:root[data-theme="dark"] #app .cs24 :is(.total b,.kf .big,.shift .fin figcaption){color:#7d9be6}
+:root[data-theme="dark"] #app .cs24 .body .hl{color:rgba(0,0,0,.52)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #app .cs24 :is(.total b,.kf .big,.shift .fin figcaption){color:#7d9be6}#app .cs24 .body .hl{color:rgba(0,0,0,.52)}}
 /* Playground — redesign in the site's language: Inter only, the site's greys, chips like the Tools row,
    glass labels like the project cards, square-cornered buttons like "Get in touch", no shadows, the site's easing. */
 .pg { padding: 100px 8px 0; --pg-ease: cubic-bezier(.25, .8, .25, 1); }
