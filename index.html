@@ -113,6 +113,52 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   width: 58px; height: 58px; border-radius: 50%; background: #3a3a3a; overflow: hidden;
   object-fit: cover; margin-bottom: 22px;
 }
+/* Hero avatar: a grey photo under still water. The pointer stirs the surface; the photo refracts with it,
+   and where the pointer passed it is wet with colour that dries back to grey. */
+.av-fx { position: relative; display: block; width: 96px; height: 96px; background: none; overflow: visible; flex: none; }
+.av-fx img, .av-fx canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; }
+.hero p .who { color: var(--fg); font-weight: 500; }
+.hero-in:has(.who) { max-width: 380px; }
+.hero .cyc { margin-top: 4px; }
+/* the slot eases to each word's width; words roll up into place (clip-path lets the decorations draw outside the box) */
+.cyc .slot{position:relative;display:inline-block;vertical-align:top;box-sizing:content-box;height:1.38em;color:var(--fg);text-decoration:none;
+  transition:width .45s cubic-bezier(.3,.7,.2,1);white-space:nowrap;cursor:default;clip-path:inset(-.4em -14px -.4em -4px)}
+.cyc .slot.link{cursor:pointer}
+.cyc .slot > span{position:absolute;left:0;top:0;display:block;white-space:nowrap;line-height:inherit;transition:transform .45s cubic-bezier(.3,.7,.2,1),opacity .3s}
+.cyc.s-chip .slot > span{left:10px}
+.cyc .slot > span.out{transform:translateY(-120%);opacity:0}
+.cyc .slot > span.in{transform:translateY(120%);opacity:0}
+
+/* style: line */
+.cyc.s-line .slot{border-bottom:1px dashed var(--faint);height:calc(1.38em - 1px)}
+
+/* style: chip — a soft pill from the site's chip colour */
+.cyc.s-chip .slot{padding:0 10px;margin:0 2px;border-radius:40px;background:rgba(0,0,0,.05);clip-path:inset(0 round 40px)}
+
+/* style: act — every word does what it says */
+/* sliders: the word is the track — ink fills the letters up to a slim thumb that slides across and settles */
+@property --wp{syntax:"<percentage>";inherits:false;initial-value:0%}
+.w-sliders{--wp:0%;background:linear-gradient(90deg,var(--fg) var(--wp),var(--faint) var(--wp));-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:wslide 1.5s cubic-bezier(.5,0,.2,1) .15s both}
+.w-sliders::after{content:"";position:absolute;top:.18em;height:1.02em;width:1.5px;border-radius:2px;background:var(--fg);left:calc(var(--wp) - .75px);animation:inherit}
+@keyframes wslide{0%{--wp:0%}60%{--wp:100%}100%{--wp:68%}}
+.w-loaders::after{content:"";position:absolute;left:0;bottom:1px;height:2px;border-radius:2px;background:var(--fg);animation:wload 1.5s cubic-bezier(.6,0,.3,1) .15s both}
+.w-loaders::before{content:"";position:absolute;left:0;right:0;bottom:1px;height:2px;border-radius:2px;background:var(--line)}
+@keyframes wload{0%{width:0}35%{width:22%}55%{width:30%}100%{width:100%}}
+.w-posters{font-family:var(--logo,"Outfit"),Inter,sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.94em}
+.w-booklets{font-family:var(--serif,"Instrument Serif"),Georgia,serif;font-style:italic;font-size:1.12em;letter-spacing:0}
+.w-funk .ch{display:inline-block;animation:wfunk .5s cubic-bezier(.3,1.6,.5,1) infinite alternate;animation-delay:calc(var(--i) * 70ms)}
+@keyframes wfunk{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.w-noise .ch{display:inline-block;animation:wnoise .18s steps(2) infinite;animation-delay:calc(var(--i) * -37ms)}
+@keyframes wnoise{0%{transform:translate(.6px,-.8px) rotate(-3deg)}50%{transform:translate(-.7px,.6px) rotate(2deg)}100%{transform:translate(.3px,.9px) rotate(-1deg)}}
+.w-tea{animation:wtea 1.4s ease-out both}
+@keyframes wtea{from{filter:blur(3px);opacity:.2;transform:translateY(3px)}to{filter:none;opacity:1;transform:none}}
+.w-tea::after{content:"";position:absolute;right:-7px;top:-4px;width:5px;height:9px;border-right:1.2px solid var(--faint);border-radius:0 6px 6px 0;opacity:0;animation:wsteam 2s ease-out .3s infinite}
+@keyframes wsteam{0%{opacity:0;transform:translateY(4px) scaleY(.6)}40%{opacity:.9}100%{opacity:0;transform:translateY(-5px) scaleY(1.1)}}
+.w-mistakes .fix{color:#d0453a;transition:color .4s}
+.w-mistakes .fix.ok{color:inherit}
+@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after{animation:none}}
+
 .hero h1 { font-size: 26px; font-weight: 500; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 16px; }
 .hero p { color: var(--muted); font-size: 17px; line-height: 1.38; }
 .hero .prev { margin: 14px 0 24px; }
@@ -856,9 +902,9 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     <section class="hero">
       ${kit.map((d, i) => `<button class="inst" type="button" data-k="${d.k}" aria-label="Play ${d.k}" style="left:${d.x}%;top:${d.y}%;width:${d.w}px;--r:${d.r}deg;--r0:${d.r0 - d.r}deg;--delay:${d.delay}s"><img src="${d.src}" alt="" draggable="false"></button>`).join("")}
       <div class="hero-in">
-        <img class="avatar" src="${AVATAR}" alt="Dakota">
+        <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
         <h1>Break it down,<br>build it back</h1>
-        <p>Hi! I'm dakota.<br>I question what’s obvious to understand what’s underneath.</p>
+        <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
         <p class="prev"><i>Prev.</i> Baidu, 24Hour Homecare</p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
         <div class="hint">Press <kbd>⌘</kbd> + <kbd>⌥</kbd> to ask AI</div>
@@ -1555,6 +1601,189 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   const nav = document.querySelectorAll(".links [data-k]");
   let spy = null;
   addEventListener("scroll", () => spy && spy(), { passive: true });
+
+  // ---------- hero avatar: water surface + leaves carried off the mirror ----------
+  let avAbort = null;
+  function avFx(el) {
+    if (avAbort) avAbort.abort();
+    avAbort = new AbortController();
+    const sig = { signal: avAbort.signal, passive: true };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const load = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = src; });
+    Promise.all([load("img/avatar-color.webp"), load("img/avatar-gray.webp")]).then(([C, G]) => {
+      if (!el.isConnected) return;
+      const cv = el.querySelector("canvas"), ctx = cv.getContext("2d");
+      const d = Math.min(devicePixelRatio || 1, 2), S = el.offsetWidth, N = Math.round(S * d);
+      cv.width = cv.height = N;
+      const px = (img) => { const c = document.createElement("canvas"); c.width = c.height = N; const x = c.getContext("2d"); x.drawImage(img, 0, 0, N, N); return x.getImageData(0, 0, N, N).data; };
+      const col = px(C), gry = px(G);
+      ctx.putImageData(new ImageData(new Uint8ClampedArray(gry), N, N), 0, 0);
+      const a = new Float32Array(N * N), b = new Float32Array(N * N), wet = new Float32Array(N * N), od = ctx.createImageData(N, N), out = od.data;
+      let prev = null, calm = 0, raf = 0;
+      const stamp = (A, x, y, R, f, cap) => {
+        const r = Math.ceil(R);
+        for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) {
+          const X = Math.round(x + i), Y = Math.round(y + j), q = (i * i + j * j) / (R * R);
+          if (X < 1 || Y < 1 || X >= N - 1 || Y >= N - 1 || q > 1) continue;
+          const k = Y * N + X, v = A[k] + f * (1 - q) * (1 - q);
+          A[k] = cap && v > 1 ? 1 : v;
+        }
+      };
+      addEventListener("pointermove", (e) => {
+        const R = el.getBoundingClientRect(), M = S * 0.25, x = e.clientX - R.left, y = e.clientY - R.top;
+        if (x < -M || y < -M || x > S + M || y > S + M) { prev = null; return; }
+        const X = x * d, Y = y * d, Rw = N * 0.26, Rd = N * 0.035;
+        const from = prev || [X, Y], dx = X - from[0], dy = Y - from[1], dist = Math.hypot(dx, dy);
+        const n = Math.max(1, Math.ceil(dist / (Rd * 1.5)));
+        for (let k = 1; k <= n; k++) {
+          const px2 = from[0] + dx * k / n, py2 = from[1] + dy * k / n;
+          stamp(wet, px2, py2, Rw, 1.4 / n * Math.min(n, 3), true);
+          stamp(a, px2, py2, Rd, 9, false);
+        }
+        prev = [X, Y]; calm = 0;
+        if (!raf) raf = requestAnimationFrame(step);
+      }, sig);
+      function step() {
+        if (!el.isConnected) { raf = 0; return; }
+        const C2 = 0.09;   // slow water: low wave speed, damped so it settles in a second or two
+        for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) {
+          const i = y * N + x;
+          b[i] = (b[i] + (a[i - 1] + a[i + 1] + a[i - N] + a[i + N] - 4 * a[i]) * C2) * 0.978;
+        }
+        let energy = 0, wetAny = false;
+        for (let i = 0; i < N * N; i++) { a[i] = (a[i] + b[i]) * 0.994; energy += b[i] < 0 ? -b[i] : b[i]; }
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          const i = y * N + x;
+          const sx = x > 0 && x < N - 1 ? a[i - 1] - a[i + 1] : 0, sy = y > 0 && y < N - 1 ? a[i - N] - a[i + N] : 0;
+          const w = wet[i] = wet[i] * 0.982; if (w > 0.004) wetAny = true;
+          let fx = x + sx * 0.9, fy = y + sy * 0.9;   // refraction, sampled smoothly so nothing jitters
+          fx = fx < 0 ? 0 : fx > N - 1.001 ? N - 1.001 : fx; fy = fy < 0 ? 0 : fy > N - 1.001 ? N - 1.001 : fy;
+          const X = fx | 0, Y = fy | 0, tx = fx - X, ty = fy - Y, k = (Y * N + X) * 4, kr = k + 4, kd = k + N * 4, kdr = kd + 4, o4 = i * 4;
+          const w00 = (1 - tx) * (1 - ty), w10 = tx * (1 - ty), w01 = (1 - tx) * ty, w11 = tx * ty;
+          const m = w * w * (3 - 2 * w), lit = 1 + Math.max(-0.08, Math.min(0.14, (sx + sy) * 0.02));
+          for (let c = 0; c < 3; c++) {
+            const g = gry[k + c] * w00 + gry[kr + c] * w10 + gry[kd + c] * w01 + gry[kdr + c] * w11;
+            const v = col[k + c] * w00 + col[kr + c] * w10 + col[kd + c] * w01 + col[kdr + c] * w11;
+            out[o4 + c] = (g + (v - g) * m) * lit;
+          }
+          out[o4 + 3] = gry[k + 3] * w00 + gry[kr + 3] * w10 + gry[kd + 3] * w01 + gry[kdr + 3] * w11;
+        }
+        ctx.putImageData(od, 0, 0);
+        calm = energy / (N * N) < 0.002 && !wetAny ? calm + 1 : 0;
+        raf = calm > 180 ? 0 : requestAnimationFrame(step);
+      }
+    });
+    avLeaves(el, sig);
+  }
+
+  // After the mirror has been stirred, the hand carries a few small leaves off it; they fall like real leaves
+  // (a slow pendulum swing), only in a narrow ring around the mirror, sized to the photo's own leaves.
+  let leafCv = null;
+  function avLeaves(mirror, sig) {
+    if (!leafCv) {
+      leafCv = document.createElement("canvas");
+      Object.assign(leafCv.style, { position: "fixed", inset: "0", width: "100vw", height: "100vh", pointerEvents: "none", zIndex: 5 });
+      document.body.appendChild(leafCv);
+    }
+    const cv = leafCv, ctx = cv.getContext("2d");
+    let d = 1;
+    const size = () => { d = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * d; cv.height = innerHeight * d; };
+    size(); addEventListener("resize", size, sig);
+    const GREENS = ["#5d7a2e", "#7c9a3d", "#98b356", "#4a6526", "#aac46b", "#6b8a34"];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    let charge = 0, chargedAt = -1e9, prev = null, leaves = [], raf = 0, last = performance.now();
+    addEventListener("pointermove", (e) => {
+      if (!mirror.isConnected) return;
+      const now = performance.now(), x = e.clientX, y = e.clientY;
+      const r = mirror.getBoundingClientRect(), mw = r.width, dist = Math.hypot(x - (r.left + mw / 2), y - (r.top + mw / 2));
+      if (dist < mw / 2) { charge = 1; chargedAt = now; }
+      else if (prev && dist < mw / 2 + 36 && charge > 0.05) {
+        const dt = Math.max(8, now - prev[2]), vx = (x - prev[0]) / dt, vy = (y - prev[1]) / dt, sp = Math.hypot(vx, vy);
+        if (Math.random() < Math.min(0.4, sp * 0.35) * charge) {
+          leaves.push({ y, ox: x, drift: Math.max(-0.03, Math.min(0.03, vx * 0.05)), ph: rnd(0, 6.28), per: rnd(1700, 2300), amp: mw * rnd(0.07, 0.1),
+            sink: rnd(0.012, 0.018), a0: rnd(-0.5, 0.5) + (Math.random() < 0.5 ? 0 : Math.PI), L: mw * rnd(0.024, 0.032),
+            c: GREENS[(Math.random() * GREENS.length) | 0], t0: now, life: rnd(2600, 3400) });
+          if (leaves.length > 7) leaves.shift();
+        }
+      }
+      prev = [x, y, now];
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(draw); }
+    }, sig);
+    function draw(now) {
+      const dt = Math.min(40, now - last); last = now;
+      charge = Math.max(0, 1 - (now - chargedAt) / 2500);
+      ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, innerWidth, innerHeight);
+      leaves = mirror.isConnected ? leaves.filter((l) => now - l.t0 < l.life) : [];
+      for (const l of leaves) {
+        const t = now - l.t0, age = t / l.life;
+        l.ph += (dt / l.per) * 6.283;
+        const sw = Math.sin(l.ph), through = Math.abs(Math.cos(l.ph));
+        l.ox += l.drift * dt; l.drift *= Math.pow(0.996, dt);
+        l.y += l.sink * (0.35 + 0.65 * through) * dt;
+        ctx.globalAlpha = 0.9 * Math.min(1, t / 350) * (age < 0.65 ? 1 : 1 - (age - 0.65) / 0.35);
+        ctx.save(); ctx.translate(l.ox + sw * l.amp, l.y); ctx.rotate(l.a0 + Math.cos(l.ph) * 0.55); ctx.scale(l.L, l.L);
+        ctx.beginPath();
+        ctx.moveTo(-1, 0);
+        ctx.bezierCurveTo(-0.7, -0.62, 0.35, -0.7, 1.05, 0);
+        ctx.bezierCurveTo(0.35, 0.62, -0.7, 0.58, -1, 0);
+        ctx.moveTo(-1, -0.04); ctx.lineTo(-1.35, -0.1); ctx.lineTo(-1.35, 0.04); ctx.lineTo(-1, 0.04);
+        ctx.restore(); ctx.fillStyle = l.c; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      raf = leaves.length || charge > 0 ? requestAnimationFrame(draw) : 0;
+    }
+  }
+
+
+function cycMount(root, onOpen) {
+  const slot = root.querySelector(".slot");
+  if (!slot || slot.dataset.on) return () => {};
+  slot.dataset.on = "1";
+  const act = root.classList.contains("s-act");
+  const WORDS = ["things", "sliders", "loaders", "posters", "booklets", "funk playlists", "noise", "tea", "mistakes"];
+  const LINK = { sliders: 1, loaders: 1, posters: 1, booklets: 1 };     // real work → opens the Playground
+  const cls = (w) => act ? "w-" + w.split(" ")[0] : "";
+  const fill = (el, w) => {
+    el.className = cls(w);
+    if (act && (w === "funk playlists" || w === "noise")) {
+      el.textContent = "";
+      [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", k); s.textContent = c === " " ? " " : c; el.appendChild(s); });
+    } else if (act && w === "mistakes") {
+      // typed wrong first, then the two letters swap into place
+      el.innerHTML = 'mista<span class="fix">ek</span>s';
+      setTimeout(() => { const f = el.querySelector(".fix"); if (f) { f.textContent = "ke"; f.classList.add("ok"); } }, 900);
+    } else el.textContent = w;
+  };
+  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
+  let i = 0, hold = false, wait = 0;
+  const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
+  const size = () => (slot.style.width = measure(WORDS[i]) + "px");
+  // the poster and booklet words use other faces; load them up front so their widths measure true
+  if (document.fonts) Promise.all(['500 17px Outfit', 'italic 19px "Instrument Serif"'].map((f) => document.fonts.load(f).catch(() => {}))).then(size);
+  size();
+  if (document.fonts) document.fonts.ready.then(size);
+  setTimeout(size, 700);
+  slot.addEventListener("mouseenter", () => (hold = true));
+  slot.addEventListener("mouseleave", () => (hold = false));
+  slot.addEventListener("click", (e) => { e.preventDefault(); if (LINK[WORDS[i]] && onOpen) onOpen(WORDS[i]); });
+  const step = (force) => {
+    if (!slot.isConnected) return clearInterval(tick);
+    if (hold || document.hidden) return;
+    if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
+    wait = 0;
+    i = (i + 1) % WORDS.length;
+    const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
+    fill(nu, WORDS[i]); nu.classList.add("in"); slot.appendChild(nu);
+    size();
+    slot.classList.toggle("link", !!LINK[WORDS[i]]);
+    if (old) { old.classList.add("out"); setTimeout(() => old.remove(), 500); }
+    requestAnimationFrame(() => requestAnimationFrame(() => nu.classList.remove("in")));
+  };
+  let tick = 0;
+  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);   // first change comes quickly, so visitors see it move
+  return () => clearInterval(tick);
+}
+
   function render() {
     const h = location.hash.slice(1) || "home";
     const isAbout = h === "about";
@@ -1585,6 +1814,8 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
     });
     tick();
+    const cycEl = app.querySelector(".cyc"); if (cycEl) cycMount(cycEl, () => { location.hash = "playground"; });
+    const avEl = app.querySelector(".av-fx"); if (avEl) avFx(avEl); else if (avAbort) avAbort.abort();
     // scroll-in reveal (same as Framer "onInView": opacity 0 → 1, y 20 → 0)
     const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .cs-hero, .cs-img, .monitor");
     if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
