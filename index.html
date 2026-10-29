@@ -2630,6 +2630,75 @@ function run(){
     }
   }
 
+  // ---------- About › Outside design: moving across the list shakes a few autumn leaves loose ----------
+  // Only while the pointer travels over the rows; a leaf for every bit of distance, so a slow pass drops one or two
+  // and a quick swipe a small flurry. They swing down like real leaves and fade before reaching far.
+  let odAbort = null, odCv = null;
+  function odLeaves(list) {
+    if (odAbort) odAbort.abort();
+    if (!list) return;
+    odAbort = new AbortController();
+    const sig = { signal: odAbort.signal, passive: true };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!odCv) {
+      odCv = document.createElement("canvas");
+      Object.assign(odCv.style, { position: "fixed", inset: "0", width: "100vw", height: "100vh", pointerEvents: "none", zIndex: 5 });
+      document.body.appendChild(odCv);
+    }
+    const cv = odCv, ctx = cv.getContext("2d");
+    let d = 1;
+    const size = () => { d = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * d; cv.height = innerHeight * d; };
+    size(); addEventListener("resize", size, sig);
+    const FALL = ["#c8642a", "#d98a3a", "#b4472c", "#e2a64b", "#9c5a2a", "#cf7a2e", "#a8682c"];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    let prev = null, travel = 0, leaves = [], raf = 0, last = 0;
+    list.addEventListener("pointermove", (e) => {
+      const now = performance.now(), x = e.clientX, y = e.clientY;
+      if (prev && now - prev[2] < 120) {
+        const dx = x - prev[0], dy = y - prev[1], dt = Math.max(8, now - prev[2]);
+        travel += Math.hypot(dx, dy);
+        const gap = rnd(34, 60);
+        if (travel > gap) {
+          travel = 0;
+          const vx = dx / dt;
+          leaves.push({ ox: x + rnd(-6, 6), y: y + rnd(-4, 4), drift: Math.max(-0.05, Math.min(0.05, vx * 0.06)), ph: rnd(0, 6.28), per: rnd(1500, 2100),
+            amp: rnd(10, 16), sink: rnd(0.028, 0.04), a0: rnd(-0.6, 0.6) + (Math.random() < 0.5 ? 0 : Math.PI), L: rnd(4.2, 5.6),
+            c: FALL[(Math.random() * FALL.length) | 0], t0: now, life: rnd(2400, 3200) });
+          if (leaves.length > 14) leaves.shift();
+          if (!raf) { last = now; raf = requestAnimationFrame(draw); }
+        }
+      }
+      prev = [x, y, now];
+    }, sig);
+    list.addEventListener("pointerleave", () => { prev = null; travel = 0; }, sig);
+    function draw(now) {
+      const dt = Math.min(40, now - last); last = now;
+      ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, innerWidth, innerHeight);
+      leaves = list.isConnected ? leaves.filter((l) => now - l.t0 < l.life) : [];
+      for (const l of leaves) {
+        const t = now - l.t0, age = t / l.life;
+        l.ph += (dt / l.per) * 6.283;
+        const sw = Math.sin(l.ph), through = Math.abs(Math.cos(l.ph));
+        l.ox += l.drift * dt; l.drift *= Math.pow(0.996, dt);
+        l.y += l.sink * (0.35 + 0.65 * through) * dt;
+        ctx.globalAlpha = 0.92 * Math.min(1, t / 250) * (age < 0.6 ? 1 : 1 - (age - 0.6) / 0.4);
+        ctx.save(); ctx.translate(l.ox + sw * l.amp, l.y); ctx.rotate(l.a0 + Math.cos(l.ph) * 0.6); ctx.scale(l.L, l.L);
+        ctx.beginPath();
+        ctx.moveTo(-1, 0);
+        ctx.bezierCurveTo(-0.7, -0.62, 0.35, -0.7, 1.05, 0);
+        ctx.bezierCurveTo(0.35, 0.62, -0.7, 0.58, -1, 0);
+        ctx.moveTo(-1, -0.05); ctx.lineTo(-1.4, -0.12); ctx.lineTo(-1.4, 0.05); ctx.lineTo(-1, 0.05);
+        ctx.fillStyle = l.c; ctx.fill();
+        // a faint midrib so it reads as a leaf, not a petal
+        ctx.beginPath(); ctx.moveTo(-0.95, 0); ctx.lineTo(0.9, 0); ctx.lineWidth = 0.09; ctx.strokeStyle = "rgba(70,30,10,.35)"; ctx.stroke();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      if (!leaves.length) ctx.clearRect(0, 0, innerWidth, innerHeight);
+      raf = leaves.length ? requestAnimationFrame(draw) : 0;
+    }
+  }
+
 
 function cycMount(root, onOpen) {
   const slot = root.querySelector(".slot");
@@ -2711,6 +2780,7 @@ function cycMount(root, onOpen) {
     });
     tick();
     const cycEl = app.querySelector(".cyc"); if (cycEl) cycMount(cycEl, () => { location.hash = "playground"; });
+    odLeaves(app.querySelector(".od"));
     const avEl = app.querySelector(".av-fx"); if (avEl) avFx(avEl); else if (avAbort) avAbort.abort();
     // scroll-in reveal (same as Framer "onInView": opacity 0 → 1, y 20 → 0)
     const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .cs-hero, .cs-img, .monitor");
