@@ -1766,10 +1766,10 @@ function cycMount(root, onOpen) {
   slot.addEventListener("mouseenter", () => (hold = true));
   slot.addEventListener("mouseleave", () => (hold = false));
   slot.addEventListener("click", (e) => { e.preventDefault(); if (LINK[WORDS[i]] && onOpen) onOpen(WORDS[i]); });
-  const tick = setInterval(() => {
+  const step = (force) => {
     if (!slot.isConnected) return clearInterval(tick);
     if (hold || document.hidden) return;
-    if (WORDS[i] === "things" && wait++ < 2) return;   // rest on "things" before the next round
+    if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
     wait = 0;
     i = (i + 1) % WORDS.length;
     const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
@@ -1778,7 +1778,9 @@ function cycMount(root, onOpen) {
     slot.classList.toggle("link", !!LINK[WORDS[i]]);
     if (old) { old.classList.add("out"); setTimeout(() => old.remove(), 500); }
     requestAnimationFrame(() => requestAnimationFrame(() => nu.classList.remove("in")));
-  }, 2200);
+  };
+  let tick = 0;
+  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);   // first change comes quickly, so visitors see it move
   return () => clearInterval(tick);
 }
 
