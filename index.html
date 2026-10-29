@@ -2625,8 +2625,8 @@ function cycMount(root, onOpen) {
   if (!slot || slot.dataset.on) return () => {};
   slot.dataset.on = "1";
   const act = root.classList.contains("s-act");
-  const WORDS = ["things", "sliders", "loaders", "posters", "booklets", "funk playlists", "noise", "tea", "mistakes"];
-  const LINK = { sliders: 1, loaders: 1, posters: 1, booklets: 1 };     // real work → opens the Playground
+  const WORDS = ["things", "sliders", "posters", "booklets", "funk playlists", "noise", "tea", "mistakes"];
+  const LINK = { sliders: 1, posters: 1, booklets: 1 };     // real work → opens the Playground
   const cls = (w) => act ? "w-" + w.split(" ")[0] : "";
   const fill = (el, w) => {
     el.className = cls(w);
