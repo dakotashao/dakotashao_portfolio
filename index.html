@@ -1471,6 +1471,33 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   .lay-a .pg-side { margin: 0 16px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "say" "facts" "acts"; row-gap: 12px; }
 }
 
+/* Detail, matched to the Playground source: the stage on the left, a white side panel on the right
+   (name, story, mode, facts as soft rows, then ← → and Full prototype at the foot). */
+.pg-shell { gap: 12px; }
+.pg-side { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 0 0 1px #e8e8e8, 0 24px 60px -32px rgba(0, 0, 0, .2); }
+.pg-side .pg-head { padding-bottom: 10px; }
+.pg-head h2 { margin-top: 4px; font-size: 18px; font-weight: 500; line-height: 22px; letter-spacing: -0.02em; color: #0d0d0d; }
+.pg-say { margin: 0 0 16px; font-size: 14.5px; line-height: 1.4; letter-spacing: -0.011em; color: #7a7a7a; }
+.pg-side .pg-tool { color: #7a7a7a; }
+.pg-side .pg-tool:hover { background: #f0f0f0; color: #0d0d0d; }
+.pg-ctl { margin-bottom: 14px; }
+.pg-ctl-label { font-size: 13px; line-height: 1; color: #7a7a7a; }
+.pg-ctl .pg-seg { background: rgba(0, 0, 0, .04); }
+.pg-ctl .pg-seg button { color: rgba(0, 0, 0, .4); }
+.pg-ctl .pg-seg button:hover { color: rgba(0, 0, 0, .7); }
+.pg-ctl .pg-seg button[aria-pressed="true"] { color: #0d0d0d; }
+.pg-ctl .pg-seg .thumb { background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .06); }
+.pg-rows { gap: 6px; }
+.pg-row, .pg-row:last-child { height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(0, 0, 0, .04); align-items: center; font-size: 14px; line-height: 1; letter-spacing: -0.02em; color: #0d0d0d; }
+.pg-row span:last-child { color: rgba(0, 0, 0, .4); }
+.pg-acts { padding-top: 18px; }
+.pg-wide { height: 36px; padding: 0 12px; border-radius: 10px; font-size: 15px; line-height: 1; letter-spacing: -0.011em; }
+.pg-wide.soft { background: #f6f6f6; color: #0d0d0d; }
+.pg-wide.soft:hover { background: #e8e8e8; }
+.pg-wide.solid { background: #000; color: #fff; }
+.pg-wide.solid:hover { background: #333; }
+@media (max-width: 759px) { .pg-side { padding: 20px; } }
+
 /* Motion from the Framer page: hero lines rise in on load (20px, 0.4s spring, staggered);
    cards and rows rise in as they scroll into view (20px, 1s, ease [.44,0,.56,1]) */
 .hero-in > * { animation: rise .4s cubic-bezier(.25, .8, .25, 1) both; }
@@ -2082,7 +2109,7 @@ function run(){
       <div class="pg-wall" id="pg-wall"></div>
       <p class="pg-empty" id="pg-empty" hidden>No block matches that.</p>
     </section>
-    <div class="pg-dtl lay-a" id="pg-dtl" hidden role="dialog" aria-modal="true" aria-labelledby="pg-d-title">
+    <div class="pg-dtl" id="pg-dtl" hidden role="dialog" aria-modal="true" aria-labelledby="pg-d-title">
       <button class="pg-scrim" id="pg-d-scrim" aria-label="Close" tabindex="-1"></button>
       <div class="pg-shell">
         <button class="pg-edge prev" id="pg-e-prev" aria-label="Previous block"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
