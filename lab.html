@@ -202,7 +202,8 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
 /* LAB: tools as a sentence, hover a tool for a tilted preview */
-.companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); max-width: 560px; margin: 0 auto; }
+.companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); margin: 0 auto; }
+@media (max-width: 520px) { .companies .tsent .tbr { display: none; } }
 .tw { position: relative; color: var(--fg); border-bottom: 1px dashed var(--rule); cursor: default; outline: none; }
 .tw-card { position: absolute; left: 50%; bottom: calc(100% + 10px); width: 168px; aspect-ratio: 16 / 10; padding: 4px; background: #fff;
   border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.08); pointer-events: none; z-index: 5;
@@ -1708,7 +1709,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     </section>
 
     <section class="companies wrap">
-      <p class="tsent">I sketch in ${tw("Figma","img/wl-cover.webp")}, build with ${tw("Claude Code","pg/tide-loader--smooth.html",1)}, ship on ${tw("GitHub","pg/rotation-slider--dominoes-drag.html",1)}, and play in ${tw("Unity","img/unity-heart.webp")}.</p>
+      <p class="tsent">I sketch in ${tw("Figma","img/wl-cover.webp")}, build with ${tw("Claude Code","pg/tide-loader--smooth.html",1)},<br class="tbr"> ship on ${tw("GitHub","pg/rotation-slider--dominoes-drag.html",1)}, and play in ${tw("Unity","img/unity-heart.webp")}.</p>
     </section>
 
 ${SHOW.howIWork ? `
