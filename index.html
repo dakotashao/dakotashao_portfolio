@@ -209,9 +209,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .think .d { font-size: 12px; color: var(--muted); line-height: 1.35; max-width: 160px; margin: 0 auto; }
 
 /* ---------- Testimonial ---------- */
-.testi { padding-block: 60px 80px; }
+.testi { padding-block: 60px 0; }
 /* Testimonial — Framer "Testimonial" component: white card, author pills (Selected = black pill with name), quote on the right */
-.tcard { background: var(--bg); padding: 80px 30px; display: flex; flex-wrap: wrap; gap: 50px 20px; align-items: flex-start; }
+.tcard { background: var(--bg); padding: 80px 30px 40px; display: flex; flex-wrap: wrap; gap: 50px 20px; align-items: flex-start; }
 .authors { flex: 1 0 0; min-width: 260px; display: flex; align-items: center; gap: 10px; }
 .author { display: flex; align-items: center; height: 56px; padding: 8px 0; border-radius: 40px; background: transparent; color: #fff; transition: background-color .4s cubic-bezier(.34, 1.25, .64, 1), padding .4s cubic-bezier(.34, 1.25, .64, 1), opacity .25s; }
 .author img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
@@ -227,7 +227,7 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tquote { color: var(--muted); } }
 
 /* ---------- FAQ ---------- */
-.faq { max-width: calc(600px + 40px); margin: 0 auto; padding: 80px 20px; }
+.faq { max-width: calc(600px + 40px); margin: 0 auto; padding: 40px 20px 80px; }
 /* FAQ — Framer "Closed/Open": height springs open (0.4s, no bounce), answer fades in from a light blur, + turns to – */
 .qa { border-bottom: 0.5px solid var(--rule); padding-block: 16px; }
 .qa .q { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0; text-align: left; color: var(--q); font-size: 16px; line-height: 19.2px; letter-spacing: -0.04em; }
