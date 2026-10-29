@@ -118,7 +118,47 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .av-fx { position: relative; display: block; width: 96px; height: 96px; background: none; overflow: visible; flex: none; }
 .av-fx img, .av-fx canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; }
 .hero p .who { color: var(--fg); font-weight: 500; }
-.hero-in:has(.who) { max-width: 360px; }
+.hero-in:has(.who) { max-width: 380px; }
+.hero .cyc { margin-top: 4px; }
+/* the slot eases to each word's width; words roll up into place (clip-path lets the decorations draw outside the box) */
+.cyc .slot{position:relative;display:inline-block;vertical-align:top;box-sizing:content-box;height:1.38em;color:var(--fg);text-decoration:none;
+  transition:width .45s cubic-bezier(.3,.7,.2,1);white-space:nowrap;cursor:default;clip-path:inset(-.4em -14px -.4em -4px)}
+.cyc .slot.link{cursor:pointer}
+.cyc .slot > span{position:absolute;left:0;top:0;display:block;white-space:nowrap;line-height:inherit;transition:transform .45s cubic-bezier(.3,.7,.2,1),opacity .3s}
+.cyc.s-chip .slot > span{left:10px}
+.cyc .slot > span.out{transform:translateY(-120%);opacity:0}
+.cyc .slot > span.in{transform:translateY(120%);opacity:0}
+
+/* style: line */
+.cyc.s-line .slot{border-bottom:1px dashed var(--faint);height:calc(1.38em - 1px)}
+
+/* style: chip — a soft pill from the site's chip colour */
+.cyc.s-chip .slot{padding:0 10px;margin:0 2px;border-radius:40px;background:rgba(0,0,0,.05);clip-path:inset(0 round 40px)}
+
+/* style: act — every word does what it says */
+/* sliders: the word is the track — ink fills the letters up to a slim thumb that slides across and settles */
+@property --wp{syntax:"<percentage>";inherits:false;initial-value:0%}
+.w-sliders{--wp:0%;background:linear-gradient(90deg,var(--fg) var(--wp),var(--faint) var(--wp));-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:wslide 1.5s cubic-bezier(.5,0,.2,1) .15s both}
+.w-sliders::after{content:"";position:absolute;top:.18em;height:1.02em;width:1.5px;border-radius:2px;background:var(--fg);left:calc(var(--wp) - .75px);animation:inherit}
+@keyframes wslide{0%{--wp:0%}60%{--wp:100%}100%{--wp:68%}}
+.w-loaders::after{content:"";position:absolute;left:0;bottom:1px;height:2px;border-radius:2px;background:var(--fg);animation:wload 1.5s cubic-bezier(.6,0,.3,1) .15s both}
+.w-loaders::before{content:"";position:absolute;left:0;right:0;bottom:1px;height:2px;border-radius:2px;background:var(--line)}
+@keyframes wload{0%{width:0}35%{width:22%}55%{width:30%}100%{width:100%}}
+.w-posters{font-family:var(--logo,"Outfit"),Inter,sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.94em}
+.w-booklets{font-family:var(--serif,"Instrument Serif"),Georgia,serif;font-style:italic;font-size:1.12em;letter-spacing:0}
+.w-funk .ch{display:inline-block;animation:wfunk .5s cubic-bezier(.3,1.6,.5,1) infinite alternate;animation-delay:calc(var(--i) * 70ms)}
+@keyframes wfunk{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.w-noise .ch{display:inline-block;animation:wnoise .18s steps(2) infinite;animation-delay:calc(var(--i) * -37ms)}
+@keyframes wnoise{0%{transform:translate(.6px,-.8px) rotate(-3deg)}50%{transform:translate(-.7px,.6px) rotate(2deg)}100%{transform:translate(.3px,.9px) rotate(-1deg)}}
+.w-tea{animation:wtea 1.4s ease-out both}
+@keyframes wtea{from{filter:blur(3px);opacity:.2;transform:translateY(3px)}to{filter:none;opacity:1;transform:none}}
+.w-tea::after{content:"";position:absolute;right:-7px;top:-4px;width:5px;height:9px;border-right:1.2px solid var(--faint);border-radius:0 6px 6px 0;opacity:0;animation:wsteam 2s ease-out .3s infinite}
+@keyframes wsteam{0%{opacity:0;transform:translateY(4px) scaleY(.6)}40%{opacity:.9}100%{opacity:0;transform:translateY(-5px) scaleY(1.1)}}
+.w-mistakes .fix{color:#d0453a;transition:color .4s}
+.w-mistakes .fix.ok{color:inherit}
+@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after{animation:none}}
+
 .hero h1 { font-size: 26px; font-weight: 500; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 16px; }
 .hero p { color: var(--muted); font-size: 17px; line-height: 1.38; }
 .hero .prev { margin: 14px 0 24px; }
@@ -864,7 +904,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       <div class="hero-in">
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
         <h1>Break it down,<br>build it back</h1>
-        <p><b class="who">I’m Dakota</b>, an interaction designer.<br>Making things helps me think them through.</p>
+        <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
         <p class="prev"><i>Prev.</i> Baidu, 24Hour Homecare</p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
         <div class="hint">Press <kbd>⌘</kbd> + <kbd>⌥</kbd> to ask AI</div>
@@ -1694,6 +1734,54 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     }
   }
 
+
+function cycMount(root, onOpen) {
+  const slot = root.querySelector(".slot");
+  if (!slot || slot.dataset.on) return () => {};
+  slot.dataset.on = "1";
+  const act = root.classList.contains("s-act");
+  const WORDS = ["things", "sliders", "loaders", "posters", "booklets", "funk playlists", "noise", "tea", "mistakes"];
+  const LINK = { sliders: 1, loaders: 1, posters: 1, booklets: 1 };     // real work → opens the Playground
+  const cls = (w) => act ? "w-" + w.split(" ")[0] : "";
+  const fill = (el, w) => {
+    el.className = cls(w);
+    if (act && (w === "funk playlists" || w === "noise")) {
+      el.textContent = "";
+      [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", k); s.textContent = c === " " ? " " : c; el.appendChild(s); });
+    } else if (act && w === "mistakes") {
+      // typed wrong first, then the two letters swap into place
+      el.innerHTML = 'mista<span class="fix">ek</span>s';
+      setTimeout(() => { const f = el.querySelector(".fix"); if (f) { f.textContent = "ke"; f.classList.add("ok"); } }, 900);
+    } else el.textContent = w;
+  };
+  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
+  let i = 0, hold = false, wait = 0;
+  const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
+  const size = () => (slot.style.width = measure(WORDS[i]) + "px");
+  // the poster and booklet words use other faces; load them up front so their widths measure true
+  if (document.fonts) Promise.all(['500 17px Outfit', 'italic 19px "Instrument Serif"'].map((f) => document.fonts.load(f).catch(() => {}))).then(size);
+  size();
+  if (document.fonts) document.fonts.ready.then(size);
+  setTimeout(size, 700);
+  slot.addEventListener("mouseenter", () => (hold = true));
+  slot.addEventListener("mouseleave", () => (hold = false));
+  slot.addEventListener("click", (e) => { e.preventDefault(); if (LINK[WORDS[i]] && onOpen) onOpen(WORDS[i]); });
+  const tick = setInterval(() => {
+    if (!slot.isConnected) return clearInterval(tick);
+    if (hold || document.hidden) return;
+    if (WORDS[i] === "things" && wait++ < 2) return;   // rest on "things" before the next round
+    wait = 0;
+    i = (i + 1) % WORDS.length;
+    const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
+    fill(nu, WORDS[i]); nu.classList.add("in"); slot.appendChild(nu);
+    size();
+    slot.classList.toggle("link", !!LINK[WORDS[i]]);
+    if (old) { old.classList.add("out"); setTimeout(() => old.remove(), 500); }
+    requestAnimationFrame(() => requestAnimationFrame(() => nu.classList.remove("in")));
+  }, 2200);
+  return () => clearInterval(tick);
+}
+
   function render() {
     const h = location.hash.slice(1) || "home";
     const isAbout = h === "about";
@@ -1724,6 +1812,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
     });
     tick();
+    const cycEl = app.querySelector(".cyc"); if (cycEl) cycMount(cycEl, () => { location.hash = "playground"; });
     const avEl = app.querySelector(".av-fx"); if (avEl) avFx(avEl); else if (avAbort) avAbort.abort();
     // scroll-in reveal (same as Framer "onInView": opacity 0 → 1, y 20 → 0)
     const rvTargets = app.querySelectorAll(".proj, .trio > *, .qa, .tcard, .companies, .exp, .books, .cs-hero, .cs-img, .monitor");
