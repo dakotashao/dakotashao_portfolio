@@ -1690,7 +1690,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 
   // LAB: tool word with a tilted preview card (img, or a live playground piece)
   let twN = 0;
-  const tw = (name, src, live) => `<span class="tw" tabindex="0" style="--tilt:${(twN++ % 2 ? 3 : -4)}deg">${name}<span class="tw-card" aria-hidden="true">${live
+  const tw = (name, src, live) => !src ? `<span class="tw tw-none">${name}</span>` : `<span class="tw" tabindex="0" style="--tilt:${(twN++ % 2 ? 3 : -4)}deg">${name}<span class="tw-card" aria-hidden="true">${live
     ? `<iframe data-src="${src}" tabindex="-1" loading="lazy" title=""></iframe>`
     : `<img src="${src}" alt="" loading="lazy">`}</span></span>`;
 
@@ -1708,7 +1708,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     </section>
 
     <section class="companies wrap">
-      <p class="tsent">I sketch in ${tw("Figma","img/btob/thumb.webp")}, draw in ${tw("Illustrator","img/wl-cover.webp")}, set type in ${tw("InDesign","pg/booklet/00.webp")}, and build with ${tw("Claude Code","pg/tide-loader--smooth.html",1)} and ${tw("Codex","pg/rotation-slider--dominoes-drag.html",1)}.</p>
+      <p class="tsent">I sketch in ${tw("Figma","img/wl-cover.webp")}, build with ${tw("Claude Code","pg/tide-loader--smooth.html",1)}, ship on ${tw("GitHub","pg/rotation-slider--dominoes-drag.html",1)}, and play in ${tw("Unity")}.</p>
     </section>
 
 ${SHOW.howIWork ? `
