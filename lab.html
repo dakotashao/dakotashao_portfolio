@@ -201,6 +201,13 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
+/* LAB: two-column thumbnails */
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 56px; }
+.projects > .label { grid-column: 1 / -1; margin-bottom: -42px; }
+.projects .proj { margin-bottom: 0; }
+.projects .shot { aspect-ratio: 16 / 10 !important; }
+.projects .proj p { font-size: 14px; }
+@media (max-width: 640px) { .projects { grid-template-columns: minmax(0, 1fr); } }
 
 /* Echos card: one real Echos screen in a phone; the screen builds itself and the camera zooms in (from Echos Thumbnail) */
 .ec{--T:10s;--k:calc(22.4cqw / 507);position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:var(--ec-bg);container-type:inline-size}
