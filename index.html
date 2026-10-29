@@ -196,7 +196,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .shot.blue { background: var(--blue); aspect-ratio: 16 / 10; }
 .shot.blue span { color: #fff; font-size: clamp(48px, 10vw, 96px); font-weight: 500; letter-spacing: -0.04em; }
 .shot .meta { position: absolute; z-index: 1; top: 8px; left: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity .25s ease; }
-.shot .meta .chip { background: rgba(0, 0, 0, .04); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: rgba(0, 0, 0, .4); font-size: 14px; line-height: 14px; letter-spacing: -0.04em; padding: 4px 10px; border-radius: 40px; }
+.shot .meta .chip { background: rgba(255, 255, 255, .58); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); color: rgba(0, 0, 0, .72); font-size: 14px; line-height: 14px; letter-spacing: -0.04em; padding: 4px 10px; border-radius: 40px; transition: background-color .2s, color .2s; }
+/* tags flip to light-on-dark when the thumbnail behind them is dark (set by toneShot) */
+.shot.on-dark .meta .chip { background: rgba(255, 255, 255, .14); color: rgba(255, 255, 255, .86); }
 .proj:hover .meta { opacity: 1; }
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
@@ -2811,6 +2813,45 @@ function cycMount(root, onOpen) {
   }
   addEventListener("hashchange", render);
   render();
+})();
+</script>
+<script>
+/* Card tags: look at what sits behind the tags and switch to light text on dark thumbnails. */
+(() => {
+  const lum = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  const parse = (c) => { const m = c && c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const v = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return (v.length > 3 && v[3] === 0) ? null : v; };
+  function sampleImg(img, shot, box) {
+    try {
+      const sr = shot.getBoundingClientRect(), ir = img.getBoundingClientRect();
+      const c = document.createElement("canvas"); c.width = 24; c.height = 8; const x = c.getContext("2d");
+      const sx = img.naturalWidth / ir.width, sy = img.naturalHeight / ir.height;
+      x.drawImage(img, (box.left - ir.left) * sx, (box.top - ir.top) * sy, box.width * sx, box.height * sy, 0, 0, 24, 8);
+      const d = x.getImageData(0, 0, 24, 8).data; let t = 0;
+      for (let i = 0; i < d.length; i += 4) t += lum(d[i], d[i + 1], d[i + 2]);
+      return t / (d.length / 4);
+    } catch (e) { return null; }
+  }
+  function toneShot(shot) {
+    const meta = shot.querySelector(".meta"); if (!meta || shot.dataset.toned) return;
+    const box = meta.getBoundingClientRect(); if (!box.width) return;
+    const cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+    let L = null;
+    for (const el of document.elementsFromPoint(cx, cy)) {
+      if (meta.contains(el)) continue;
+      if (!shot.contains(el) && el !== shot) break;
+      if (el.tagName === "IMG") { if (!el.complete) return; L = sampleImg(el, shot, box); if (L != null) break; continue; }
+      const cs = getComputedStyle(el);
+      const c = parse(el instanceof SVGElement ? cs.fill : cs.backgroundColor) || (el instanceof SVGElement ? null : parse(cs.backgroundColor));
+      if (c) { L = lum(c[0], c[1], c[2]); break; }
+    }
+    if (L == null) return;
+    shot.dataset.toned = "1";
+    shot.classList.toggle("on-dark", L < 0.45);
+  }
+  const run = () => document.querySelectorAll(".proj .shot").forEach(toneShot);
+  document.addEventListener("pointerover", (e) => { const s = e.target.closest && e.target.closest(".proj"); if (s) toneShot(s.querySelector(".shot")); });
+  window.addEventListener("load", () => setTimeout(run, 300));
+  window.addEventListener("hashchange", () => setTimeout(run, 400));
 })();
 </script>
 </body>
