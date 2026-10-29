@@ -41,7 +41,7 @@
 .device::before,.device::after{content:"";position:absolute;width:3px}
 .device::before{left:-3px;top:150px;height:176px;border-radius:2px 0 0 2px;background:linear-gradient(var(--frame) 0 28px,transparent 28px 58px,var(--frame) 58px 110px,transparent 110px 124px,var(--frame) 124px 176px)}
 .device::after{right:-3px;top:240px;height:88px;border-radius:0 2px 2px 0;background:var(--frame)}
-.screen{-webkit-user-select:none;user-select:none;position:relative;width:100%;aspect-ratio:393/852;background:var(--screen);color:var(--ink);font:400 15px/1.45 var(--ui);border-radius:55px;overflow:hidden;-webkit-font-smoothing:antialiased}
+.screen{-webkit-user-select:none;user-select:none;position:relative;width:100%;aspect-ratio:393/852;background:var(--screen);color:var(--ink);font:400 15px/1.45 var(--ui);border-radius:55px;overflow:hidden;clip-path:inset(0 round 55px);isolation:isolate;transform:translateZ(0);-webkit-font-smoothing:antialiased}
 .status{position:relative;height:58px;display:grid;grid-template-columns:1fr 126px 1fr;align-items:center;justify-items:center;padding-top:8px;font-weight:600;font-size:17px;letter-spacing:-.01em}
 .status::before{content:"";position:absolute;left:50%;top:11px;width:126px;height:37px;margin-left:-63px;border-radius:19px;background:var(--hw)}
 .status .sys{grid-column:3;display:flex;align-items:center;gap:6px}
