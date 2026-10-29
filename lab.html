@@ -201,6 +201,18 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
+/* LAB: tools as a sentence, hover a tool for a tilted preview */
+.companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); max-width: 560px; margin: 0 auto; }
+.tw { position: relative; color: var(--fg); border-bottom: 1px dashed var(--rule); cursor: default; outline: none; }
+.tw-card { position: absolute; left: 50%; bottom: calc(100% + 10px); width: 168px; aspect-ratio: 16 / 10; padding: 4px; background: #fff;
+  border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.08); pointer-events: none; z-index: 5;
+  opacity: 0; transform: translate(-50%, 8px) rotate(calc(var(--tilt) * .4)) scale(.92); transform-origin: 50% 100%;
+  transition: opacity .18s ease, transform .35s cubic-bezier(.34,1.4,.64,1); }
+.tw-card img, .tw-card iframe { display: block; width: 100%; height: 100%; object-fit: cover; border: 0; border-radius: 2px; background: var(--card); }
+.tw-card iframe { width: 300%; height: 300%; transform: scale(.3333); transform-origin: 0 0; }
+.tw-card:has(iframe) { overflow: hidden; }
+.tw:hover .tw-card, .tw:focus-visible .tw-card { opacity: 1; transform: translate(-50%, 0) rotate(var(--tilt)) scale(1); }
+@media (prefers-reduced-motion: reduce) { .tw-card { transition: opacity .15s; } }
 /* LAB: two-column thumbnails */
 .projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 56px; }
 .projects > .label { grid-column: 1 / -1; margin-bottom: -42px; }
@@ -1676,6 +1688,12 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       <p class="c">© 2026 Dakota Shao</p>
     </footer>`;
 
+  // LAB: tool word with a tilted preview card (img, or a live playground piece)
+  let twN = 0;
+  const tw = (name, src, live) => `<span class="tw" tabindex="0" style="--tilt:${(twN++ % 2 ? 3 : -4)}deg">${name}<span class="tw-card" aria-hidden="true">${live
+    ? `<iframe data-src="${src}" tabindex="-1" loading="lazy" title=""></iframe>`
+    : `<img src="${src}" alt="" loading="lazy">`}</span></span>`;
+
   const home = () => `
     <section class="hero">
       ${kit.map((d, i) => `<button class="inst" type="button" data-k="${d.k}" aria-label="Play ${d.k}" style="left:${d.x}%;top:${d.y}%;width:${d.w}px;--r:${d.r}deg;--r0:${d.r0 - d.r}deg;--delay:${d.delay}s"><img src="${d.src}" alt="" draggable="false"></button>`).join("")}
@@ -1690,8 +1708,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     </section>
 
     <section class="companies wrap">
-      <h3>Tools I work with:</h3>
-      <div class="tools"><span class="chip">Figma</span><span class="chip">Illustrator</span><span class="chip">InDesign</span><span class="chip">Claude Code</span><span class="chip">Codex</span><span class="chip">GitHub</span><span class="chip">VS Code</span><span class="chip">Midjourney</span><span class="chip">Unity</span></div>
+      <p class="tsent">I sketch in ${tw("Figma","img/btob/thumb.webp")}, draw in ${tw("Illustrator","img/wl-cover.webp")}, set type in ${tw("InDesign","pg/booklet/00.webp")}, and build with ${tw("Claude Code","pg/tide-loader--smooth.html",1)} and ${tw("Codex","pg/rotation-slider--dominoes-drag.html",1)}.</p>
     </section>
 
 ${SHOW.howIWork ? `
@@ -2737,6 +2754,10 @@ function cycMount(root, onOpen) {
   addEventListener("hashchange", render);
   render();
 })();
+</script>
+<script>
+document.addEventListener("pointerover", e => { const t = e.target.closest && e.target.closest(".tw"); if (!t) return; const f = t.querySelector("iframe[data-src]"); if (f) { f.src = f.dataset.src; f.removeAttribute("data-src"); } });
+document.addEventListener("focusin", e => { const t = e.target.closest && e.target.closest(".tw"); if (!t) return; const f = t.querySelector("iframe[data-src]"); if (f) { f.src = f.dataset.src; f.removeAttribute("data-src"); } });
 </script>
 </body>
 </html>
