@@ -447,6 +447,9 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .lp-rec.on .lp-vin { transform: translateY(-68%); }
 .now { margin-top: 10px; font-size: 14px; color: var(--muted); letter-spacing: -0.011em; min-height: 20px; }
 .now b { font-weight: 400; color: var(--fg); }
+.now-ic { display: inline-block; width: 13px; height: 13px; margin-right: 8px; vertical-align: -2px; color: var(--fg); }
+.now-ic svg { display: block; width: 100%; height: 100%; animation: spin 1.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .now-ic svg { animation: none; } }
 .now-sp { margin-left: 10px; color: var(--muted); text-decoration: none; transition: color .2s; }
 .now-sp:hover { color: var(--fg); }
 @media (prefers-reduced-motion: reduce) { .lp-rec, .lp-vin { transition: none !important; } .lp-rec.on .lp-spin { animation: none; } }
@@ -2464,7 +2467,7 @@ function run(){
     </div>`;
 
   const lpSpot = (a) => "https://open.spotify.com/search/" + encodeURIComponent((LP_SONG[a.id] || a.t) + " " + a.a);
-  const lpText = (i, on) => { const a = LP_ORDER[i]; return on ? `Now spinning · <b>${LP_SONG[a.id] || a.t}</b> · ${a.a}<a class="now-sp" href="${lpSpot(a)}" target="_blank" rel="noopener" aria-label="Listen to the full song on Spotify">Full song ↗</a>` : `<b>${a.t}</b> · ${a.a}`; };
+  const lpText = (i, on) => { const a = LP_ORDER[i]; return on ? `<span class="now-ic" role="img" aria-label="Now playing"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="currentColor"/><circle cx="8" cy="8" r="5.2" fill="none" stroke="var(--bg)" stroke-opacity=".35" stroke-width=".6"/><circle cx="8" cy="8" r="2.6" fill="var(--bg)" fill-opacity=".9"/><circle cx="10.4" cy="5.2" r=".9" fill="var(--bg)" fill-opacity=".5"/><circle cx="8" cy="8" r=".8" fill="currentColor"/></svg></span><b>${LP_SONG[a.id] || a.t}</b> · ${a.a}<a class="now-sp" href="${lpSpot(a)}" target="_blank" rel="noopener" aria-label="Listen to the full song on Spotify">Full song ↗</a>` : `<b>${a.t}</b> · ${a.a}`; };
   const lpSet = (html) => { const n = document.querySelector(".now"); if (n) n.innerHTML = html; };
   let lpOn = -1;
   const lpRest = () => lpSet(lpOn < 0 ? `<span>${LP_REST}</span>` : lpText(lpOn, true));
