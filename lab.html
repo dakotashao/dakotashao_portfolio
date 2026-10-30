@@ -203,6 +203,15 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
+/* LAB: hitting a drum swaps the slogan to "Make noise." until the kit goes quiet */
+.slg { display: grid; }
+.slg > span { grid-area: 1 / 1; transition: opacity .22s ease, transform .32s cubic-bezier(.2,.8,.2,1); }
+.slg-b { opacity: 0; transform: translateY(6px); }
+.slg.noisy .slg-a { opacity: 0; transform: translateY(-6px); }
+.slg.noisy .slg-b { opacity: 1; transform: none; }
+.slg-b.bump { animation: slg-bump .18s ease-out; }
+@keyframes slg-bump { 0% { transform: scale(1.04); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .slg > span { transition: opacity .15s; transform: none !important; } .slg-b.bump { animation: none; } }
 /* LAB: tools as a sentence, hover a tool for a tilted preview */
 .companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); margin: 0 auto; }
 @media (max-width: 520px) { .companies .tsent .tbr { display: none; } }
@@ -1708,7 +1717,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       ${kit.map((d, i) => `<button class="inst" type="button" data-k="${d.k}" aria-label="Play ${d.k}" style="left:${d.x}%;top:${d.y}%;width:${d.w}px;--r:${d.r}deg;--r0:${d.r0 - d.r}deg;--delay:${d.delay}s"><img src="${d.src}" alt="" draggable="false"></button>`).join("")}
       <div class="hero-in">
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
-        <h1>Break it down,<br>build it back</h1>
+        <h1 class="slg"><span class="slg-a">Break it down,<br>build it back</span><span class="slg-b" aria-hidden="true">Make<br>noise.</span></h1>
         <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
         <p class="prev"><i>Prev.</i> Baidu, 24Hour Homecare</p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
@@ -2779,6 +2788,16 @@ function cycMount(root, onOpen) {
   return () => clearInterval(tick);
 }
 
+  // LAB: slogan reads "Make noise." while someone is playing; goes back 2.4s after the last hit
+  let noiseT = 0;
+  function noise() {
+    const h = app.querySelector(".slg"); if (!h) return;
+    const b = h.querySelector(".slg-b");
+    if (h.classList.contains("noisy")) { b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
+    h.classList.add("noisy");
+    clearTimeout(noiseT); noiseT = setTimeout(() => h.classList.remove("noisy"), 2400);
+  }
+
   function render() {
     const h = location.hash.slice(1) || "home";
     const isAbout = h === "about";
@@ -2805,8 +2824,8 @@ function cycMount(root, onOpen) {
     if (work && work.custom === "btob") btobMount(app.querySelector(".cs24"));
     app.querySelectorAll(".inst").forEach((b) => {
       const d = kit.find((x) => x.k === b.dataset.k);
-      b.addEventListener("pointerdown", (e) => hit(b, d, e));
-      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
+      b.addEventListener("pointerdown", (e) => { hit(b, d, e); noise(); });
+      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); noise(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
     });
     tick();
     const cycEl = app.querySelector(".cyc"); if (cycEl) cycMount(cycEl, () => { location.hash = "playground"; });
