@@ -1029,6 +1029,17 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .flows > .flow > .demo{order:1;width:100%}
 #app .cs24 .flows > .flow > .ft{order:2;margin:24px auto 0;width:100%}
 #app .cs24 div.flows{gap:112px}
+/* LAB: pinned core flows */
+#app .cs24 .flows.pinned{position:relative;display:block;max-width:none;margin-top:40px}
+#app .cs24 .flows.pinned .pin-stage{position:sticky;top:0;height:100vh;overflow:hidden}
+#app .cs24 .flows.pinned .pin-stage > .flow{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;padding:64px 16px 28px;
+  opacity:0;transform:translateY(24px);transition:opacity .45s ease,transform .6s cubic-bezier(.32,.72,0,1);pointer-events:none}
+#app .cs24 .flows.pinned .pin-stage > .flow.past{transform:translateY(-24px)}
+#app .cs24 .flows.pinned .pin-stage > .flow.on{opacity:1;transform:none;pointer-events:auto}
+#app .cs24 .flows.pinned .flow > .demo{order:1;width:100%;flex:0 1 auto;min-height:0;max-width:640px;padding:clamp(20px,4vh,52px) 0 clamp(10px,2vh,26px);gap:clamp(10px,1.6vh,18px)}
+#app .cs24 .flows.pinned .flow .phone{width:min(300px,calc((100vh - 340px) * .46))}
+#app .cs24 .flows.pinned .flow > .ft{order:2;width:100%;margin:24px auto 0;max-width:560px}
+@media (min-width:1000px){#app .cs24 .flows.pinned .flow > .demo{max-width:800px}#app .cs24 .flows.pinned .flow > .ft{max-width:620px}}
 #app .cs24 .hl{background:#dbe8f8;border-radius:5px;padding:1px 5px;margin:0 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .eyet{display:flex;flex-wrap:wrap;gap:4px;font-size:14px;line-height:20px;color:var(--fg)}
 #app .cs24 .eyet .etag{font-size:14px;line-height:14px;letter-spacing:-0.04em;padding:5px 10px;border-radius:40px;background:rgba(var(--ink-rgb,0,0,0),.06);color:rgba(var(--ink-rgb,0,0,0),.5)}
@@ -2027,19 +2038,53 @@ function run(){
     function clear(){timers.forEach(clearTimeout);timers=[];dot.classList.remove('in','down');}
     function later(f,t){timers.push(setTimeout(f,t));}
     var fl=d.closest('.flow'),tg=fl&&fl.querySelector('.ftag'),tc=tg&&tg.className,tt=tg&&tg.textContent;function show(k){cur=k;if(tg){var pr=lis[k]&&lis[k].getAttribute('data-st')==='pr';tg.className=pr?'ftag st-pr':tc;tg.textContent=pr?'Proposal':tt;}lis.forEach(function(l,j){l.classList.toggle('on',j===k);var b=l.querySelector('.bar i');b.style.transition='none';b.style.width=j<k?'100%':'0';});scr.forEach(function(x,j){x.classList.toggle('on',j===k);});}
-    function go(){clear();if(held||!visible||still)return;var li=lis[cur],b=li.querySelector('.bar i'),STEP=+li.getAttribute('data-dur')||STEPD;b.offsetWidth;b.style.transition='width '+STEP+'ms linear';b.style.width='100%';
+    function go(){clear();if(held||!visible||still||d._pin)return;var li=lis[cur],b=li.querySelector('.bar i'),STEP=+li.getAttribute('data-dur')||STEPD;b.offsetWidth;b.style.transition='width '+STEP+'ms linear';b.style.width='100%';
       var t=li.getAttribute('data-tap');
       if(t){t=t.split(',');dot.style.left=(t[0]*100)+'%';dot.style.top=(t[1]*100)+'%';
         later(function(){dot.classList.add("in");},STEP-1300);
         later(function(){dot.classList.add('down');},STEP-360);
         later(function(){dot.classList.remove('down');},STEP-180);}
       later(function(){dot.classList.remove('in');show((cur+1)%lis.length);go();},STEP);}
+    d._show=show;d._lis=lis;d._clear=clear;
     lis.forEach(function(l){var bt=l.querySelector('button');bt.setAttribute('data-tip',l.querySelector('.l').textContent);bt.setAttribute('aria-label',l.querySelector('.l').textContent);});
     lis.forEach(function(l,j){l.querySelector('button').addEventListener('click',function(){clear();show(j);go();});});
     if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){visible=e.isIntersecting;if(visible)go();else clear();});},{threshold:.5}).observe(d);}
     else{visible=true;go();}
   });
 
+
+  // LAB: core flows are pinned. The page stops moving; scrolling steps through each flow's screens,
+  // then cross-fades to the next flow. Phone + text always fit one viewport. Off on small screens / reduced motion.
+  (function(){
+    var box=root.querySelector('.flows'); if(!box||still||innerWidth<760) return;
+    var flows=[].slice.call(box.querySelectorAll(':scope > .flow')); if(!flows.length) return;
+    var demos=flows.map(function(f){return f.querySelector('.demo');});
+    var map=[]; demos.forEach(function(d,fi){ d._pin=true; d._clear&&d._clear(); (d._lis||[]).forEach(function(_,k){ map.push([fi,k]); }); });
+    var PER=0.5; // viewport-heights of scroll per screen
+    var stage=document.createElement('div'); stage.className='pin-stage';
+    flows.forEach(function(f){ stage.appendChild(f); });
+    box.appendChild(stage); box.classList.add('pinned');
+    function size(){ box.style.height=(map.length*PER*innerHeight+innerHeight)+'px'; }
+    size();
+    var curF=-1, curI=-1;
+    function at(){
+      var r=box.getBoundingClientRect(), span=box.offsetHeight-innerHeight;
+      var p=Math.min(1,Math.max(0,-r.top/span)), x=p*map.length, i=Math.min(map.length-1,Math.floor(x)), frac=Math.min(1,x-i);
+      var fi=map[i][0], k=map[i][1], d=demos[fi];
+      if(fi!==curF){ flows.forEach(function(f,j){ f.classList.toggle('on',j===fi); f.classList.toggle('past',j<fi); }); curF=fi; }
+      if(i!==curI){ d._show(k); curI=i; }
+      var b=d._lis[k]&&d._lis[k].querySelector('.bar i'); if(b){ b.style.transition='none'; b.style.width=(frac*100)+'%'; }
+    }
+    // a step button jumps the page to that screen
+    demos.forEach(function(d,fi){ (d._lis||[]).forEach(function(li,k){ li.querySelector('button').addEventListener('click',function(e){
+      e.stopImmediatePropagation(); var i=0; for(;i<map.length;i++) if(map[i][0]===fi&&map[i][1]===k) break;
+      var top=box.getBoundingClientRect().top+scrollY+(i+.02)/map.length*(box.offsetHeight-innerHeight);
+      window.scrollTo({top:top,behavior:'smooth'});
+    },true); }); });
+    addEventListener('scroll',at,{passive:true});
+    addEventListener('resize',function(){ size(); at(); });
+    at();
+  })();
 
   // outcome: stamp the badge and throw confetti each time the block scrolls into view
   var outc=root.querySelector('.outc'), seal=root.querySelector('.seal');
