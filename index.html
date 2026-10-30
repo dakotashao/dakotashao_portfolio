@@ -65,6 +65,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .nav.open .links { opacity: 1; visibility: visible; transform: none; }
 @media (hover: hover) { .nav-left:hover .links { opacity: 1; visibility: visible; transform: none; } }
 .links { display: flex; flex-direction: column; font-size: 16px; line-height: 1.5; }
+/* over the About photo the nav turns white so it reads on the grey image */
+.nav.on-photo { --fg: #fff; --muted: rgba(255, 255, 255, .72); --line: rgba(255, 255, 255, .45); color: #fff; }
+.nav .dot, .nav .links a, .nav .theme { transition: color .25s, border-color .25s, background-color .25s; }
 /* only the dot (or the menu once it's open) reacts to the mouse — the hidden menu area must not */
 .nav-left { pointer-events: none !important; }
 .nav-left > .dot { pointer-events: auto; }
@@ -205,6 +208,34 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
+/* LAB: each drum hit sends a faint echo of the slogan outward, like a sound wave */
+.slg { display: inline-block; position: relative; }
+.slg::after { content: attr(data-t); white-space: pre; position: absolute; inset: 0; color: var(--fg); opacity: 0; pointer-events: none; }
+.slg.shake::after { animation: slg-echo .5s ease-out; }
+@keyframes slg-echo { 0% { opacity: .35; transform: none; } 100% { opacity: 0; transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { .slg.shake::after { animation: none; } }
+/* LAB: tools as a sentence, hover a tool for a tilted preview */
+.companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); margin: 0 auto; }
+@media (max-width: 520px) { .companies .tsent .tbr { display: none; } }
+.tw { position: relative; color: var(--fg); border-bottom: 1px dashed var(--rule); cursor: default; outline: none; }
+.tw-card { position: absolute; left: 50%; bottom: calc(100% + 10px); width: 168px; aspect-ratio: 16 / 10; padding: 4px; background: #fff;
+  border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.08); pointer-events: none; z-index: 5;
+  opacity: 0; transform: translate(-50%, 8px) rotate(calc(var(--tilt) * .4)) scale(.92); transform-origin: 50% 100%;
+  transition: opacity .18s ease, transform .35s cubic-bezier(.34,1.4,.64,1); }
+.tw-tall .tw-card { width: 116px; aspect-ratio: 2 / 3; }
+.tw-card img, .tw-card iframe { display: block; width: 100%; height: 100%; object-fit: cover; border: 0; border-radius: 2px; background: var(--card); }
+.tw-card iframe { width: 300%; height: 300%; transform: scale(.3333); transform-origin: 0 0; }
+.tw-card:has(iframe) { overflow: hidden; }
+.tw:hover .tw-card, .tw:focus-visible .tw-card { opacity: 1; transform: translate(-50%, 0) rotate(var(--tilt)) scale(1); }
+@media (prefers-reduced-motion: reduce) { .tw-card { transition: opacity .15s; } }
+/* LAB: two-column thumbnails */
+.companies { padding-bottom: 0; }
+.projects { padding-top: 72px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 56px; }
+.projects > .label { grid-column: 1 / -1; margin-bottom: -42px; }
+.projects .proj { margin-bottom: 0; }
+.projects .shot { aspect-ratio: 16 / 10 !important; }
+.projects .proj p { font-size: 14px; }
+@media (max-width: 640px) { .projects { grid-template-columns: minmax(0, 1fr); } }
 
 /* Echos card: a visitor asks Elias about Romanticism; Elias answers and the paintings scroll in (from Echos Thumbnail · Elias) */
 .ec{--T:11s;--k:calc(31.8cqw / 1080);position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#eff0f2;container-type:inline-size}
@@ -419,6 +450,15 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .lp-rec.on .lp-vin { transform: translateY(-68%); }
 .now { margin-top: 10px; font-size: 14px; color: var(--muted); letter-spacing: -0.011em; min-height: 20px; }
 .now b { font-weight: 400; color: var(--fg); }
+.now-ic { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; margin-right: 9px; vertical-align: 0; }
+.now-ic i { width: 1.4px; height: 100%; background: var(--fg); border-radius: 1px; transform-origin: bottom; animation: eq 1.1s ease-in-out infinite; }
+.now-ic i:nth-child(2) { animation-delay: -.45s; } .now-ic i:nth-child(3) { animation-delay: -.8s; }
+@keyframes eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .now-ic i { animation: none; transform: scaleY(.6); } }
+.now-sp { color: inherit; text-decoration: none; }
+.now-sp b { transition: color .2s; }
+.now-sp .ar { display: inline-block; margin-left: 3px; color: var(--muted); font-size: 12px; transition: color .2s, transform .2s; }
+.now-sp:hover .ar { color: var(--fg); transform: translate(1px, -1px); }
 @media (prefers-reduced-motion: reduce) { .lp-rec, .lp-vin { transition: none !important; } .lp-rec.on .lp-spin { animation: none; } }
 .locale { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-block: 22px 0; margin-top: 30px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .spacer { height: 110px; }
@@ -1565,6 +1605,10 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 .rv.in { opacity: 1; transform: none; }
 .qa.rv { --rv-y: 24px; }
 @media (prefers-reduced-motion: reduce) { .hero-in > * { animation: none; } .rv { opacity: 1; transform: none; transition: none; } }
+/* same reveal for About + case study, as an animation so it never overrides an element's own hover transitions */
+.rva:not(.in) { opacity: 0; }
+.rva.in { animation: rva-in 1s cubic-bezier(.44, 0, .56, 1) var(--rv-d, 0s) backwards; }
+@keyframes rva-in { from { opacity: 0; transform: translateY(20px); } }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
@@ -1682,12 +1726,18 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       <p class="c">© 2026 Dakota Shao</p>
     </footer>`;
 
+  // LAB: tool word with a tilted preview card (img, or a live playground piece)
+  let twN = 0;
+  const tw = (name, src, live, shape) => !src ? `<span class="tw tw-none">${name}</span>` : `<span class="tw${shape ? " tw-" + shape : ""}" tabindex="0" style="--tilt:${(twN++ % 2 ? 3 : -4)}deg">${name}<span class="tw-card" aria-hidden="true">${live
+    ? `<iframe data-src="${src}" tabindex="-1" loading="lazy" title=""></iframe>`
+    : `<img src="${src}" alt="" loading="lazy">`}</span></span>`;
+
   const home = () => `
     <section class="hero">
       ${kit.map((d, i) => `<button class="inst" type="button" data-k="${d.k}" aria-label="Play ${d.k}" style="left:${d.x}%;top:${d.y}%;width:${d.w}px;--r:${d.r}deg;--r0:${d.r0 - d.r}deg;--delay:${d.delay}s"><img src="${d.src}" alt="" draggable="false"></button>`).join("")}
       <div class="hero-in">
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
-        <h1>Break it down,<br>build it back</h1>
+        <h1 class="slg" data-t="Break it down,&#10;build it back">Break it down,<br>build it back</h1>
         <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
         <p class="prev"><i>Prev.</i> <a href="https://www.linkedin.com/company/baidu-inc/posts/?feedView=all" target="_blank" rel="noopener">Baidu</a>, <a href="https://www.24hrcares.com" target="_blank" rel="noopener">24Hour Homecare</a></p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
@@ -1696,8 +1746,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
     </section>
 
     <section class="companies wrap">
-      <h3>Tools I work with:</h3>
-      <div class="tools"><span class="chip">Figma</span><span class="chip">Illustrator</span><span class="chip">InDesign</span><span class="chip">Claude Code</span><span class="chip">Codex</span><span class="chip">GitHub</span><span class="chip">VS Code</span><span class="chip">Midjourney</span><span class="chip">Unity</span></div>
+      <p class="tsent">I sketch in ${tw("Figma","img/wl-cover.webp")}, build with ${tw("Claude Code","img/autumn-list.webp",0,"tall")},<br class="tbr"> ship on ${tw("GitHub","pg/rotation-slider--dominoes-drag.html",1)}, and play in ${tw("Unity","img/unity-heart.webp")}.</p>
     </section>
 
 ${SHOW.howIWork ? `
@@ -2433,17 +2482,38 @@ function run(){
       <div class="cols"><span></span><div class="locale"><span id="vloc"></span><span id="clock">--:--</span></div></div>
     </div>`;
 
-  const lpText = (i, on) => (on ? "Now spinning · " : "") + `<b>${LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}`;
+  const lpSpot = (a) => "https://open.spotify.com/search/" + encodeURIComponent((LP_SONG[a.id] || a.t) + " " + a.a);
+  const lpText = (i, on) => { const a = LP_ORDER[i]; return on ? `<span class="now-ic" role="img" aria-label="Now playing"><i></i><i></i><i></i></span><a class="now-sp" href="${lpSpot(a)}" target="_blank" rel="noopener" title="Full song on Spotify"><b>${LP_SONG[a.id] || a.t}</b><span class="ar" aria-hidden="true">↗</span></a> · ${a.a}` : `<b>${a.t}</b> · ${a.a}`; };
   const lpSet = (html) => { const n = document.querySelector(".now"); if (n) n.innerHTML = html; };
   let lpOn = -1;
   const lpRest = () => lpSet(lpOn < 0 ? `<span>${LP_REST}</span>` : lpText(lpOn, true));
+  // click a record → play a 30s Apple Music preview of one track (looked up at runtime, nothing hosted here)
+  const LP_SONG = {"mamas-gun":"Bag Lady","tago-mago":"Oh Yeah","whats-going-on":"Mercy Mercy Me","crazysexycool":"Waterfalls","when-i-get-home":"Almeda","songs-key-of-life":"Sir Duke","black-on-both-sides":"Umi Says","stand":"Everyday People","brown-sugar":"Brown Sugar","this-old-dog":"My Old Man","miseducation":"Doo Wop (That Thing)","in-rainbows":"Weird Fishes / Arpeggi","tracy-chapman":"For My Lover"};
+  const lpAudio = new Audio(); lpAudio.preload = "none";
+  const lpCache = {};
+  const lpNorm = (t) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
+  const lpFind = (a) => lpCache[a.id] || (lpCache[a.id] = new Promise((res) => {
+    const cb = "lpcb" + Math.random().toString(36).slice(2), sc = document.createElement("script");
+    const done = (u) => { delete window[cb]; sc.remove(); clearTimeout(t); res(u); };
+    const t = setTimeout(() => done(null), 6000);
+    window[cb] = (d) => { const rs = (d && d.results || []).filter((x) => x.previewUrl), al = lpNorm(a.t), tr = lpNorm(LP_SONG[a.id] || "");
+      const hit = rs.find((x) => lpNorm(x.collectionName || "").includes(al) && lpNorm(x.trackName).startsWith(tr)) || rs.find((x) => lpNorm(x.trackName).startsWith(tr)) || rs[0];
+      done(hit ? hit.previewUrl : null); };
+    sc.onerror = () => done(null);
+    sc.src = "https://itunes.apple.com/search?entity=song&limit=10&country=us&callback=" + cb + "&term=" + encodeURIComponent(a.a.replace(/&/g, "and") + " " + (LP_SONG[a.id] || a.t));
+    document.head.appendChild(sc);
+  }));
+  const lpStop = () => { lpAudio.pause(); lpAudio.removeAttribute("src"); };
+  const lpPlay = async (i) => { const a = LP_ORDER[i], u = await lpFind(a); if (lpOn !== i || !u) return; lpAudio.src = u; lpAudio.volume = .8; lpAudio.play().catch(() => {}); };
+  lpAudio.addEventListener("ended", () => { lpOn = -1; document.querySelectorAll(".lp-rec").forEach((x) => { x.classList.remove("on"); x.setAttribute("aria-pressed", false); }); lpRest(); });
   const lpPick = (r) => { const i = +r.dataset.i; lpOn = lpOn === i ? -1 : i;
-    document.querySelectorAll(".lp-rec").forEach((x) => { const s = +x.dataset.i === lpOn; x.classList.toggle("on", s); x.setAttribute("aria-pressed", s); }); lpRest(); };
+    document.querySelectorAll(".lp-rec").forEach((x) => { const s = +x.dataset.i === lpOn; x.classList.toggle("on", s); x.setAttribute("aria-pressed", s); }); lpRest();
+    lpStop(); if (lpOn >= 0) lpPlay(lpOn); };
   document.addEventListener("click", (e) => { const r = e.target.closest(".lp-rec"); if (r) lpPick(r); });
   document.addEventListener("keydown", (e) => { const r = e.target.closest && e.target.closest(".lp-rec"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); lpPick(r); } });
   document.addEventListener("mouseover", (e) => { const r = e.target.closest(".lp-rec"); if (r) lpSet(lpText(+r.dataset.i, +r.dataset.i === lpOn)); });
   document.addEventListener("mouseout", (e) => { const r = e.target.closest(".lp-rec"); if (r && !r.contains(e.relatedTarget)) lpRest(); });
-  addEventListener("hashchange", () => { lpOn = -1; });
+  addEventListener("hashchange", () => { lpOn = -1; lpStop(); });
 
   document.addEventListener("click", async (e) => {
     const m = e.target.closest(".mail"); if (!m) return;
@@ -2464,6 +2534,11 @@ function run(){
     const o = navEl.classList.toggle("open"); navDot.setAttribute("aria-expanded", o);
   });
   navEl.querySelector(".nav-left").addEventListener("mouseleave", closeNav);
+  // white nav while the About photo sits under it
+  const navPhoto = () => { const h = document.querySelector(".about-hero"); navEl.classList.toggle("on-photo", !!h && h.getBoundingClientRect().bottom > navEl.querySelector(".links").getBoundingClientRect().bottom + 8); };
+  addEventListener("scroll", navPhoto, { passive: true }); addEventListener("resize", navPhoto);
+  addEventListener("hashchange", () => requestAnimationFrame(() => requestAnimationFrame(navPhoto)));
+  requestAnimationFrame(() => requestAnimationFrame(navPhoto));
   document.addEventListener("pointerdown", (e) => { if (!navEl.contains(e.target)) closeNav(); });
   addEventListener("hashchange", () => { navEl.classList.remove("open"); navDot.setAttribute("aria-expanded", "false"); });
 
@@ -2730,7 +2805,7 @@ function cycMount(root, onOpen) {
     } else el.textContent = w;
   };
   const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
-  let i = 0, hold = false, wait = 0;
+  let i = 0, hold = false, wait = 0, drum = false, drumT = 0;
   const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
   const size = () => (slot.style.width = measure(WORDS[i]) + "px");
   // the poster and booklet words use other faces; load them up front so their widths measure true
@@ -2741,10 +2816,11 @@ function cycMount(root, onOpen) {
   slot.addEventListener("mouseenter", () => (hold = true));
   slot.addEventListener("mouseleave", () => (hold = false));
   slot.addEventListener("click", (e) => { e.preventDefault(); if (LINK[WORDS[i]] && onOpen) onOpen(WORDS[i]); });
-  const step = (force) => {
+  const step = (force, to) => {
     if (!slot.isConnected) return clearInterval(tick);
-    if (hold || document.hidden) return;
-    if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
+    if (to == null && (hold || drum || document.hidden)) return;
+    if (to != null) i = to - 1;
+    else if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
     wait = 0;
     i = (i + 1) % WORDS.length;
     const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
@@ -2755,9 +2831,24 @@ function cycMount(root, onOpen) {
     requestAnimationFrame(() => requestAnimationFrame(() => nu.classList.remove("in")));
   };
   let tick = 0;
-  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);   // first change comes quickly, so visitors see it move
+  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);
+  // drums: jump straight to "noise", stay there while the kit is being played, resume 2.4 s after the last hit
+  root.toNoise = () => {
+    const n = WORDS.indexOf("noise");
+    if (i !== n) step(true, n);
+    drum = true; clearTimeout(drumT);
+    // once the kit goes quiet, move on right away instead of waiting out the next 2.2 s tick
+    drumT = setTimeout(() => { drum = false; step(true); clearInterval(tick); tick = setInterval(step, 2200); }, 700);
+  };   // first change comes quickly, so visitors see it move
   return () => clearInterval(tick);
 }
+
+  // LAB: each drum hit echoes the slogan and sends the rotating line to "noise" while someone is playing
+  function noise() {
+    const h = app.querySelector(".slg");
+    if (h) { h.classList.remove("shake"); void h.offsetWidth; h.classList.add("shake"); }
+    const c = app.querySelector(".cyc"); if (c && c.toNoise) c.toNoise();
+  }
 
   function render() {
     const h = location.hash.slice(1) || "home";
@@ -2785,8 +2876,8 @@ function cycMount(root, onOpen) {
     if (work && work.custom === "btob") btobMount(app.querySelector(".cs24"));
     app.querySelectorAll(".inst").forEach((b) => {
       const d = kit.find((x) => x.k === b.dataset.k);
-      b.addEventListener("pointerdown", (e) => hit(b, d, e));
-      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
+      b.addEventListener("pointerdown", (e) => { hit(b, d, e); noise(); });
+      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); noise(); const r = b.getBoundingClientRect(); hit(b, d, { clientX: r.left + r.width / 2, clientY: r.top }); } });
     });
     tick();
     const cycEl = app.querySelector(".cyc"); if (cycEl) cycMount(cycEl, () => { location.hash = "playground"; });
@@ -2797,6 +2888,19 @@ function cycMount(root, onOpen) {
     if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
       rvTargets.forEach((el) => { el.classList.add("rv"); io.observe(el); });
+    }
+    // About + case study: smaller pieces so text arrives line by line; things that enter together are staggered
+    const rvaSel = isAbout
+      ? ".about-hero, .intro .av, .intro p, .intro .mail, .list-c .sec-h, .crow, .od li, .lp-sec .sec-h, .lp-wrap, .about > .cols:last-child .locale"
+      : work ? ".cs24 .article > .hero > *, .cs24 .article > .text > *, .cs24 .article > figure:not(.seal), .cs24 .article > .ovt, .cs24 .article > .fig, .cs24 .article > .kf, .cs24 .article > .kx, .cs24 .article > .tokens, .cs24 .flow, .cs24 .dsec > *, .cs24 .outc > div, .cs24 .refl > div" : "";
+    if (rvaSel && "IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const els = [...app.querySelectorAll(rvaSel)].filter((el) => !el.matches(".seal, canvas") && getComputedStyle(el).animationName === "none");
+      const io2 = new IntersectionObserver((es) => {
+        es.filter((en) => en.isIntersecting).map((en) => en.target)
+          .sort((a, b) => (a.compareDocumentPosition(b) & 4 ? -1 : 1))
+          .forEach((el, i) => { el.style.setProperty("--rv-d", Math.min(i, 6) * 0.08 + "s"); el.classList.add("in"); io2.unobserve(el); });
+      }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+      els.forEach((el) => { el.classList.add("rva"); io2.observe(el); });
     }
     app.querySelectorAll(".cs-video").forEach((v) => v.querySelector(".cs-play").addEventListener("click", () => {
       v.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${v.dataset.yt}?autoplay=1&rel=0&playsinline=1" title="${v.dataset.title}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
@@ -2821,6 +2925,10 @@ function cycMount(root, onOpen) {
   addEventListener("hashchange", render);
   render();
 })();
+</script>
+<script>
+document.addEventListener("pointerover", e => { const t = e.target.closest && e.target.closest(".tw"); if (!t) return; const f = t.querySelector("iframe[data-src]"); if (f) { f.src = f.dataset.src; f.removeAttribute("data-src"); } });
+document.addEventListener("focusin", e => { const t = e.target.closest && e.target.closest(".tw"); if (!t) return; const f = t.querySelector("iframe[data-src]"); if (f) { f.src = f.dataset.src; f.removeAttribute("data-src"); } });
 </script>
 <script>
 /* Card tags: look at what sits behind the tags and switch to light text on dark thumbnails. */
