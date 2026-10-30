@@ -163,6 +163,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .hero p { color: var(--muted); font-size: 17px; line-height: 1.38; }
 .hero .prev { margin: 14px 0 24px; }
 .hero .prev i { font-style: italic; }
+.hero .prev a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color .2s, text-decoration-color .2s; }
+.hero .prev a:hover { color: var(--fg); text-decoration-color: currentColor; }
 .hint { margin-top: 12px; font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
 kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border-radius: 4px; padding: 1px 4px; color: var(--muted); }
 .inst { position: absolute; z-index: 1; cursor: pointer; padding: 0; transform: translate(-50%, -50%) rotate(var(--r)); -webkit-tap-highlight-color: transparent; }
@@ -1716,7 +1718,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
         <h1 class="slg" data-t="Break it down,&#10;build it back">Break it down,<br>build it back</h1>
         <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
-        <p class="prev"><i>Prev.</i> Baidu, 24Hour Homecare</p>
+        <p class="prev"><i>Prev.</i> <a href="https://www.linkedin.com/company/baidu-inc/posts/?feedView=all" target="_blank" rel="noopener">Baidu</a>, <a href="https://www.24hrcares.com" target="_blank" rel="noopener">24Hour Homecare</a></p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
         <div class="hint">Press <kbd>⌘</kbd> + <kbd>⌥</kbd> to ask AI</div>
       </div>
