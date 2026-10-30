@@ -2461,17 +2461,37 @@ function run(){
       <div class="cols"><span></span><div class="locale"><span id="vloc"></span><span id="clock">--:--</span></div></div>
     </div>`;
 
-  const lpText = (i, on) => (on ? "Now spinning · " : "") + `<b>${LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}`;
+  const lpText = (i, on) => on ? `Now spinning · <b>${LP_SONG[LP_ORDER[i].id] || LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}` : `<b>${LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}`;
   const lpSet = (html) => { const n = document.querySelector(".now"); if (n) n.innerHTML = html; };
   let lpOn = -1;
   const lpRest = () => lpSet(lpOn < 0 ? `<span>${LP_REST}</span>` : lpText(lpOn, true));
+  // click a record → play a 30s Apple Music preview of one track (looked up at runtime, nothing hosted here)
+  const LP_SONG = {"mamas-gun":"Bag Lady","tago-mago":"Oh Yeah","whats-going-on":"What's Going On","crazysexycool":"Waterfalls","when-i-get-home":"Almeda","songs-key-of-life":"Sir Duke","black-on-both-sides":"Umi Says","stand":"Everyday People","brown-sugar":"Brown Sugar","this-old-dog":"My Old Man","miseducation":"Doo Wop (That Thing)","in-rainbows":"Weird Fishes / Arpeggi","tracy-chapman":"Fast Car"};
+  const lpAudio = new Audio(); lpAudio.preload = "none";
+  const lpCache = {};
+  const lpNorm = (t) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
+  const lpFind = (a) => lpCache[a.id] || (lpCache[a.id] = new Promise((res) => {
+    const cb = "lpcb" + Math.random().toString(36).slice(2), sc = document.createElement("script");
+    const done = (u) => { delete window[cb]; sc.remove(); clearTimeout(t); res(u); };
+    const t = setTimeout(() => done(null), 6000);
+    window[cb] = (d) => { const rs = (d && d.results || []).filter((x) => x.previewUrl), al = lpNorm(a.t), tr = lpNorm(LP_SONG[a.id] || "");
+      const hit = rs.find((x) => lpNorm(x.collectionName || "").includes(al) && lpNorm(x.trackName).startsWith(tr)) || rs.find((x) => lpNorm(x.trackName).startsWith(tr)) || rs[0];
+      done(hit ? hit.previewUrl : null); };
+    sc.onerror = () => done(null);
+    sc.src = "https://itunes.apple.com/search?entity=song&limit=10&country=us&callback=" + cb + "&term=" + encodeURIComponent(a.a.replace(/&/g, "and") + " " + (LP_SONG[a.id] || a.t));
+    document.head.appendChild(sc);
+  }));
+  const lpStop = () => { lpAudio.pause(); lpAudio.removeAttribute("src"); };
+  const lpPlay = async (i) => { const a = LP_ORDER[i], u = await lpFind(a); if (lpOn !== i || !u) return; lpAudio.src = u; lpAudio.volume = .8; lpAudio.play().catch(() => {}); };
+  lpAudio.addEventListener("ended", () => { lpOn = -1; document.querySelectorAll(".lp-rec").forEach((x) => { x.classList.remove("on"); x.setAttribute("aria-pressed", false); }); lpRest(); });
   const lpPick = (r) => { const i = +r.dataset.i; lpOn = lpOn === i ? -1 : i;
-    document.querySelectorAll(".lp-rec").forEach((x) => { const s = +x.dataset.i === lpOn; x.classList.toggle("on", s); x.setAttribute("aria-pressed", s); }); lpRest(); };
+    document.querySelectorAll(".lp-rec").forEach((x) => { const s = +x.dataset.i === lpOn; x.classList.toggle("on", s); x.setAttribute("aria-pressed", s); }); lpRest();
+    lpStop(); if (lpOn >= 0) lpPlay(lpOn); };
   document.addEventListener("click", (e) => { const r = e.target.closest(".lp-rec"); if (r) lpPick(r); });
   document.addEventListener("keydown", (e) => { const r = e.target.closest && e.target.closest(".lp-rec"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); lpPick(r); } });
   document.addEventListener("mouseover", (e) => { const r = e.target.closest(".lp-rec"); if (r) lpSet(lpText(+r.dataset.i, +r.dataset.i === lpOn)); });
   document.addEventListener("mouseout", (e) => { const r = e.target.closest(".lp-rec"); if (r && !r.contains(e.relatedTarget)) lpRest(); });
-  addEventListener("hashchange", () => { lpOn = -1; });
+  addEventListener("hashchange", () => { lpOn = -1; lpStop(); });
 
   document.addEventListener("click", async (e) => {
     const m = e.target.closest(".mail"); if (!m) return;
