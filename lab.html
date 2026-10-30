@@ -447,6 +447,8 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .lp-rec.on .lp-vin { transform: translateY(-68%); }
 .now { margin-top: 10px; font-size: 14px; color: var(--muted); letter-spacing: -0.011em; min-height: 20px; }
 .now b { font-weight: 400; color: var(--fg); }
+.now-sp { margin-left: 10px; color: var(--muted); text-decoration: none; transition: color .2s; }
+.now-sp:hover { color: var(--fg); }
 @media (prefers-reduced-motion: reduce) { .lp-rec, .lp-vin { transition: none !important; } .lp-rec.on .lp-spin { animation: none; } }
 .locale { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-block: 22px 0; margin-top: 30px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .spacer { height: 110px; }
@@ -2461,7 +2463,8 @@ function run(){
       <div class="cols"><span></span><div class="locale"><span id="vloc"></span><span id="clock">--:--</span></div></div>
     </div>`;
 
-  const lpText = (i, on) => on ? `Now spinning · <b>${LP_SONG[LP_ORDER[i].id] || LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}` : `<b>${LP_ORDER[i].t}</b> · ${LP_ORDER[i].a}`;
+  const lpSpot = (a) => "https://open.spotify.com/search/" + encodeURIComponent((LP_SONG[a.id] || a.t) + " " + a.a);
+  const lpText = (i, on) => { const a = LP_ORDER[i]; return on ? `Now spinning · <b>${LP_SONG[a.id] || a.t}</b> · ${a.a}<a class="now-sp" href="${lpSpot(a)}" target="_blank" rel="noopener" aria-label="Listen to the full song on Spotify">Full song ↗</a>` : `<b>${a.t}</b> · ${a.a}`; };
   const lpSet = (html) => { const n = document.querySelector(".now"); if (n) n.innerHTML = html; };
   let lpOn = -1;
   const lpRest = () => lpSet(lpOn < 0 ? `<span>${LP_REST}</span>` : lpText(lpOn, true));
