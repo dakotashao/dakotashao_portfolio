@@ -203,15 +203,18 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 .proj.locked, .proj.closed { cursor: default; }
 .proj h4 { font-size: 16px; font-weight: 400; margin-top: 12px; }
 .proj p { color: var(--muted); font-size: 16px; line-height: 1.4; margin-top: 4px; }
-/* LAB: hitting a drum swaps the slogan to "Make noise." until the kit goes quiet */
-.slg { display: grid; }
-.slg > span { grid-area: 1 / 1; transition: opacity .22s ease, transform .32s cubic-bezier(.2,.8,.2,1); }
-.slg-b { opacity: 0; transform: translateY(6px); }
-.slg.noisy .slg-a { opacity: 0; transform: translateY(-6px); }
-.slg.noisy .slg-b { opacity: 1; transform: none; }
-.slg-b.bump { animation: slg-bump .18s ease-out; }
-@keyframes slg-bump { 0% { transform: scale(1.04); } 100% { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .slg > span { transition: opacity .15s; transform: none !important; } .slg-b.bump { animation: none; } }
+/* LAB: the slogan shakes with each drum hit */
+.slg { display: inline-block; transform-origin: 50% 60%; }
+.slg.shake { animation: slg-shake .34s cubic-bezier(.3,.7,.4,1); }
+@keyframes slg-shake {
+  0% { transform: translate(0,0) rotate(0); }
+  15% { transform: translate(-3px,1px) rotate(-1.2deg); }
+  32% { transform: translate(3px,-1px) rotate(1deg); }
+  50% { transform: translate(-2px,0) rotate(-.6deg); }
+  70% { transform: translate(1px,0) rotate(.3deg); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .slg.shake { animation: none; } }
 /* LAB: tools as a sentence, hover a tool for a tilted preview */
 .companies .tsent { font-size: 20px; line-height: 1.6; color: var(--muted); margin: 0 auto; }
 @media (max-width: 520px) { .companies .tsent .tbr { display: none; } }
@@ -1717,7 +1720,7 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       ${kit.map((d, i) => `<button class="inst" type="button" data-k="${d.k}" aria-label="Play ${d.k}" style="left:${d.x}%;top:${d.y}%;width:${d.w}px;--r:${d.r}deg;--r0:${d.r0 - d.r}deg;--delay:${d.delay}s"><img src="${d.src}" alt="" draggable="false"></button>`).join("")}
       <div class="hero-in">
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
-        <h1 class="slg"><span class="slg-a">Break it down,<br>build it back</span><span class="slg-b" aria-hidden="true">Make<br>noise.</span></h1>
+        <h1 class="slg">Break it down,<br>build it back</h1>
         <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
         <p class="prev"><i>Prev.</i> Baidu, 24Hour Homecare</p>
         <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
@@ -2759,7 +2762,7 @@ function cycMount(root, onOpen) {
     } else el.textContent = w;
   };
   const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
-  let i = 0, hold = false, wait = 0;
+  let i = 0, hold = false, wait = 0, drum = false, drumT = 0;
   const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
   const size = () => (slot.style.width = measure(WORDS[i]) + "px");
   // the poster and booklet words use other faces; load them up front so their widths measure true
@@ -2770,10 +2773,11 @@ function cycMount(root, onOpen) {
   slot.addEventListener("mouseenter", () => (hold = true));
   slot.addEventListener("mouseleave", () => (hold = false));
   slot.addEventListener("click", (e) => { e.preventDefault(); if (LINK[WORDS[i]] && onOpen) onOpen(WORDS[i]); });
-  const step = (force) => {
+  const step = (force, to) => {
     if (!slot.isConnected) return clearInterval(tick);
-    if (hold || document.hidden) return;
-    if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
+    if (to == null && (hold || drum || document.hidden)) return;
+    if (to != null) i = to - 1;
+    else if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
     wait = 0;
     i = (i + 1) % WORDS.length;
     const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
@@ -2784,18 +2788,22 @@ function cycMount(root, onOpen) {
     requestAnimationFrame(() => requestAnimationFrame(() => nu.classList.remove("in")));
   };
   let tick = 0;
-  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);   // first change comes quickly, so visitors see it move
+  setTimeout(() => { step(true); tick = setInterval(step, 2200); }, 1600);
+  // drums: jump straight to "noise", stay there while the kit is being played, resume 2.4 s after the last hit
+  root.toNoise = () => {
+    const n = WORDS.indexOf("noise");
+    if (i !== n) step(true, n);
+    drum = true; clearTimeout(drumT);
+    drumT = setTimeout(() => { drum = false; }, 2400);
+  };   // first change comes quickly, so visitors see it move
   return () => clearInterval(tick);
 }
 
-  // LAB: slogan reads "Make noise." while someone is playing; goes back 2.4s after the last hit
-  let noiseT = 0;
+  // LAB: each drum hit shakes the slogan and sends the rotating line to "noise" while someone is playing
   function noise() {
-    const h = app.querySelector(".slg"); if (!h) return;
-    const b = h.querySelector(".slg-b");
-    if (h.classList.contains("noisy")) { b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
-    h.classList.add("noisy");
-    clearTimeout(noiseT); noiseT = setTimeout(() => h.classList.remove("noisy"), 2400);
+    const h = app.querySelector(".slg");
+    if (h) { h.classList.remove("shake"); void h.offsetWidth; h.classList.add("shake"); }
+    const c = app.querySelector(".cyc"); if (c && c.toNoise) c.toNoise();
   }
 
   function render() {
