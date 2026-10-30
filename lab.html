@@ -2038,14 +2038,14 @@ function run(){
     function clear(){timers.forEach(clearTimeout);timers=[];dot.classList.remove('in','down');}
     function later(f,t){timers.push(setTimeout(f,t));}
     var fl=d.closest('.flow'),tg=fl&&fl.querySelector('.ftag'),tc=tg&&tg.className,tt=tg&&tg.textContent;function show(k){cur=k;if(tg){var pr=lis[k]&&lis[k].getAttribute('data-st')==='pr';tg.className=pr?'ftag st-pr':tc;tg.textContent=pr?'Proposal':tt;}lis.forEach(function(l,j){l.classList.toggle('on',j===k);var b=l.querySelector('.bar i');b.style.transition='none';b.style.width=j<k?'100%':'0';});scr.forEach(function(x,j){x.classList.toggle('on',j===k);});}
-    function go(){clear();if(held||!visible||still||d._pin)return;var li=lis[cur],b=li.querySelector('.bar i'),STEP=+li.getAttribute('data-dur')||STEPD;b.offsetWidth;b.style.transition='width '+STEP+'ms linear';b.style.width='100%';
+    function go(){clear();if(held||!visible||still||d._pin||d._hover)return;var li=lis[cur],b=li.querySelector('.bar i'),STEP=+li.getAttribute('data-dur')||STEPD;b.offsetWidth;b.style.transition='width '+STEP+'ms linear';b.style.width='100%';
       var t=li.getAttribute('data-tap');
       if(t){t=t.split(',');dot.style.left=(t[0]*100)+'%';dot.style.top=(t[1]*100)+'%';
         later(function(){dot.classList.add("in");},STEP-1300);
         later(function(){dot.classList.add('down');},STEP-360);
         later(function(){dot.classList.remove('down');},STEP-180);}
       later(function(){dot.classList.remove('in');show((cur+1)%lis.length);go();},STEP);}
-    d._show=show;d._lis=lis;d._clear=clear;
+    d._show=show;d._lis=lis;d._clear=clear;d._go=function(){go();};d._cur=function(){return cur;};
     lis.forEach(function(l){var bt=l.querySelector('button');bt.setAttribute('data-tip',l.querySelector('.l').textContent);bt.setAttribute('aria-label',l.querySelector('.l').textContent);});
     lis.forEach(function(l,j){l.querySelector('button').addEventListener('click',function(){clear();show(j);go();});});
     if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){visible=e.isIntersecting;if(visible)go();else clear();});},{threshold:.5}).observe(d);}
@@ -2053,36 +2053,45 @@ function run(){
   });
 
 
-  // LAB: core flows are pinned. The page stops moving; scrolling steps through each flow's screens,
-  // then cross-fades to the next flow. Phone + text always fit one viewport. Off on small screens / reduced motion.
+  // LAB: core flows are pinned. Page scroll moves between flows (the page itself stays put);
+  // with the pointer over the phone frame, the wheel steps through that flow's screens instead.
+  // Off on small screens / reduced motion.
   (function(){
     var box=root.querySelector('.flows'); if(!box||still||innerWidth<760) return;
     var flows=[].slice.call(box.querySelectorAll(':scope > .flow')); if(!flows.length) return;
     var demos=flows.map(function(f){return f.querySelector('.demo');});
-    var map=[]; demos.forEach(function(d,fi){ d._pin=true; d._clear&&d._clear(); (d._lis||[]).forEach(function(_,k){ map.push([fi,k]); }); });
-    var PER=0.5; // viewport-heights of scroll per screen
+    demos.forEach(function(d){ d._pin=true; d._clear&&d._clear(); });
+    var PER=0.7; // viewport-heights of page scroll per flow
     var stage=document.createElement('div'); stage.className='pin-stage';
     flows.forEach(function(f){ stage.appendChild(f); });
     box.appendChild(stage); box.classList.add('pinned');
-    function size(){ box.style.height=(map.length*PER*innerHeight+innerHeight)+'px'; }
+    function size(){ box.style.height=(flows.length*PER*innerHeight+innerHeight)+'px'; }
     size();
-    var curF=-1, curI=-1;
+    var cur=-1;
     function at(){
       var r=box.getBoundingClientRect(), span=box.offsetHeight-innerHeight;
-      var p=Math.min(1,Math.max(0,-r.top/span)), x=p*map.length, i=Math.min(map.length-1,Math.floor(x)), frac=Math.min(1,x-i);
-      var fi=map[i][0], k=map[i][1], d=demos[fi];
-      if(fi!==curF){ flows.forEach(function(f,j){ f.classList.toggle('on',j===fi); f.classList.toggle('past',j<fi); }); curF=fi; }
-      if(i!==curI){ d._show(k); curI=i; }
-      var b=d._lis[k]&&d._lis[k].querySelector('.bar i'); if(b){ b.style.transition='none'; b.style.width=(frac*100)+'%'; }
+      var p=Math.min(1,Math.max(0,-r.top/span)), fi=Math.min(flows.length-1,Math.floor(p*flows.length));
+      if(fi===cur) return;
+      flows.forEach(function(f,j){ f.classList.toggle('on',j===fi); f.classList.toggle('past',j<fi); });
+      if(cur>=0){ demos[cur]._pin=true; demos[cur]._clear(); }
+      cur=fi; demos[fi]._pin=false; demos[fi]._show(0); demos[fi]._go();
     }
-    // a step button jumps the page to that screen
-    demos.forEach(function(d,fi){ (d._lis||[]).forEach(function(li,k){ li.querySelector('button').addEventListener('click',function(e){
-      e.stopImmediatePropagation(); var i=0; for(;i<map.length;i++) if(map[i][0]===fi&&map[i][1]===k) break;
-      var top=box.getBoundingClientRect().top+scrollY+(i+.02)/map.length*(box.offsetHeight-innerHeight);
-      window.scrollTo({top:top,behavior:'smooth'});
-    },true); }); });
+    // over the frame: the wheel flips screens. At the first/last screen it lets the page scroll on to the next flow.
+    demos.forEach(function(d){
+      var acc=0, lock=0;
+      d.addEventListener('mouseenter',function(){ d._hover=true; d._clear(); });
+      d.addEventListener('mouseleave',function(){ d._hover=false; acc=0; d._go(); });
+      d.addEventListener('wheel',function(e){
+        var n=d._lis.length, k=d._cur(), dir=e.deltaY>0?1:-1;
+        if((dir>0&&k>=n-1)||(dir<0&&k<=0)) return;          // edge: hand the scroll back to the page
+        e.preventDefault();
+        if(performance.now()<lock) return;                    // one screen per gesture, trackpad momentum ignored
+        acc+=e.deltaY; if(Math.abs(acc)<30) return;
+        acc=0; lock=performance.now()+420; d._show(k+dir);
+      },{passive:false});
+    });
     addEventListener('scroll',at,{passive:true});
-    addEventListener('resize',function(){ size(); at(); });
+    addEventListener('resize',function(){ size(); cur=-1; at(); });
     at();
   })();
 
