@@ -65,6 +65,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .nav.open .links { opacity: 1; visibility: visible; transform: none; }
 @media (hover: hover) { .nav-left:hover .links { opacity: 1; visibility: visible; transform: none; } }
 .links { display: flex; flex-direction: column; font-size: 16px; line-height: 1.5; }
+/* frosted backing so the open menu stays readable over photos (About hero) — text position unchanged */
+.links { padding: 8px 16px 10px; margin: -8px -16px 0; border-radius: 14px; background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: blur(18px) saturate(1.1); backdrop-filter: blur(18px) saturate(1.1); }
 /* only the dot (or the menu once it's open) reacts to the mouse — the hidden menu area must not */
 .nav-left { pointer-events: none !important; }
 .nav-left > .dot { pointer-events: auto; }
