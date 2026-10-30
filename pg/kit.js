@@ -192,10 +192,29 @@
   };
   // a real hand takes over from the demo
   addEventListener("pointerdown", e => { if (e.isTrusted && KIT.playing) KIT.stop(); }, true);
-  // a real click on empty card space asks the gallery to open the detail view
+  // a real click on anything that isn't a control asks the gallery to open the detail view.
+  // (Checking for "empty" space alone missed blocks whose layout wrapper covers the whole stage.)
+  // Not a click: a drag, a long press, or a text selection.
+  const CTRL = "button,a,input,select,textarea,label,summary,[role=button],[role=slider],[role=radio],[role=checkbox],[role=switch],[role=tab],[role=option],[tabindex],[contenteditable]";
+  // a block can name more of its own controls: <div id="stage" data-ctrl="[data-leaf]">
+  const MORE = stage.dataset.ctrl || "";
+  const isCtrl = el => {
+    if (MORE && el.closest && el.closest(MORE)) return true;
+    for (let e = el; e && e !== document.body && e !== document.documentElement; e = e.parentElement) {
+      if (e.matches(CTRL)) return true;
+      const c = getComputedStyle(e).cursor;
+      if (c && c !== "auto" && c !== "default") return true;
+    }
+    return false;
+  };
+  let press = null;
+  addEventListener("pointerdown", e => { if (e.isTrusted) press = { x: e.clientX, y: e.clientY, t: performance.now() }; }, true);
   addEventListener("click", e => {
-    if (e.isTrusted && (e.target === document.body || e.target === document.documentElement || e.target === stage))
-      try { parent.postMessage({ type: "open-detail" }, "*"); } catch (err) {}
+    if (!e.isTrusted) return;
+    if (press && (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 5 || performance.now() - press.t > 600)) return;
+    const sel = getSelection(); if (sel && !sel.isCollapsed) return;
+    if (isCtrl(e.target)) return;
+    try { parent.postMessage({ type: "open-detail" }, "*"); } catch (err) {}
   });  // tell the gallery whether this block has a demo, so it can hide the play button
   addEventListener("load", () => { try { parent.postMessage({ type: "demo-avail", on: !!script }, "*"); } catch (e) {} });
   addEventListener("message", e => {

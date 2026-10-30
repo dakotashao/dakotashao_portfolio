@@ -2137,7 +2137,7 @@ function run(){
     { name:"Lever Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
       say:"The track is a lever pivoted at zero. The further out the ball goes, the more it tips, and the harder the most exposed stop is to reach.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--lever-visible","weight-sliders--lever-usage"] },
-    { slug:"avant-garde-booklet", name:"Avant Garde Booklet", type:"Booklets", verb:"Press",
+    { slug:"avant-garde-booklet", name:"Avant Garde Booklet", type:"Booklets", verb:"Flip",
       say:"A type specimen for ITC Avant Garde Gothic, set to 1970s funk. Turn the pages; it opens on the Funkadelic spread.", href:"https://claude.ai/artifact/LFMgefpSSuxcwXRv6kGR7C" },
     { slug:"selection-has-weight--toggle", name:"Toggle", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
       say:"A choice weighs as much as what it exposes. Hold to tip the switch over; turning it back off is one tap.", url:"adv_interface_wk03_selector/quirky/" },
@@ -2146,7 +2146,7 @@ function run(){
     { name:"Surface Slider", type:"Sliders", week:4, tone:"Ethereal", verb:"Drag", url:"adv_interface_wk04_slider/ethereal-sliders/",
       say:"A slider of water. Hover and the surface rises under your hand; drag and the bulk of the water trails the head.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["liquid-sliders--volume","liquid-sliders--rain"] },
-    { name:"Fling Loader", type:"Loaders", verb:"Drag",
+    { name:"Fling Loader", type:"Loaders", verb:"Fling",
       say:"A progress indicator on an early-2000s Nokia LCD. While your message sends, fling the bird at the mailbox; it can only fly as far as the send has got.", href:"https://nokia-loader.vercel.app",
       axes:[["Progress",["Determinate","Indeterminate"]]], grid:["fling-loader","fling-loader-indeterminate"] },
     { slug:"film", name:"Short Film", tagName:"Film", type:"Film", nodemo:true, minimal:true,
@@ -2154,7 +2154,7 @@ function run(){
     { name:"Rope Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
       say:"A value weighs as much as what it exposes. The number hangs on a rope that droops deeper as the value rises.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--offline-downloads","weight-sliders--keep-for"] },
-    { slug:"dominoes-list--wheel", name:"Dominoes Wheel", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
+    { slug:"dominoes-list--wheel", name:"Dominoes Wheel", type:"Lists", week:5, verb:"Scroll", url:"adv_interface_wk05/domino-list/",
       say:"The same list as a wheel. Rows you scroll past tip back onto the pile like dominoes." },
     { slug:"selection-has-weight--radio", name:"Radio", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
       say:"The more people an option reaches, the higher the ball has to be lifted. Hold to lift it; tap to drop it.", url:"adv_interface_wk03_selector/quirky/" },
@@ -2171,20 +2171,20 @@ function run(){
     { name:"Tide Loader", type:"Loaders", verb:"Watch", nodemo:true,
       say:"An ASCII ocean. Blue water washes into a white square from the left, pulls back, leaves grains on the sand, then reaches further.", href:"https://dakotashao.github.io/tide-loader/",
       axes:[["Edge",["Smooth","Strips"]],["Progress",["Loading","Endless"]]], grid:["tide-loader--smooth","tide-loader--smooth-endless","tide-loader--strips","tide-loader--strips-endless"] },
-    { slug:"mix-of-615", name:"Mix of 615", type:"Booklets", verb:"Press",
+    { slug:"mix-of-615", name:"Mix of 615", type:"Booklets", verb:"Flip",
       say:"A printed booklet as a flip book. Click a page or use the arrows to turn it.", href:"https://claude.ai/artifact/LEhvyGWGKJQd7d2HfoUqUV" },
     { name:"Parting Slider", type:"Sliders", week:4, tone:"Ethereal", verb:"Drag", url:"adv_interface_wk04_slider/ethereal-sliders/",
       say:"A bar of glass that parts where you press, and heals where it was cut before.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["liquid-sliders--sleep-timer","liquid-sliders--fade-out"] },
-    { name:"Balance Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
+    { name:"Balance Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Hover + Hold", url:"adv_interface_wk04_slider/weight-sliders/",
       say:"A beam the ball rolls along. Push one end and it leans; the ball only moves once it tips far enough.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--balance-visible","weight-sliders--balance-usage"] },
     { name:"Push Loader", type:"Loaders", verb:"Watch",
       say:"A stick figure pushes the word LOADING. The letters squeeze and the screen turns orange as the pressure builds; at 100% the word springs open and throws the figure out.", href:"https://dakotashao.github.io/push-loader/",
       axes:[["Progress",["Determinate","Indeterminate"]]], grid:["push-loader--determinate","push-loader--indeterminate"] },
-    { slug:"dominoes-list--tape", name:"Dominoes Tape", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
+    { slug:"dominoes-list--tape", name:"Dominoes Tape", type:"Lists", week:5, verb:"Scroll", url:"adv_interface_wk05/domino-list/",
       say:"A wheel with a domino tape: a fixed line, and each row carries its own dominoes that tip as it passes." },
-    { name:"Resolving Badge", type:"Badges & Tooltips", week:2, tone:"Nostalgic", verb:"Press",
+    { name:"Resolving Badge", type:"Badges & Tooltips", week:2, tone:"Nostalgic", verb:"Click",
       say:"Badges start blank and resolve into place, like data arriving on an old terminal.", url:"adv_interface_wk02/nostalgic/",
       axes:[["Type",["Content","Dot"]]], grid:["resolving-data--badge-content","resolving-data--badge-dot"] },
   ];
@@ -2198,7 +2198,7 @@ function run(){
   const ICON = {
     play: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>',
     stop: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="3"/></svg>',
-    open: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/></svg>',
+    open: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M5 9V5h4M15 5h4v4M19 15v4h-4M9 19H5v-4"/></svg>',
   };
   
   ITEMS.forEach((it) => { if (it.axes) it.sel = it.axes.map(() => 0); });
@@ -2267,7 +2267,7 @@ function run(){
   function pgRender(again) {
     const wall = pgEl("pg-wall"); if (!wall) return;
     pg.shown = ITEMS.filter((it) => (!pg.filter || it.type === pg.filter) &&
-      (!pg.query || [it.name, it.type, it.tone, it.verb, it.week ? "week " + it.week : ""].join(" ").toLowerCase().includes(pg.query)));
+      (!pg.query || [it.name, it.type, it.verb].join(" ").toLowerCase().includes(pg.query)));
     pgEl("pg-empty").hidden = pg.shown.length > 0;
     if (pg.io) pg.io.disconnect(); pg.frames.clear();
     pg.io = new IntersectionObserver((es) => es.forEach((en) => {
