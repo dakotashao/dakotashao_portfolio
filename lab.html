@@ -2466,7 +2466,7 @@ function run(){
   let lpOn = -1;
   const lpRest = () => lpSet(lpOn < 0 ? `<span>${LP_REST}</span>` : lpText(lpOn, true));
   // click a record → play a 30s Apple Music preview of one track (looked up at runtime, nothing hosted here)
-  const LP_SONG = {"mamas-gun":"Bag Lady","tago-mago":"Oh Yeah","whats-going-on":"What's Going On","crazysexycool":"Waterfalls","when-i-get-home":"Almeda","songs-key-of-life":"Sir Duke","black-on-both-sides":"Umi Says","stand":"Everyday People","brown-sugar":"Brown Sugar","this-old-dog":"My Old Man","miseducation":"Doo Wop (That Thing)","in-rainbows":"Weird Fishes / Arpeggi","tracy-chapman":"Fast Car"};
+  const LP_SONG = {"mamas-gun":"Bag Lady","tago-mago":"Oh Yeah","whats-going-on":"Mercy Mercy Me","crazysexycool":"Waterfalls","when-i-get-home":"Almeda","songs-key-of-life":"Sir Duke","black-on-both-sides":"Umi Says","stand":"Everyday People","brown-sugar":"Brown Sugar","this-old-dog":"My Old Man","miseducation":"Doo Wop (That Thing)","in-rainbows":"Weird Fishes / Arpeggi","tracy-chapman":"For My Lover"};
   const lpAudio = new Audio(); lpAudio.preload = "none";
   const lpCache = {};
   const lpNorm = (t) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
