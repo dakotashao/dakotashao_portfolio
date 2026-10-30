@@ -1024,6 +1024,11 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ftag.st-ad, #app .cs24 .ftag.ad{background:var(--cs-t);color:var(--cs)}
 #app .cs24 .ftag.st-pr, #app .cs24 .ftag.pr{background:var(--bg);color:var(--body)}
 #app .cs24 .flow .ft h3:first-child{margin-top:0}
+/* LAB: core flows read figure first, text underneath; tight gap to its own figure, wide gap to the next flow */
+#app .cs24 .flows > .flow{display:flex;flex-direction:column}
+#app .cs24 .flows > .flow > .demo{order:1;width:100%}
+#app .cs24 .flows > .flow > .ft{order:2;margin:24px auto 0;width:100%}
+#app .cs24 div.flows{gap:112px}
 #app .cs24 .hl{background:#dbe8f8;border-radius:5px;padding:1px 5px;margin:0 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone;--fg:#0d0d0d;--body:rgba(0,0,0,.52);--frame:#f4f4f4;--ink-rgb:0,0,0;--mute:rgba(0,0,0,.36);--rule:rgba(0,0,0,.08)}
 #app .cs24 .eyet{display:flex;flex-wrap:wrap;gap:4px;font-size:14px;line-height:20px;color:var(--fg)}
 #app .cs24 .eyet .etag{font-size:14px;line-height:14px;letter-spacing:-0.04em;padding:5px 10px;border-radius:40px;background:rgba(var(--ink-rgb,0,0,0),.06);color:rgba(var(--ink-rgb,0,0,0),.5)}
