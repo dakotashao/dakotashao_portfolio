@@ -201,7 +201,7 @@ svg.line path{fill:none;stroke-linecap:round;transition:opacity .35s}
     <div class="rm" aria-hidden="true"><canvas id="room"></canvas><canvas id="tv"></canvas></div>
     <div class="scrim"></div>
     <div class="c" id="C"></div>
-    <button class="dn" id="dn" type="button" role="switch" aria-checked="false" aria-label="Daytime"><i class="dnk"></i><span class="ms sun">light_mode</span><span class="ms moon">dark_mode</span></button>
+    <button class="dn" id="dn" type="button" role="switch" aria-checked="true" aria-label="Daytime"><i class="dnk"></i><span class="ms sun">light_mode</span><span class="ms moon">dark_mode</span></button>
   </div>
   <div class="row">
     <div class="seg" id="seg" role="radiogroup" aria-label="Climate display"><span>Climate</span><button role="radio" data-v="level" aria-checked="true">Liquid level</button><button role="radio" data-v="beads" aria-checked="false">Beads</button><button role="radio" data-v="ticks" aria-checked="false">Tick ring</button></div>
@@ -508,7 +508,7 @@ function render(){
     const st=f&&s.open&&!s.songs&&hasState(x), glyph=st?(x.music?(x.paused?'play_arrow':'pause'):'power_settings_new'):x.icon;
     if(icons[i]._g!==glyph){ icons[i].firstChild.textContent=glyph; icons[i]._g=glyph; if(icons[i]._g0!==undefined&&!reduce) icons[i].firstChild.animate([{scale:.6,opacity:0},{scale:1,opacity:1}],{duration:280,easing:'cubic-bezier(.34,1.45,.64,1)'}); icons[i]._g0=1; }
     icons[i].classList.toggle('st',st); icons[i].setAttribute('aria-label',st?(x.music?(x.paused?'Play':'Pause'):(x.on?'Turn off':'Turn on'))+' '+x.label:x.label);
-    icons[i].classList.toggle('f',f); icons[i].classList.toggle('off',!!isOff(x)&&!(st&&x.music)); icons[i].style.opacity=vessel?0:(s.open&&!f?.4:1);
+    icons[i].classList.toggle('f',f); icons[i].classList.toggle('off',!!isOff(x)&&!(st&&x.music)); icons[i].style.opacity=vessel?0:(s.open&&!f?.4:1); icons[i].style.pointerEvents=vessel?'none':''; /* a hidden lobe must not cover the bulb or the record under it */
     kcL[i].style.transform=T(P(g.r+(vessel?92:g.s)/2+13,a),1); kcL[i].classList.toggle('show',!s.open); kcL[i].classList.toggle('f',f); });
   core.style.transform=`scale(${s.open?.95:1})`;
   const hub=P((s.open?G.open:G.foc).r,fa);
@@ -817,12 +817,12 @@ const TV=(()=>{
 })();
 
 /* room sync: the photo follows committed values, and previews the focused option while a ring is open */
-let dayT=0, tableT=0;
+let dayT=1, tableT=0;
 const SCENE={Reading:{ceil:1,floor:90,blinds:1,table:1},Movie:{ceil:-1,floor:10,blinds:2,table:0},Dinner:{ceil:0,floor:35,blinds:0,table:1},Night:{ceil:-1,floor:0,blinds:2,table:.35}};
 const ix=l=>DEV.findIndex(d=>d.label===l);
 const MUS_I=DEV.findIndex(d=>d.music), iC=ix('Ceiling light'), iF=ix('Floor lamp'), iB=ix('Blinds'), iS=ix('Scenes');
-/* the TV is on by day and off by night (the page opens at night); the Night scene also switches it off; playing music again (play, a new playlist or song) turns it back on */
-let tvOff=true, wasPaused=null;
+/* the TV is on by day and off by night (the page opens by day); the Night scene also switches it off; playing music again (play, a new playlist or song) turns it back on */
+let tvOff=false, wasPaused=null;
 function tvSync(){ const m=MUS(), pi=m.sel, si=m.song[pi], p=m.opts[pi].pal;
   if(wasPaused===true&&!m.paused) tvOff=false; wasPaused=m.paused;
   let off=tvOff; if(s.open&&s.f===iS&&s.of!==DEV[iS].sel) off=DEV[iS].opts[s.of].label==='Night'; /* previewing a scene */
@@ -854,7 +854,7 @@ function frostLoop(){ if(!F.classList.contains('lite')){ frostRaf=0; return; }
 /* the dial follows the room: dark room -> pale liquid, bright room -> dark liquid (with a little hysteresis so it doesn't flicker) */
 let roomL=1;
 const applyTheme=()=>{ const room=F.dataset.bg==='room', lite=F.classList.contains('lite');
-  F.classList.toggle('lite',room&&!dayT&&(lite?roomL<.44:roomL<.41)); /* daytime always keeps the dark dial */ if(F.classList.contains('lite')&&!frostRaf) frostRaf=requestAnimationFrame(frostLoop); };
+  F.classList.toggle('lite',room&&(lite?roomL<.44:roomL<.41)); /* follows how dark the room really is, so a Night scene by day turns it light too */ if(F.classList.contains('lite')&&!frostRaf) frostRaf=requestAnimationFrame(frostLoop); };
 ROOM.onLum=L=>{ roomL=L; applyTheme(); };
 /* background switch: the original colour field, or the live room behind a soft blur */
 document.querySelectorAll('#bseg button').forEach(b=>b.addEventListener('click',()=>{

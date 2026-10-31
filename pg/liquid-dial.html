@@ -22,6 +22,9 @@
 .btn.pwr{top:-2.5px;right:96px;width:52px;height:3px}
 .screen{position:relative;width:1194px;height:834px;border-radius:26px;overflow:hidden;background:#000}
 .screen iframe{display:block;width:100%;height:100%;border:0}
+.screen iframe{transition:transform 1s cubic-bezier(.4,0,.2,1)}
+.push .screen iframe{transform:scale(1.6)}
+@media (prefers-reduced-motion:reduce){.screen iframe{transition:none}}
 </style>
 </head><body>
 <div id="stage" data-w="1252" data-h="892" data-pad="24">
@@ -29,7 +32,7 @@
     <i class="btn top1"></i><i class="btn top2"></i><i class="btn pwr"></i>
     <div class="glass">
       <span class="cam" aria-hidden="true"></span>
-      <div class="screen"><iframe src="liquid-dial/dial.html?device=tablet" title="Liquid Dial running on a tablet" allow="autoplay"></iframe></div>
+      <div class="screen"><iframe title="Liquid Dial running on a tablet" allow="autoplay"></iframe></div>
     </div>
   </div>
 </div>
@@ -37,6 +40,77 @@
 <script>
 // tapping outside the screen (card or bezel) folds the dial back, like tapping the room
 const frame = document.querySelector('.screen iframe');
-addEventListener('pointerdown', () => frame.contentWindow.postMessage('liquid-dial:rest', '*'));
+addEventListener('pointerdown', e => { if (e.isTrusted) frame.contentWindow.postMessage('liquid-dial:rest', '*'); });
+
+// the demo cursor lives on this page; its taps and drags on the screen are passed through to the dial as touches
+const SCR = 26; // device edge + bezel: where the screen starts on the stage
+// in the small gallery card the camera pushes in on hover (and while the demo plays): the whole screen,
+// room and dial together, zooms around its centre so the dial reads without changing its proportions.
+// The detail view and the full page always show the whole screen.
+const inCard = /[?&]zoom=/.test(location.search) && !/[?&]detail=1/.test(location.search);
+const stageEl = document.getElementById('stage');
+let overCard = false, overScreen = false;
+const syncZoom = () => document.documentElement.classList.toggle('push', inCard && (overCard || overScreen || KIT.playing));
+document.documentElement.addEventListener('mouseenter', () => { overCard = true; syncZoom(); });
+document.documentElement.addEventListener('mouseleave', () => { overCard = false; syncZoom(); });
+// screen point (inside the dial page) <-> stage point (where the demo cursor moves), read live so it holds mid-zoom
+const live = () => { const r = frame.getBoundingClientRect(), s = stageEl.getBoundingClientRect(); return { r, s, k: r.width / 1194 }; };
+const toStage = (x, y) => { const { r, s, k } = live(); return [(r.left + x * k - s.left) / KIT.scale, (r.top + y * k - s.top) / KIT.scale]; };
+const fromStage = (x, y) => { const { r, s, k } = live(); return [(s.left + x * KIT.scale - r.left) / k, (s.top + y * KIT.scale - r.top) / k]; };
+let held = null; // the dial element a demo press started on; moves and the release go to it, like a captured pointer
+const inner = e => { const { r, k } = live(); return [(e.clientX - r.left) / k, (e.clientY - r.top) / k]; };
+['pointerdown', 'pointermove', 'pointerup', 'click'].forEach(type => frame.addEventListener(type, e => {
+  if (e.isTrusted) return;
+  if (type === 'pointermove' && !held) return;
+  const [x, y] = inner(e), doc = frame.contentDocument;
+  const el = (type !== 'pointerdown' && type !== 'click' && held) || doc.elementFromPoint(x, y) || doc.body;
+  if (type === 'pointerdown') held = el; if (type === 'pointerup') held = null;
+  const o = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, button: 0, buttons: type === 'pointerup' ? 0 : 1, view: frame.contentWindow };
+  el.dispatchEvent(type === 'click' ? new MouseEvent(type, o) : new PointerEvent(type, { ...o, pointerId: 9, pointerType: 'touch', isPrimary: true }));
+}));
+// synthetic touches have no real pointer to capture: let the dial's setPointerCapture calls pass quietly
+frame.addEventListener('load', () => { const P = frame.contentWindow.Element.prototype, sp = P.setPointerCapture;
+  P.setPointerCapture = function (id) { if (id !== 9) return sp.call(this, id); };
+  // the pointer over the screen is inside the dial's own page, so it reports its own hover
+  const de = frame.contentDocument.documentElement;
+  de.addEventListener('mouseenter', () => { overScreen = true; syncZoom(); });
+  de.addEventListener('mouseleave', () => { overScreen = false; syncZoom(); }); });
+frame.src = 'liquid-dial/dial.html?device=tablet';
+const dial = sel => frame.contentDocument.querySelector(sel);
+const spot = (el, fy = .5) => { const r = el.getBoundingClientRect(); return toStage(r.left + r.width / 2, r.top + r.height * fy); };
+const face = j => frame.contentDocument.querySelectorAll('.oc')[j];
+const lobe = name => spot(dial(`.ic[aria-label="${name}"]`));
+// one notch of scrolling over the record turns it to the next song
+const scroll = (c, dir) => { const [x, y] = fromStage(c.pos.x, c.pos.y), doc = frame.contentDocument;
+  (doc.elementFromPoint(x, y) || doc.body).dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, clientX: x, clientY: y, deltaY: 50 * dir, view: frame.contentWindow })); };
+
+// Scenes: Night, then Reading. Music: a new playlist, tap it again for the record, scroll to another song, tap to play.
+// Floor lamp: pull the light up, then down. Then tap the room to fold it.
+KIT.demo(async c => {
+  syncZoom(); await c.wait(inCard ? 1100 : 300);
+  await c.click(...lobe('Scenes')); await c.wait(600);
+  await c.click(...lobe('Scenes')); await c.wait(900);
+  await c.click(...spot(face(3))); await c.wait(1800);
+  await c.click(...spot(face(0))); await c.wait(1800);
+
+  await c.click(...lobe('Music')); await c.wait(600);
+  await c.click(...lobe('Music')); await c.wait(900);
+  await c.click(...spot(face(2))); await c.wait(1400);
+  await c.click(...spot(face(2))); await c.wait(1000);
+  await c.move(...spot(dial('.recC'))); await c.wait(300);
+  scroll(c, 1); await c.wait(700);
+  scroll(c, 1); await c.wait(900);
+  await c.click(...spot(dial('.recC'))); await c.wait(1600);
+
+  await c.click(...lobe('Floor lamp')); await c.wait(600);
+  await c.click(...lobe('Floor lamp')); await c.wait(900);
+  // the bulb: higher is brighter; press where the light is now so it doesn't jump, pull it up, then down
+  const tank = dial('.tank'), now = parseInt(dial('.mid').innerText.match(/(\d+)%/)?.[1] ?? 60, 10) / 100;
+  await c.move(...spot(tank, 1 - now)); await c.drag(...spot(tank, .02), 600); await c.wait(500);
+  await c.drag(...spot(tank, .8), 900); await c.up(); await c.wait(1200);
+
+  await c.click(...toStage(380, 600)); await c.wait(400);
+}, { reset() { frame.contentWindow.postMessage('liquid-dial:rest', '*'); } });
+const kitStop = KIT.stop; KIT.stop = n => { kitStop(n); syncZoom(); };
 </script>
 </body></html>
