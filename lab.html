@@ -2915,7 +2915,7 @@ function cycMount(root, onOpen) {
     else if (!force && WORDS[i] === "things" && wait++ < 1) return;   // rest on "things" a beat longer (about 4 s), not long enough to lose people
     wait = 0;
     i = (i + 1) % WORDS.length;
-    const old = slot.querySelector("span:not(.out)"), nu = document.createElement("span");
+    const old = slot.querySelector(":scope > span:not(.out)"), nu = document.createElement("span");
     fill(nu, WORDS[i]); nu.classList.add("in"); slot.appendChild(nu);
     size();
     slot.classList.toggle("link", !!LINK[WORDS[i]]);
