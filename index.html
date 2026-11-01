@@ -158,9 +158,20 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes wtea{from{filter:blur(3px);opacity:.2;transform:translateY(3px)}to{filter:none;opacity:1;transform:none}}
 .w-tea::after{content:"";position:absolute;right:-7px;top:-4px;width:5px;height:9px;border-right:1.2px solid var(--faint);border-radius:0 6px 6px 0;opacity:0;animation:wsteam 2s ease-out .3s infinite}
 @keyframes wsteam{0%{opacity:0;transform:translateY(4px) scaleY(.6)}40%{opacity:.9}100%{opacity:0;transform:translateY(-5px) scaleY(1.1)}}
+.w-prototypes .tx{display:inline-block;animation:wproto 1.8s steps(1) both}
+.w-prototypes .v{margin-left:2px;font-size:.52em;vertical-align:.9em;line-height:0;color:var(--muted);font-variant-numeric:tabular-nums}
+.mz.w-prototypes .tx{animation:none}
+@keyframes wproto{0%{letter-spacing:.06em;font-style:italic;color:var(--faint)}30%{font-weight:600;letter-spacing:-.04em;font-style:normal;color:var(--muted)}60%,100%{font-weight:400;letter-spacing:0;font-style:normal;color:var(--fg)}}
+.w-1px .c{position:relative;display:inline-block;transform:translateX(var(--m));animation:wpxs .5s cubic-bezier(.3,.7,.2,1) .9s both}
+.w-1px .c::after{content:"";position:absolute;right:-1px;top:20%;bottom:20%;width:1px;background:#f24822;opacity:0;animation:wpxr 1.4s ease both}
+.w-1px .c:last-child::after{display:none}
+@keyframes wpxs{to{transform:none}}
+@keyframes wpxr{0%{opacity:0}15%,60%{opacity:1}100%{opacity:0}}
+.w-sense .ch{display:inline-block;animation:wsense .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.35s + var(--i) * 18ms)}
+@keyframes wsense{0%{transform:translate(var(--dx),var(--dy)) rotate(var(--dr))}100%{transform:none}}
 .w-mistakes .fix{color:#d0453a;transition:color .4s}
 .w-mistakes .fix.ok{color:inherit}
-@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after,.w-1px .c,.w-1px .c::after,.w-1px .lab,.w-prototypes .tx,.w-sense .ch{animation:none}}
 
 .hero h1 { font-size: 26px; font-weight: 500; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 16px; }
 .hero p { color: var(--muted); font-size: 17px; line-height: 1.38; }
@@ -2797,21 +2808,38 @@ function cycMount(root, onOpen) {
   if (!slot || slot.dataset.on) return () => {};
   slot.dataset.on = "1";
   const act = root.classList.contains("s-act");
-  const WORDS = ["things", "sliders", "posters", "booklets", "funk playlists", "noise", "tea", "mistakes"];
-  const LINK = { sliders: 1, posters: 1, booklets: 1 };     // real work → opens the Playground
+  const WORDS = ["things", "prototypes", "1px fixes", "sense of a mess", "noise", "tea", "mistakes"];
+  const LINK = { prototypes: 1 };     // real work → opens the Playground
   const cls = (w) => act ? "w-" + w.split(" ")[0] : "";
   const fill = (el, w) => {
     el.className = cls(w);
     if (act && (w === "funk playlists" || w === "noise")) {
       el.textContent = "";
       [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", k); s.textContent = c === " " ? " " : c; el.appendChild(s); });
+    } else if (act && w === "prototypes") {
+      // three versions in a row: too loose, too heavy, then the one that ships
+      el.innerHTML = '<span class="tx">prototypes</span><sup class="v">v1</sup>';
+      const v = el.querySelector(".v");
+      setTimeout(() => { v.textContent = "v2"; }, 540);
+      setTimeout(() => { v.textContent = "v3"; }, 1080);
+    } else if (act && w === "1px fixes") {
+      // spacing starts uneven; red measurement lines show up, then the letters close up evenly
+      el.textContent = "";
+      [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "c"; s.style.setProperty("--m", [0, 2, -1, 2, 0, 3, -1, 1, 0][k % 9] + "px");
+        s.textContent = c === " " ? "\u00a0" : c; el.appendChild(s); });
+    } else if (act && w === "sense of a mess") {
+      // the letters land scattered, then fall into order
+      el.textContent = "";
+      [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", k);
+        s.style.setProperty("--dx", ((k * 37) % 13 - 6) + "px"); s.style.setProperty("--dy", ((k * 53) % 11 - 5) + "px"); s.style.setProperty("--dr", ((k * 71) % 41 - 20) + "deg");
+        s.textContent = c === " " ? "\u00a0" : c; el.appendChild(s); });
     } else if (act && w === "mistakes") {
       // typed wrong first, then the two letters swap into place
       el.innerHTML = 'mista<span class="fix">ek</span>s';
       setTimeout(() => { const f = el.querySelector(".fix"); if (f) { f.textContent = "ke"; f.classList.add("ok"); } }, 900);
     } else el.textContent = w;
   };
-  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
+  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.classList.add("mz"); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
   let i = 0, hold = false, wait = 0, drum = false, drumT = 0;
   const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
   const size = () => (slot.style.width = measure(WORDS[i]) + "px");
