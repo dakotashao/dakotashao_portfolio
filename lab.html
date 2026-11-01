@@ -160,15 +160,18 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes wsteam{0%{opacity:0;transform:translateY(4px) scaleY(.6)}40%{opacity:.9}100%{opacity:0;transform:translateY(-5px) scaleY(1.1)}}
 .w-prototypes::after{content:"\2197";display:inline-block;margin-left:3px;font-size:.78em;color:var(--muted);transition:transform .25s}
 .cyc .slot.link:hover .w-prototypes::after{transform:translate(2px,-2px);color:var(--fg)}
-.w-1px .nudge{display:inline-block;animation:wnudge .9s steps(1) both}
-.w-1px::after{content:"";position:absolute;left:-4px;right:-4px;bottom:.2em;height:1px;background:#f24822;opacity:0;animation:wguide .9s ease both}
-@keyframes wnudge{0%{transform:translate(2px,-2px)}70%{transform:none}}
-@keyframes wguide{0%{opacity:0}15%,65%{opacity:1}100%{opacity:0}}
+.w-1px .c{position:relative;display:inline-block;margin-right:var(--m);animation:wpxs .5s cubic-bezier(.3,.7,.2,1) .9s both}
+.w-1px .c::after{content:"";position:absolute;right:-1px;top:20%;bottom:20%;width:1px;background:#f24822;opacity:0;animation:wpxr 1.4s ease both}
+.w-1px .c:last-child::after{display:none}
+.w-1px .lab{position:absolute;left:50%;top:-11px;transform:translateX(-50%);font-size:9px;line-height:12px;color:#fff;background:#f24822;padding:0 4px;border-radius:2px;opacity:0;animation:wpxr 1.4s ease both}
+.mz .c{margin-right:0!important}
+@keyframes wpxs{to{margin-right:0}}
+@keyframes wpxr{0%{opacity:0}15%,60%{opacity:1}100%{opacity:0}}
 .w-sense .ch{display:inline-block;animation:wsense .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.35s + var(--i) * 18ms)}
 @keyframes wsense{0%{transform:translate(var(--dx),var(--dy)) rotate(var(--dr))}100%{transform:none}}
 .w-mistakes .fix{color:#d0453a;transition:color .4s}
 .w-mistakes .fix.ok{color:inherit}
-@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after,.w-1px .nudge,.w-1px::after,.w-sense .ch{animation:none}}
+@media (prefers-reduced-motion:reduce){.cyc .slot,.cyc .slot>span{transition:none}.w-sliders,.w-sliders::after,.w-loaders::after,.w-funk .ch,.w-noise .ch,.w-tea,.w-tea::after,.w-1px .c,.w-1px .c::after,.w-1px .lab,.w-sense .ch{animation:none}}
 
 .hero h1 { font-size: 26px; font-weight: 500; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 16px; }
 .hero p { color: var(--muted); font-size: 17px; line-height: 1.38; }
@@ -2871,8 +2874,10 @@ function cycMount(root, onOpen) {
       el.textContent = "";
       [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", k); s.textContent = c === " " ? " " : c; el.appendChild(s); });
     } else if (act && w === "1px fixes") {
-      // sits 2px off its guide, then snaps onto it
-      el.innerHTML = '<span class="nudge">1px fixes</span>';
+      // spacing starts uneven; red measurement lines show up, then the letters close up evenly
+      el.innerHTML = '<span class="lab">1</span>';
+      [...w].forEach((c, k) => { const s = document.createElement("span"); s.className = "c"; s.style.setProperty("--m", [2, 0, 3, 1, 0, 4, 1, 2, 0][k % 9] + "px");
+        s.textContent = c === " " ? "\u00a0" : c; el.appendChild(s); });
     } else if (act && w === "sense of a mess") {
       // the letters land scattered, then fall into order
       el.textContent = "";
@@ -2885,7 +2890,7 @@ function cycMount(root, onOpen) {
       setTimeout(() => { const f = el.querySelector(".fix"); if (f) { f.textContent = "ke"; f.classList.add("ok"); } }, 900);
     } else el.textContent = w;
   };
-  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
+  const measure = (w) => { const s = document.createElement("span"); fill(s, w); s.classList.add("mz"); s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"; slot.appendChild(s); const x = s.getBoundingClientRect().width; s.remove(); return Math.ceil(x); };
   let i = 0, hold = false, wait = 0, drum = false, drumT = 0;
   const first = document.createElement("span"); fill(first, WORDS[0]); slot.appendChild(first);
   const size = () => (slot.style.width = measure(WORDS[i]) + "px");
