@@ -2098,48 +2098,6 @@ function run(){
   });
 
 
-  // core flows are pinned. Page scroll moves between flows (the page itself stays put);
-  // with the pointer over the phone frame, the wheel steps through that flow's screens instead.
-  // Off on small screens / reduced motion.
-  (function(){
-    var box=root.querySelector('.flows'); if(!box||still||innerWidth<760) return;
-    var flows=[].slice.call(box.querySelectorAll(':scope > .flow')); if(!flows.length) return;
-    var demos=flows.map(function(f){return f.querySelector('.demo');});
-    demos.forEach(function(d){ d._pin=true; d._clear&&d._clear(); });
-    var PER=0.7; // viewport-heights of page scroll per flow
-    var stage=document.createElement('div'); stage.className='pin-stage';
-    flows.forEach(function(f){ stage.appendChild(f); });
-    box.appendChild(stage); box.classList.add('pinned');
-    function size(){ box.style.height=(flows.length*PER*innerHeight+innerHeight)+'px'; }
-    size();
-    var cur=-1;
-    function at(){
-      var r=box.getBoundingClientRect(), span=box.offsetHeight-innerHeight;
-      var p=Math.min(1,Math.max(0,-r.top/span)), fi=Math.min(flows.length-1,Math.floor(p*flows.length));
-      if(fi===cur) return;
-      flows.forEach(function(f,j){ f.classList.toggle('on',j===fi); f.classList.toggle('past',j<fi); });
-      if(cur>=0){ demos[cur]._pin=true; demos[cur]._clear(); }
-      cur=fi; demos[fi]._pin=false; demos[fi]._show(0); demos[fi]._go();
-    }
-    // over the frame: the wheel flips screens. At the first/last screen it lets the page scroll on to the next flow.
-    demos.forEach(function(d){
-      var acc=0, lock=0;
-      d.addEventListener('mouseenter',function(){ d._hover=true; d._clear(); });
-      d.addEventListener('mouseleave',function(){ d._hover=false; acc=0; d._go(); });
-      d.addEventListener('wheel',function(e){
-        var n=d._lis.length, k=d._cur(), dir=e.deltaY>0?1:-1;
-        if((dir>0&&k>=n-1)||(dir<0&&k<=0)) return;          // edge: hand the scroll back to the page
-        e.preventDefault();
-        if(performance.now()<lock) return;                    // one screen per gesture, trackpad momentum ignored
-        acc+=e.deltaY; if(Math.abs(acc)<30) return;
-        acc=0; lock=performance.now()+420; d._show(k+dir);
-      },{passive:false});
-    });
-    addEventListener('scroll',at,{passive:true});
-    addEventListener('resize',function(){ size(); cur=-1; at(); });
-    at();
-  })();
-
   // outcome: stamp the badge and throw confetti each time the block scrolls into view
   var outc=root.querySelector('.outc'), seal=root.querySelector('.seal');
   if(outc&&seal){
