@@ -2197,12 +2197,14 @@ function run(){
   function end(){if(x0===null)return;tr.style.transition='';x0=null;if(dx<-50)go(i+1);else if(dx>50)go(i-1);else go(i);}
   vp.addEventListener('pointerup',end);vp.addEventListener('pointercancel',end);
   d.addEventListener('keydown',function(e){if(e.key==='ArrowRight')go(i+1);if(e.key==='ArrowLeft')go(i-1);tick();});
-  var still=matchMedia('(prefers-reduced-motion: reduce)').matches,vis=false,hold=false,T=null,DUR=6000,pg=document.createElementNS('http://www.w3.org/2000/svg','svg');pg.setAttribute('class','ring');pg.setAttribute('viewBox','0 0 40 40');pg.setAttribute('aria-hidden','true');pg.innerHTML='<circle cx="20" cy="20" r="19"/>';nx.appendChild(pg);var rc=pg.firstChild;
-  function bar(){rc.style.transition='none';rc.style.strokeDashoffset='120';rc.getBoundingClientRect();if(still||!vis)return;rc.style.transition='stroke-dashoffset '+DUR+'ms linear';rc.style.strokeDashoffset='0';}
-  function tick(){clearTimeout(T);if(still||!vis||hold){rc.style.transition='none';rc.style.strokeDashoffset='120';return}bar();T=setTimeout(function(){go(i<n-1?i+1:0);tick();},DUR);}
+  var still=matchMedia('(prefers-reduced-motion: reduce)').matches,vis=false,hold=false,T=null,DUR=6000,rem=DUR,t0=0,run=false,pg=document.createElementNS('http://www.w3.org/2000/svg','svg');pg.setAttribute('class','ring');pg.setAttribute('viewBox','0 0 40 40');pg.setAttribute('aria-hidden','true');pg.innerHTML='<circle cx="20" cy="20" r="19"/>';nx.appendChild(pg);var rc=pg.firstChild;
+  function set(o,ms){rc.style.transition=ms?'stroke-dashoffset '+ms+'ms linear':'none';rc.style.strokeDashoffset=o;}
+  function stop(){clearTimeout(T);if(run){rem=Math.max(0,rem-(performance.now()-t0));run=false;}set(120*rem/DUR,0);}
+  function start(){if(still||!vis||hold||run)return;run=true;t0=performance.now();rc.getBoundingClientRect();set(0,rem);T=setTimeout(function(){run=false;rem=DUR;go(i<n-1?i+1:0);set(120,0);start();},rem);}
+  function tick(){clearTimeout(T);run=false;rem=DUR;set(120,0);start();}
   [pv,nx].forEach(function(b){b.addEventListener('click',tick)});ts.forEach(function(t){t.addEventListener('click',tick)});vp.addEventListener('pointerup',function(){setTimeout(tick,0)});
-  d.addEventListener('mouseenter',function(){hold=true;tick()});d.addEventListener('mouseleave',function(){hold=false;tick()});
-  if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){vis=e.isIntersecting;tick();});},{threshold:.5}).observe(d);}else{vis=true;tick();}
+  d.addEventListener('mouseenter',function(){hold=true;stop()});d.addEventListener('mouseleave',function(){hold=false;start()});
+  if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){vis=e.isIntersecting;if(vis)start();else stop();});},{threshold:.3}).observe(d);}else{vis=true;start();}
   go(0);
 });
 
