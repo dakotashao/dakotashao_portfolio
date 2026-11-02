@@ -155,6 +155,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .w-noise .ch{display:inline-block;animation:wnoise .18s steps(2) infinite;animation-delay:calc(var(--i) * -37ms)}
 @keyframes wnoise{0%{transform:translate(.6px,-.8px) rotate(-3deg)}50%{transform:translate(-.7px,.6px) rotate(2deg)}100%{transform:translate(.3px,.9px) rotate(-1deg)}}
 .w-tea{animation:wtea 1.4s ease-out both}
+.cyc .slot > span.w-tea.out{animation:none}
 @keyframes wtea{from{filter:blur(3px);opacity:.2;transform:translateY(3px)}to{filter:none;opacity:1;transform:none}}
 .w-tea::after{content:"";position:absolute;right:-7px;top:-4px;width:5px;height:9px;border-right:1.2px solid var(--faint);border-radius:0 6px 6px 0;opacity:0;animation:wsteam 2s ease-out .3s infinite}
 @keyframes wsteam{0%{opacity:0;transform:translateY(4px) scaleY(.6)}40%{opacity:.9}100%{opacity:0;transform:translateY(-5px) scaleY(1.1)}}
