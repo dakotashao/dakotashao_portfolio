@@ -1690,6 +1690,8 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 @keyframes stampDrop{0%{opacity:0;transform:translateY(-200px) scale(3.6) rotate(-24deg);animation-timing-function:cubic-bezier(.55,0,.9,.4)}12%{opacity:1}58%{transform:translateY(0) scale(.86) rotate(-3deg);animation-timing-function:cubic-bezier(.2,.8,.3,1)}76%{transform:scale(1.08) rotate(-7deg)}100%{opacity:1;transform:scale(1) rotate(-6deg)}}
 @media (max-width:560px){#app .cs24 .ostat.cards3{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){#app .cs24 .seal.in{animation:none}}
+#app .cs24 .ostat.cards3 .sealc{width:132px;height:132px;right:15px;top:-31px;transform:scale(.44);transform-origin:100% 0}
+#app .cs24 .ostat.cards3 .sealc .seal{zoom:1;will-change:transform,opacity;backface-visibility:hidden}
 </style>
 </head>
 <body>
@@ -2156,7 +2158,7 @@ function run(){
     }
     if('IntersectionObserver' in window){
       new IntersectionObserver(function(es){es.forEach(function(e){
-        if(e.isIntersecting){seal.classList.remove('in');void seal.offsetWidth;seal.classList.add('in');if(!still)setTimeout(fire,320);}
+        if(e.isIntersecting){seal.classList.remove('in');void seal.offsetWidth;seal.classList.add('in');if(!still)fire();}
         else{seal.classList.remove('in');}
       });},{threshold:.55}).observe(outc);
     } else seal.classList.add('in');
