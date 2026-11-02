@@ -1035,12 +1035,12 @@ kbd { font-family: var(--sans); font-size: 10px; background: var(--card); border
 #app .cs24 .ftag.st-ad, #app .cs24 .ftag.ad{background:var(--cs-t);color:var(--cs)}
 #app .cs24 .ftag.st-pr, #app .cs24 .ftag.pr{background:var(--bg);color:var(--body)}
 #app .cs24 .flow .ft h3:first-child{margin-top:0}
-/* LAB: core flows read figure first, text underneath; tight gap to its own figure, wide gap to the next flow */
+/* core flows read figure first, text underneath; tight gap to its own figure, wide gap to the next flow */
 #app .cs24 .flows > .flow{display:flex;flex-direction:column}
 #app .cs24 .flows > .flow > .demo{order:1;width:100%}
 #app .cs24 .flows > .flow > .ft{order:2;margin:24px auto 0;width:100%}
 #app .cs24 div.flows{gap:112px}
-/* LAB: pinned core flows */
+/* pinned core flows */
 #app .cs24 .flows.pinned{position:relative;display:block;max-width:none;margin-top:40px}
 #app .cs24 .flows.pinned .pin-stage{position:sticky;top:0;height:100vh;overflow:hidden}
 #app .cs24 .flows.pinned .pin-stage > .flow{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;padding:64px 16px 28px;
@@ -2064,7 +2064,7 @@ function run(){
   });
 
 
-  // LAB: core flows are pinned. Page scroll moves between flows (the page itself stays put);
+  // core flows are pinned. Page scroll moves between flows (the page itself stays put);
   // with the pointer over the phone frame, the wheel steps through that flow's screens instead.
   // Off on small screens / reduced motion.
   (function(){
@@ -2227,9 +2227,8 @@ function run(){
       say:"Photo edits as a list. Drag a row sideways and it turns into a slider. Hold the title to peek at the original." },
     { slug:"autumn-full-bleed", name:"Autumn", type:"Lists", week:5, verb:"Hover",
       say:"Hover a leaf and the big one behind turns into it. Click a color to open its leaves.", url:"adv_interface_wk05/autumn-full/" },
-    { name:"Domino Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/rotation-slider/",
-      say:"Drag left and the dominoes fall. Drag back and they stand up again.",
-      axes:[["Mode",["Continuous","Stepped"]]], grid:["rotation-slider--dominoes-drag","rotation-slider--domino-stacks"] },
+    { slug:"liquid-dial", name:"Liquid Dial", type:"Prototypes", verb:"Tap", href:"pg/liquid-dial.html",
+      say:"A smart home dial on an 11-inch tablet. Tap a device to point at it, tap again to open, drag along an arc to set it. Tap the room to go back." },
     { name:"Lever Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/weight-sliders/",
       say:"The bar is a lever. Pull the ball further out and it tips harder. The last stop is the hardest to reach.",
       axes:[["Mode",["Continuous","Stepped"]]], grid:["weight-sliders--lever-visible","weight-sliders--lever-usage"] },
@@ -2237,6 +2236,9 @@ function run(){
       say:"A type specimen for Avant Garde, set to 70s funk.", href:"https://claude.ai/artifact/LFMgefpSSuxcwXRv6kGR7C" },
     { slug:"selection-has-weight--toggle", name:"Toggle", type:"Selectors", week:3, tone:"Quirky", verb:"Hold",
       say:"Turning it on takes effort: hold until it tips over. Turning it off is one tap.", url:"adv_interface_wk03_selector/quirky/" },
+    { name:"Domino Slider", type:"Sliders", week:4, tone:"Quirky", verb:"Drag", url:"adv_interface_wk04_slider/rotation-slider/",
+      say:"Drag left and the dominoes fall. Drag back and they stand up again.",
+      axes:[["Mode",["Continuous","Stepped"]]], grid:["rotation-slider--dominoes-drag","rotation-slider--domino-stacks"] },
     { slug:"reading-pile", name:"Reading Pile", type:"Badges & Tooltips", week:2, tone:"Playful", verb:"Select",
       say:"Highlight a word while you read. It drops into your pile.", url:"adv_interface_wk02/playful-reading/" },
     { name:"Surface Slider", type:"Sliders", week:4, tone:"Ethereal", verb:"Drag", url:"adv_interface_wk04_slider/ethereal-sliders/",
@@ -2285,11 +2287,11 @@ function run(){
       axes:[["Type",["Content","Dot"]]], grid:["resolving-data--badge-content","resolving-data--badge-dot"] },
   ];
   
-  const CARD_H = { "avant-garde-booklet": 340, "mix-of-615": 400 };
+  const CARD_H = { "avant-garde-booklet": 340, "mix-of-615": 400, "liquid-dial": 340 };
   
-  const ZOOM = {"autumn-full-bleed": 0.68, "dominoes-list--rows": 0.75, "dominoes-list--tape": 0.75, "dominoes-list--wheel": 0.75, "fling-loader": 0.68, "fling-loader-indeterminate": 0.68, "fluid-interface": 1, "information-has-weight": 1, "liquid-glass": 0.57, "liquid-sliders--fade-out": 0.6, "liquid-sliders--rain": 0.6, "liquid-sliders--sleep-timer": 0.6, "liquid-sliders--volume": 0.6, "notifications-pile-up": 0.66, "push-loader--determinate": 0.6, "push-loader--indeterminate": 0.6, "reading-pile": 0.66, "resolving-data--badge-content": 0.89, "resolving-data--badge-dot": 0.89, "rotation-slider--domino-stacks": 0.75, "rotation-slider--dominoes-drag": 0.75, "rotation-slider--plumb-bob": 0.75, "selection-has-weight--checkbox": 0.75, "selection-has-weight--radio": 0.75, "selection-has-weight--toggle": 0.74, "tide-loader--smooth": 0.8, "tide-loader--smooth-endless": 0.8, "tide-loader--strips": 0.8, "tide-loader--strips-endless": 0.8, "weight-sliders--balance-usage": 0.82, "weight-sliders--balance-visible": 0.82, "weight-sliders--keep-for": 0.82, "weight-sliders--lever-usage": 0.82, "weight-sliders--lever-visible": 0.82, "weight-sliders--offline-downloads": 0.82, "avant-garde-booklet": 0.62, "mix-of-615": 0.62};
+  const ZOOM = {"liquid-dial": 0.72, "autumn-full-bleed": 0.68, "dominoes-list--rows": 0.75, "dominoes-list--tape": 0.75, "dominoes-list--wheel": 0.75, "fling-loader": 0.68, "fling-loader-indeterminate": 0.68, "fluid-interface": 1, "information-has-weight": 1, "liquid-glass": 0.57, "liquid-sliders--fade-out": 0.6, "liquid-sliders--rain": 0.6, "liquid-sliders--sleep-timer": 0.6, "liquid-sliders--volume": 0.6, "notifications-pile-up": 0.66, "push-loader--determinate": 0.6, "push-loader--indeterminate": 0.6, "reading-pile": 0.66, "resolving-data--badge-content": 0.89, "resolving-data--badge-dot": 0.89, "rotation-slider--domino-stacks": 0.75, "rotation-slider--dominoes-drag": 0.75, "rotation-slider--plumb-bob": 0.75, "selection-has-weight--checkbox": 0.75, "selection-has-weight--radio": 0.75, "selection-has-weight--toggle": 0.74, "tide-loader--smooth": 0.8, "tide-loader--smooth-endless": 0.8, "tide-loader--strips": 0.8, "tide-loader--strips-endless": 0.8, "weight-sliders--balance-usage": 0.82, "weight-sliders--balance-visible": 0.82, "weight-sliders--keep-for": 0.82, "weight-sliders--lever-usage": 0.82, "weight-sliders--lever-visible": 0.82, "weight-sliders--offline-downloads": 0.82, "avant-garde-booklet": 0.62, "mix-of-615": 0.62};
   
-  const TYPES = ["Badges & Tooltips", "Selectors", "Sliders", "Lists", "Loaders", "Booklets", "Film"];
+  const TYPES = ["Badges & Tooltips", "Selectors", "Sliders", "Lists", "Loaders", "Prototypes", "Booklets", "Film"];
   
   const ICON = {
     play: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>',
