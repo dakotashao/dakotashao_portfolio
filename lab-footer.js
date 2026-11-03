@@ -55,6 +55,10 @@ function scene(id, cfg) {
     // a few distant pigeons that cross the sky now and then as a small group, not a constant swarm
     (cfg.roam || []).forEach(s => S.birds.push(newBird({ s, st: 'away', roam: true, t: 1e9 })));
     S.nextFlock = performance.now() + R(1500, 3500);
+    // the original constant flock crossing the sky (restored), now faster
+    const swarmWp = () => [{ x: W + 60, y: R(20, H * .5) }];
+    (cfg.swarm || []).forEach(([x, y, s]) => { const cruise = R(250, 310); const b = newBird({ s, st: 'fly', roam: true, swarm: true, x: x * W / 680, y, vx: cruise, vy: R(-20, 20), fhz: R(7, 8.5), mode: 'flap', bt: 0, burst: R(.5, 1), cruise }); b.wps = swarmWp(); S.birds.push(b); });
+    S.swarmWp = swarmWp;
   }
   setup();
   addEventListener('resize', () => { size(); setup(); });
@@ -160,7 +164,7 @@ function scene(id, cfg) {
     if (b.mode === 'glide') b.vy += 70 * T;
     b.x += b.vx * T; b.y += b.vy * T;
     if (b.mode !== 'glide') b.ph += (b.mode === 'flare' ? 6 : b.fhz) * T * Math.PI * 2;
-    if (!tgt.home && d < 46) { b.wps.shift(); if (!b.wps.length) { b.st = 'away'; b.t = b.roam ? 1e9 : R(2500, 6000); } }
+    if (!tgt.home && d < 46) { b.wps.shift(); if (!b.wps.length && b.swarm) { b.x = -50; b.y = R(20, H * .5); b.wps = S.swarmWp(); } else if (!b.wps.length) { b.st = 'away'; b.t = b.roam ? 1e9 : R(2500, 6000); } }
     if (tgt.home && d < 3) land(b);
   }
 
@@ -257,6 +261,7 @@ scene('v4', { grain: .32, grainAmp: 150,
   back(c, W, H) { const px = W * .72; c.fillStyle = '#1e1e1d'; c.beginPath(); c.moveTo(px - 6, H + 10); c.lineTo(px - 4, 170); c.lineTo(px + 4, 170); c.lineTo(px + 6, H + 10); c.fill(); c.fillRect(px - 30, 206, 60, 3); c.strokeStyle = '#2a2a28'; c.lineWidth = 1; c.beginPath(); c.moveTo(px + 2, 210); c.lineTo(px + 34, H + 10); c.stroke(); },
   knockHit: (S, m) => Math.abs(m.x - S.W * .72) < 14 && m.y > 165,
   perch: () => [[4, .12, .62], [4, .84, .6], [0, .7, .56], [1, .82, .56], [2, .62, .56]],
+  swarm: [[60, 70, .4], [130, 56, .38], [190, 108, .36], [260, 82, .4], [330, 48, .4], [400, 96, .37], [470, 62, .36], [540, 30, .38]],
   roam: [.5, .48, .5, .46, .5],
   roamLand: [[0, .55, .05], [1, .6, .05], [0, .82, .04], [2, .78, .05], [1, .4, .05]] });
 
