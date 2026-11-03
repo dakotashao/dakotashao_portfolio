@@ -43,13 +43,13 @@ function thud() { const a = audio(); if (!a) return; const t = a.currentTime, o 
 function scene(id, cfg) {
   const card = document.getElementById(id), cv = document.createElement('canvas'); card.prepend(cv);
   const c = cv.getContext('2d'); let W, H;
-  const S = { c, wires: [], birds: [], mouse: null, m: { x: 0, y: 0 }, sm: { x: 0, y: 0 }, focus: .3, lastMove: performance.now() };
+  const S = { nid: 0, trk: [], snaps: [], c, wires: [], birds: [], mouse: null, m: { x: 0, y: 0 }, sm: { x: 0, y: 0 }, focus: .3, lastMove: performance.now() };
   function size() { const d = Math.min(2, devicePixelRatio || 1); W = card.clientWidth; H = card.clientHeight; cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0); S.W = W; S.H = H; }
   size();
   const gp = c.createPattern(noiseTile(180, cfg.grainAmp || 90), 'repeat');
   let now = performance.now();
 
-  function newBird(o) { return Object.assign({ st: 'perch', face: Math.random() < .5 ? 1 : -1, act: null, next: R(1500, 7000), ori: ORIS[(Math.random() * ORIS.length) | 0], headRot: 0, headY: 0, fluff: 0, shake: 0, flapA: 0, stretch: 0, sq: 1, ph: R(0, 6) }, o); }
+  function newBird(o) { return Object.assign({ id: ++S.nid, st: 'perch', face: Math.random() < .5 ? 1 : -1, act: null, next: R(1500, 7000), ori: ORIS[(Math.random() * ORIS.length) | 0], headRot: 0, headY: 0, fluff: 0, shake: 0, flapA: 0, stretch: 0, sq: 1, ph: R(0, 6) }, o); }
   function setup() {
     S.wires = []; S.birds = []; cfg.build(S);
     S.wires.forEach(w => { w.plucks = []; w.waves = []; w.sag = w.sag || 0; w.lw = w.lw || 1; w.col = w.col || '#1d1d1c'; w.op = w.op ?? 1; w.ph = R(0, 6); w.wind = w.wind ?? .7; w.za = w.za ?? 1; w.zb = w.zb ?? w.za; w.L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]); });
@@ -112,6 +112,7 @@ function scene(id, cfg) {
     const hi = () => R(14, Math.max(30, H * .28));
     if (b.roam || Math.random() < .2) b.wps = [{ x: p.x + side * 120, y: p.y - 140 }, { x: side > 0 ? W + 80 : -80, y: hi() }];
     else b.wps = [{ x: p.x + side * R(70, 120), y: p.y - R(110, 150) }, { x: side > 0 ? W * R(.82, .96) : W * R(.04, .18), y: hi() }, { x: side > 0 ? W * R(.25, .45) : W * R(.55, .75), y: hi() }, 'home'];
+    if (cfg.track) { const z = R(26, 58); S.snaps.push({ x: p.x + R(-12, 12), y: p.y - 10 + R(-14, 8), w: z * R(.85, 1.3), h: z, t: now, life: R(4500, 8000) }); if (S.snaps.length > 40) S.snaps.shift(); }
     b.u = clamp(b.hu + R(-.025, .025), .04, .96);
     pluck(S.wires[b.wi], b.u, -1.1);
   }
@@ -202,6 +203,43 @@ function scene(id, cfg) {
     if (b.mode === 'flare') { c.strokeStyle = COL.leg; c.lineWidth = 1.1; c.beginPath(); c.moveTo(-1, 2.6); c.lineTo(1, 7); c.moveTo(1.5, 2.6); c.lineTo(3.4, 6.6); c.stroke(); }
     c.fillStyle = COL.wing; c.fill(wingPath(a, spread)); c.restore();
   }
+  // ---------- tracking layer: detection boxes that lag behind the birds, sometimes doubled, left behind when a bird is lost
+  const MONO = '8.5px ui-monospace, "SF Mono", Menlo, monospace';
+  function track(dt) {
+    S.birds.forEach(b => {
+      if (b.st !== 'fly' || b.trk || b.x < -20 || b.x > W + 20) return;
+      if (!b.seen) b.seen = now + R(60, 340);           // detection lag
+      if (now < b.seen) return;
+      const n = Math.random() < .18 ? 2 : 1;
+      for (let i = 0; i < n; i++) S.trk.push({ b, x: b.x + R(-14, 14), y: b.y + R(-10, 10), w: R(22, 34) * (i ? 1.4 : 1), h: R(16, 26) * (i ? 1.35 : 1), a: 0, k: R(9, 18), lab: i === 0 && Math.random() < .55, conf: R(.71, .98), id: b.id, cls: Math.random() < .08 ? 'pigeon?' : 'bird', live: true, sec: !!i });
+      b.trk = true;
+    });
+    S.trk.forEach(t => {
+      const b = t.b;
+      if (t.live) {
+        if (b.st !== 'fly') { t.live = false; t.end = now; t.why = 'perch'; b.trk = false; b.seen = 0; }
+        else if (b.x < -10 || b.x > W + 10 || b.y < -10) { t.live = false; t.end = now; t.why = 'lost'; b.trk = false; b.seen = 0; }
+        else { const f = 1 - Math.exp(-t.k * dt / 1000); t.x += (b.x + b.vx * .05 - t.x) * f + R(-.6, .6); t.y += (b.y + b.vy * .05 - t.y) * f + R(-.6, .6); t.a = Math.min(1, t.a + dt / 160); if (Math.random() < .04) t.conf = clamp(t.conf + R(-.06, .05), .52, .99); if (t.sec && Math.random() < .004) { t.live = false; t.end = now; t.why = ''; } }
+      } else t.a = Math.max(0, 1 - (now - t.end) / (t.why === 'lost' ? 3600 : 900));
+    });
+    S.trk = S.trk.filter(t => t.live || t.a > 0);
+  }
+  function drawSnaps() {
+    S.snaps = S.snaps.filter(f => now - f.t < f.life);
+    S.snaps.forEach(f => { const k = (now - f.t) / f.life, a = k < .06 ? k / .06 : 1 - Math.pow((k - .06) / .94, 1.6);
+      c.save(); c.globalAlpha = a; c.fillStyle = 'rgba(246,246,243,.38)'; c.fillRect(f.x - f.w / 2, f.y - f.h / 2, f.w, f.h); c.strokeStyle = 'rgba(26,26,25,.55)'; c.lineWidth = .5; c.strokeRect(f.x - f.w / 2 + .5, f.y - f.h / 2 + .5, f.w, f.h); c.restore(); });
+  }
+  function drawTrk() {
+    c.save(); c.font = MONO; c.textBaseline = 'bottom';
+    S.trk.forEach(t => { const x = Math.round(t.x - t.w / 2) + .5, y = Math.round(t.y - t.h / 2) + .5;
+      c.globalAlpha = t.a * (t.live ? .85 : .6); c.strokeStyle = '#1a1a19'; c.fillStyle = '#1a1a19';
+      c.lineWidth = .6; if (!t.live && t.why === 'lost') c.setLineDash([2, 2]); c.strokeRect(x, y, t.w, t.h); c.setLineDash([]);
+      c.lineWidth = 1.3; const k = 4; [[0, 0, 1, 1], [t.w, 0, -1, 1], [t.w, t.h, -1, -1], [0, t.h, 1, -1]].forEach(([dx, dy, sx, sy]) => { c.beginPath(); c.moveTo(x + dx + sx * k, y + dy); c.lineTo(x + dx, y + dy); c.lineTo(x + dx, y + dy + sy * k); c.stroke(); });
+      const lb = !t.lab ? '' : t.live ? `${t.cls === 'bird' ? '' : t.cls + ' '}${String(t.id).padStart(2, '0')}  ${t.conf.toFixed(2)}` : t.why === 'lost' ? `${String(t.id).padStart(2, '0')} lost` : '';
+      if (lb) c.fillText(lb, x, y - 2);
+    });
+    c.restore();
+  }
   const blurFor = z => cfg.depth ? Math.min(3.2, Math.abs(z - S.focus) * 4.2) : 0;
 
   let last = performance.now(), running = true, visible = true;
@@ -222,6 +260,7 @@ function scene(id, cfg) {
     if (cfg.back) cfg.back(c, W, H, S, { par, blurFor });
     S.wires.forEach(w => { c.save(); c.strokeStyle = w.col; c.globalAlpha = w.op; const bl = blurFor((w.za + w.zb) / 2); if (bl > .2) c.filter = `blur(${bl * .6}px)`; c.lineWidth = w.lw * (cfg.depth ? (.45 + .55 * (w.za + w.zb) / 2) : 1); c.beginPath(); for (let i = 0; i <= 24; i++) { const u = i / 24, p = pt(w, u); i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); } c.stroke(); c.restore(); });
     if (cfg.front) cfg.front(c, W, H, S, { par, blurFor, now });
+    if (cfg.track) drawSnaps();
     S.birds.forEach(b => {
       if (b.st === 'away') { if (!b.roam && (b.t -= dt) <= 0) { const side = Math.random() < .5 ? -1 : 1; Object.assign(b, { st: 'fly', x: side > 0 ? W + 50 : -50, y: R(14, H * .3), vx: -side * 260, vy: R(-20, 30), ph: 0, fhz: R(9, 10), mode: 'flap', bt: 0, burst: R(.5, .9), wps: [{ x: side > 0 ? W * R(.3, .6) : W * R(.4, .7), y: R(14, H * .3) }, 'home'] }); } return; }
       if (b.st === 'crouch') { b.t += dt; b.sq = 1 - .18 * Math.sin(Math.min(1, b.t / 80) * Math.PI / 2); if (b.t > 80) { b.sq = 1; launch(b); } }
@@ -231,6 +270,8 @@ function scene(id, cfg) {
       if (b.st === 'fly') { const z = b.roam ? .8 : (b.z || 1), s = b.s * (cfg.depth ? z : 1); drawFlying(b, s, b.roam ? 0 : .4); }
       else if (b.st !== 'away') { const p = bpos(b); drawPerched(b, p.x, p.y, b.s * (cfg.depth ? p.z : 1), blurFor(p.z) * .5); }
     });
+    if (cfg.track) { track(dt); drawTrk(); }
+    if (cfg.autoScare && now > (S.nextScare || (S.nextScare = now + R(6000, 9000)))) { S.nextScare = now + R(16000, 26000); const ps = S.birds.filter(b => b.st === 'perch'); if (ps.length > 6 && now - S.lastMove > 4000) { const b0 = ps[(Math.random() * ps.length) | 0]; ps.forEach(b => setTimeout(() => takeoff(b, Math.random() < .5 ? -1 : 1, true), Math.abs(b.u - b0.u) * 1600 + (b.wi !== b0.wi) * R(100, 400) + R(0, 120))); } }
     c.globalAlpha = cfg.grain || .07; c.globalCompositeOperation = 'overlay'; c.fillStyle = gp; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     if (!reduce && visible) requestAnimationFrame(frame); else running = false;
   }
@@ -282,4 +323,11 @@ scene('v5', { grain: .08, depth: true,
   focusTarget(S) { if (!S.mouse) return .45; const d = Math.abs(S.mouse.x - S.px); return d < 120 ? 1 : Math.max(.2, .55 - (S.px - S.mouse.x) / S.W * .6); },
   knockHit: (S, m) => Math.abs(m.x - (S.px - S.sm.x * 26)) < 16 && m.y > 36,
   perch: () => { const a = []; [[0, [.12, .26, .42]], [1, [.16, .32]], [4, [.22, .4]], [5, [.3, .6]], [2, [.3, .6]], [3, [.4, .72]], [6, [.4]], [8, [.5]]].forEach(([wi, us]) => us.forEach(u => a.push([wi, u, .85]))); return a; } });
+
+scene('v6', { grain: .22, grainAmp: 120, track: true, autoScare: true, scare: 46,
+  sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9d9d5'); g.addColorStop(.6, '#e7e7e3'); g.addColorStop(1, '#dededa'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
+  build(S) { const W = S.W, H = S.H, px = W * .2;
+    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, W + 10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
+  back(c, W, H) { const px = W * .2; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
+  perch: () => { const a = []; [[0, 9, .3, .95], [1, 7, .35, .9], [2, 6, .3, .85], [3, 5, .3, .9], [4, 4, .45, .9]].forEach(([wi, n, u0, u1]) => { for (let k = 0; k < n; k++) a.push([wi, u0 + (u1 - u0) * (k + R(.1, .9)) / n, R(.48, .56)]); }); return a; } });
 })();
