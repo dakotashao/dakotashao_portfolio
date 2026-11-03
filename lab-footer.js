@@ -44,9 +44,10 @@ function scene(id, cfg) {
   const card = document.getElementById(id), cv = document.createElement('canvas'); card.prepend(cv);
   const c = cv.getContext('2d'); let W, H;
   const S = { nid: 0, trk: [], snaps: [], c, wires: [], birds: [], mouse: null, m: { x: 0, y: 0 }, sm: { x: 0, y: 0 }, focus: .3, lastMove: performance.now() };
-  function size() { const d = Math.min(2, devicePixelRatio || 1); W = card.clientWidth; H = card.clientHeight; cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0); S.W = W; S.H = H; }
+  function size() { const d = Math.min(1.5, devicePixelRatio || 1); W = card.clientWidth; H = card.clientHeight; cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0); S.W = W; S.H = H; }
   size();
-  const gp = c.createPattern(noiseTile(180, cfg.grainAmp || 90), 'repeat');
+  const gr = document.createElement('div'); gr.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:overlay;opacity:${cfg.grain || .07};background:url(${noiseTile(180, cfg.grainAmp || 90).toDataURL()})`; cv.after(gr);
+  let skyC = null;
   let now = performance.now();
 
   function newBird(o) { return Object.assign({ id: ++S.nid, st: 'perch', face: Math.random() < .5 ? 1 : -1, act: null, next: R(1500, 7000), ori: ORIS[(Math.random() * ORIS.length) | 0], headRot: 0, headY: 0, fluff: 0, shake: 0, flapA: 0, stretch: 0, sq: 1, ph: R(0, 6) }, o); }
@@ -174,7 +175,7 @@ function scene(id, cfg) {
   // ---------- drawing
   function drawPerched(b, x, y, s, blur) {
     const O = ORI[b.ori] || ORI.side, flat = O.wing.sym;
-    c.save(); if (blur > .2) c.filter = `blur(${blur}px)`;
+    c.save(); if (blur > .2) c.globalAlpha = Math.max(.4, 1 - blur * .2);
     const sq = b.sq * (1 + b.fluff * .08), sh = b.shake * .8, hop = b.hop || 0;
     c.translate(x + sh, y - hop); c.scale(b.face * s * 1.25 * (1 + b.fluff * .1), s * 1.25 * sq);
     c.fillStyle = INK; c.strokeStyle = INK;
@@ -196,7 +197,7 @@ function scene(id, cfg) {
     const face = b.vx >= 0 ? 1 : -1; let ang = clamp(Math.atan2(b.vy, Math.abs(b.vx)), -.7, .55), a = Math.sin(b.ph), spread = 1;
     if (b.mode === 'glide') { a = .45; spread = 1; }
     if (b.mode === 'flare') { ang = -.6; a = Math.sin(b.ph) * .7 + .35; spread = 1.1; }
-    c.save(); if (blur > .2) c.filter = `blur(${blur}px)`;
+    c.save(); if (blur > .2) c.globalAlpha = Math.max(.4, 1 - blur * .2);
     c.translate(b.x, b.y); c.scale(face * s * 1.1, s * 1.1); c.rotate(ang);
     c.fillStyle = INK; c.globalAlpha = .85; c.fill(wingPath(clamp(a + .15, -1, 1), spread * .9)); c.globalAlpha = 1;
     c.fillStyle = COL.body; c.fill(F_BODY); c.fillStyle = COL.head; c.beginPath(); c.ellipse(7, -1.6, 3.6, 2.8, 0, 0, 7); c.fill();
@@ -256,9 +257,9 @@ function scene(id, cfg) {
           if (settle) { const [wi, u0, du] = cfg.roamLand[i % cfg.roamLand.length]; b.wi = wi; b.hu = b.u = clamp(u0 + R(-du, du), .05, .95); b.s = b.s0 || (b.s0 = b.s, b.s); b.wps = [{ x: W * R(.35, .6), y: y0 + oy + 20 }, 'home']; } }); }
       S.nextFlock = now + R(7000, 14000);
     }
-    c.clearRect(0, 0, W, H); if (cfg.sky) cfg.sky(c, W, H, S);
+    c.clearRect(0, 0, W, H); if (cfg.sky) { if (!skyC || skyC.width !== cv.width) { skyC = document.createElement('canvas'); skyC.width = cv.width; skyC.height = cv.height; const x = skyC.getContext('2d'); x.scale(cv.width / W, cv.height / H); cfg.sky(x, W, H, S); } c.drawImage(skyC, 0, 0, W, H); }
     if (cfg.back) cfg.back(c, W, H, S, { par, blurFor });
-    S.wires.forEach(w => { c.save(); c.strokeStyle = w.col; c.globalAlpha = w.op; const bl = blurFor((w.za + w.zb) / 2); if (bl > .2) c.filter = `blur(${bl * .6}px)`; c.lineWidth = w.lw * (cfg.depth ? (.45 + .55 * (w.za + w.zb) / 2) : 1); c.beginPath(); for (let i = 0; i <= 24; i++) { const u = i / 24, p = pt(w, u); i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); } c.stroke(); c.restore(); });
+    S.wires.forEach(w => { c.save(); c.strokeStyle = w.col; c.globalAlpha = w.op; const bl = blurFor((w.za + w.zb) / 2); if (bl > .2) c.globalAlpha = w.op * Math.max(.35, 1 - bl * .2); c.lineWidth = w.lw * (cfg.depth ? (.45 + .55 * (w.za + w.zb) / 2) : 1); c.beginPath(); for (let i = 0; i <= 24; i++) { const u = i / 24, p = pt(w, u); i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); } c.stroke(); c.restore(); });
     if (cfg.front) cfg.front(c, W, H, S, { par, blurFor, now });
     if (cfg.track) drawSnaps();
     S.birds.forEach(b => {
@@ -272,7 +273,6 @@ function scene(id, cfg) {
     });
     if (cfg.track) { track(dt); drawTrk(); }
     if (cfg.autoScare && now > (S.nextScare || (S.nextScare = now + R(6000, 9000)))) { S.nextScare = now + R(16000, 26000); const ps = S.birds.filter(b => b.st === 'perch'); if (ps.length > 6 && now - S.lastMove > 4000) { const b0 = ps[(Math.random() * ps.length) | 0]; ps.forEach(b => setTimeout(() => takeoff(b, Math.random() < .5 ? -1 : 1, true), Math.abs(b.u - b0.u) * 1600 + (b.wi !== b0.wi) * R(100, 400) + R(0, 120))); } }
-    c.globalAlpha = cfg.grain || .07; c.globalCompositeOperation = 'overlay'; c.fillStyle = gp; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     if (!reduce && visible) requestAnimationFrame(frame); else running = false;
   }
   requestAnimationFrame(frame);
@@ -313,7 +313,7 @@ scene('v5', { grain: .08, depth: true,
     arms.forEach(([ax, ay], i) => { const left = i !== 3 && i !== 2; if (left) S.wires.push({ a: [ax, ay], b: [f1.x + (i % 2 ? -10 : 10) * f1.z * 2, f1.top + 12 * f1.z + (i > 3 ? 18 * f1.z : 0)], za: 1, zb: f1.z, lw: 1.5, sag: 14, fromPole: true, wind: .8 }); else S.wires.push({ a: [ax, ay], b: [W + 30, ay - 18 + i * 6], za: 1, zb: 1.05, lw: 1.6, sag: 6, fromPole: true, wind: .6 }); });
     for (let i = 0; i < S.far.length - 1; i++) { const a = S.far[i], b = S.far[i + 1]; [-1, 1].forEach(j => S.wires.push({ a: [a.x + j * 16 * a.z, a.top + 12 * a.z], b: [b.x + j * 16 * b.z, b.top + 12 * b.z], za: a.z, zb: b.z, lw: 1.2, sag: 8 * a.z, op: .9, wind: .4 })); } },
   back(c, W, H, S, { par, blurFor }) { c.save(); const hz = H * .62, o = par(.15); c.strokeStyle = '#d2d2cf'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, hz + o.y); c.lineTo(W, hz - 4 + o.y); c.stroke(); c.restore();
-    S.far.forEach(p => { const o = par(p.z), bl = blurFor(p.z); c.save(); if (bl > .2) c.filter = `blur(${bl}px)`; c.globalAlpha = .55 + .45 * p.z / .42; c.fillStyle = '#2e2e2c'; c.fillRect(p.x + o.x - 4 * p.z, p.top + o.y, 8 * p.z + .6, p.h); c.fillRect(p.x + o.x - 22 * p.z, p.top + o.y + 10 * p.z, 44 * p.z, Math.max(1, 3 * p.z)); c.restore(); }); },
+    S.far.forEach(p => { const o = par(p.z), bl = blurFor(p.z); c.save(); c.globalAlpha = (.55 + .45 * p.z / .42) * (bl > .2 ? Math.max(.35, 1 - bl * .2) : 1); c.fillStyle = '#2e2e2c'; c.fillRect(p.x + o.x - 4 * p.z, p.top + o.y, 8 * p.z + .6, p.h); c.fillRect(p.x + o.x - 22 * p.z, p.top + o.y + 10 * p.z, 44 * p.z, Math.max(1, 3 * p.z)); c.restore(); }); },
   front(c, W, H, S, { par, blurFor, now }) { const px = S.px, o = par(1), bl = blurFor(1); let sh = 0; if (S.shake) { const a = (now - S.shake) / 1000; if (a < .6) sh = Math.sin(a * 60) * 2.2 * Math.exp(-a * 7); }
     c.save(); if (bl > .2) c.filter = `blur(${bl}px)`; c.translate(o.x + sh, o.y); const g = c.createLinearGradient(px - 10, 0, px + 10, 0); g.addColorStop(0, '#4a4844'); g.addColorStop(.4, '#2c2a27'); g.addColorStop(1, '#3e3c38'); c.fillStyle = g;
     c.beginPath(); c.moveTo(px - 7, 40); c.lineTo(px + 7, 40); c.lineTo(px + 11, H + 10); c.lineTo(px - 11, H + 10); c.fill();
