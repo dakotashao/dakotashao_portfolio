@@ -1,23 +1,25 @@
-/* Footer lab: pigeons on wires.
-   Look and behaviour studied from Dakota's photos of pigeons on a street-light arm:
-   dark grey bodies with a lighter folded-wing panel and two dark bars, darker head, a hint of sheen on the neck.
+/* Footer lab: birds on wires.
+   Birds drawn as flat silhouettes, after the Pinterest "bird" board: upright, round head, tail hanging past the wire,
+   seen from the side, three-quarter, front or back, and they turn around now and then.
    Perched: look toward a nearby pointer, preen, stretch a wing, fluff and shake, flap for balance, doze when left alone,
    keep their spacing and shuffle aside when a neighbour lands.
    Startled: crouch, burst off with a wing clap, neighbours follow, the group loops around and lands again. */
 (() => {
 const R = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const COL = { body: '#454543', head: '#323230', wing: '#5d5d5b', bar: 'rgba(40,40,39,.55)', tail: '#2c2c2b', leg: '#4f4f4d', sheen: 'rgba(190,190,185,.16)' };
 
-// ---------- perched pigeon, side view, facing +x, feet at (21, 30)
-const P_BODY = new Path2D('M31 12.5C33.2 14.6 33.6 17.6 32.6 20.4 31.2 24 27.4 26.2 22.8 26.2 18.6 26.2 15 24.6 12.6 22.2L3.6 23.2 3.2 20.6 12.2 16.6C15 13.6 19.8 11.6 24.6 11.4 27 11.3 29.4 11.6 31 12.5Z');
-const P_NECK = new Path2D('M27 13.2C27.4 10.6 28.8 8.8 30.6 8.6L33 12.2C32.4 13.4 31.8 14.2 31 14.8Z');
-const P_WING = new Path2D('M14.2 17C17.6 14.2 22.8 13.2 27.2 14.2 28.8 17.4 27.4 21.2 23.6 22.6 19.6 23.6 16 22.6 13.4 20.6Z');
-const P_BARS = new Path2D('M19.4 16.4C20.6 18 21.2 19.6 21.3 21.4M22.4 15.6C23.6 17.4 24.2 19 24.3 20.8');
-const P_TAIL = new Path2D('M3.2 20.6 6 19.4 6.6 22.6 3.6 23.2Z');
-// head, drawn around the neck pivot (27.5, 11.5) so it can turn, dip and tuck
-const P_HEAD = new Path2D(); P_HEAD.ellipse(1.5, -2.8, 3.3, 3.1, 0, 0, Math.PI * 2); P_HEAD.moveTo(4.3, -3.7); P_HEAD.lineTo(6.9, -2.7); P_HEAD.lineTo(4.5, -1.8); P_HEAD.closePath();
-const NECK = { x: 29, y: 11 };
+// ---------- perched birds as flat silhouettes (from the Pinterest board): upright, round head, tail hanging past the wire.
+// Feet at (0,0) on the wire, facing +x. Four facings: side, three-quarter, front, back.
+const INK = '#1a1a19';
+const COL = { body: INK, head: INK, wing: INK, tail: INK, leg: INK };
+const E_ = (x, y, rx, ry, r = 0) => { const p = new Path2D(); p.ellipse(x, y, rx, ry, r, 0, Math.PI * 2); return p; };
+const P_ = pts => { const p = new Path2D(); pts.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); p.closePath(); return p; };
+const ORI = {
+  side: { body: E_(.2, -7.8, 4.4, 7.9, .42), neck: { x: 2.4, y: -13.2 }, head: E_(1.2, -3, 3.3, 3.1), beak: P_([[4, -3.9], [6.8, -2.8], [4.1, -1.8]]), tail: P_([[-2.2, -3.6], [-6.8, 5.2], [-4.9, 6], [-.4, -1.6]]), wing: { x: -.5, y: -9 } },
+  tq:   { body: E_(.2, -8, 5, 8.1, .2), neck: { x: 1.2, y: -14 }, head: E_(.7, -3.2, 3.5, 3.3), beak: P_([[3.6, -4], [5.8, -3.1], [3.7, -2.2]]), tail: P_([[-1.8, -2.6], [-4.4, 5.2], [-2.6, 5.8], [.2, -1.2]]), wing: { x: -.5, y: -9.5 } },
+  front:{ body: E_(0, -8.2, 5.6, 8.3), neck: { x: 0, y: -14.4 }, head: E_(0, -3.2, 3.6, 3.4), beak: null, tail: P_([[-1.4, -1], [-1.1, 3.6], [1.1, 3.6], [1.4, -1]]), wing: { x: 0, y: -10, sym: 1 } },
+  back: { body: E_(0, -8.2, 5.5, 8.4), neck: { x: 0, y: -14.4 }, head: E_(0, -3, 3.5, 3.3), beak: null, tail: P_([[-2.1, -2.4], [-1.7, 6.6], [1.7, 6.6], [2.1, -2.4]]), wing: { x: 0, y: -10, sym: 1 } } };
+const ORIS = ['side', 'side', 'tq', 'tq', 'front', 'back'];
 
 // ---------- flight: body + a wing whose tip moves continuously, so flaps read as one motion
 const F_BODY = new Path2D('M12-1.2 9.2-2C8.2-4 5.8-4.8 3.8-3.8 0-3.4-5-2.4-9-.8L-15-2.4-14 .6-15 3-9 1.8C-5 3.2 0 3.4 4 2.6 6.6 2.2 8.4 1 9.2-.2Z');
@@ -47,7 +49,7 @@ function scene(id, cfg) {
   const gp = c.createPattern(noiseTile(180, cfg.grainAmp || 90), 'repeat');
   let now = performance.now();
 
-  function newBird(o) { return Object.assign({ st: 'perch', face: Math.random() < .5 ? 1 : -1, act: null, next: R(1500, 7000), headRot: 0, headY: 0, fluff: 0, shake: 0, flapA: 0, stretch: 0, sq: 1, ph: R(0, 6) }, o); }
+  function newBird(o) { return Object.assign({ st: 'perch', face: Math.random() < .5 ? 1 : -1, act: null, next: R(1500, 7000), ori: ORIS[(Math.random() * ORIS.length) | 0], headRot: 0, headY: 0, fluff: 0, shake: 0, flapA: 0, stretch: 0, sq: 1, ph: R(0, 6) }, o); }
   function setup() {
     S.wires = []; S.birds = []; cfg.build(S);
     S.wires.forEach(w => { w.plucks = []; w.waves = []; w.sag = w.sag || 0; w.lw = w.lw || 1; w.col = w.col || '#1d1d1c'; w.op = w.op ?? 1; w.ph = R(0, 6); w.wind = w.wind ?? .7; w.za = w.za ?? 1; w.zb = w.zb ?? w.za; w.L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]); });
@@ -121,12 +123,12 @@ function scene(id, cfg) {
   }
 
   // ---------- idle behaviour while perched
-  const ACTS = ['preen', 'preen', 'stretch', 'fluff', 'flap', 'bob', 'turn', 'scratch'];
+  const ACTS = ['preen', 'preen', 'stretch', 'fluff', 'flap', 'bob', 'turn', 'turn', 'scratch'];
   function idle(b, dt) {
     const p = bpos(b), m = S.mouse;
     const dozing = now - S.lastMove > 9000;
     if (b.roam && b.stay && now > b.stay && !b.act) { b.stay = 0; S.birds.filter(o => o.roam && o.st === 'perch').forEach((o, i) => { o.stay = 0; setTimeout(() => takeoff(o, 1, i > 0), i * R(80, 200)); }); return; }
-    if (m) { const d = Math.hypot(m.x - p.x, m.y - p.y + 8), r = (cfg.scare || 54) * (cfg.depth ? .5 + .5 * p.z : 1); if (d < r) return takeoff(b, m.x < p.x ? 1 : -1); if (d < r * 2.6) { b.face = m.x < p.x ? -1 : 1; b.headRot += (-.25 - b.headRot) * .15; b.alert = true; } else b.alert = false; }
+    if (m) { const d = Math.hypot(m.x - p.x, m.y - p.y + 8), r = (cfg.scare || 54) * (cfg.depth ? .5 + .5 * p.z : 1); if (d < r) return takeoff(b, m.x < p.x ? 1 : -1); if (d < r * 2.6) { b.face = m.x < p.x ? -1 : 1; if (b.ori === 'back' || b.ori === 'front') b.ori = 'tq'; b.headRot += (-.25 - b.headRot) * .15; b.alert = true; } else b.alert = false; }
     if (b.act) {
       const a = b.act; a.t += dt; const k = clamp(a.t / a.dur, 0, 1), bell = Math.sin(k * Math.PI);
       if (a.type === 'preen') { b.headRot = 1.25 * bell + Math.sin(a.t / 70) * .12 * bell; b.headY = 2.5 * bell; }
@@ -134,13 +136,13 @@ function scene(id, cfg) {
       if (a.type === 'fluff') { b.fluff = k < .75 ? Math.min(1, k / .3) : 1 - (k - .75) / .25; b.shake = k > .7 && k < .9 ? Math.sin(a.t / 18) : 0; }
       if (a.type === 'flap') b.flapA = bell;
       if (a.type === 'bob') { b.headY = 2 * Math.sin(k * Math.PI * 4); }
-      if (a.type === 'turn' && k > .5 && !a.done) { b.face *= -1; a.done = true; }
+      if (a.type === 'turn') { b.sq = 1 - .1 * bell; if (k > .5 && !a.done) { b.ori = ORIS[(Math.random() * ORIS.length) | 0]; b.face = Math.random() < .5 ? 1 : -1; a.done = true; } }
       if (a.type === 'scratch') { b.headRot = .5 * bell; b.scratch = bell; }
       if (a.type === 'shuffle') { b.u = a.from + (a.to - a.from) * (1 - Math.pow(1 - k, 2)); b.hop = Math.abs(Math.sin(k * Math.PI * 3)) * 1.6; }
-      if (k >= 1) { b.act = null; b.headRot = b.headY = b.stretch = b.fluff = b.shake = b.scratch = b.hop = 0; b.next = R(2500, 9000); }
+      if (k >= 1) { b.act = null; b.sq = 1; b.headRot = b.headY = b.stretch = b.fluff = b.shake = b.scratch = b.hop = 0; b.next = R(2500, 9000); }
     } else if (!b.alert) {
       b.headRot += ((dozing ? .9 : 0) - b.headRot) * .03; b.headY += ((dozing ? 3.2 : 0) - b.headY) * .03; b.fluff += ((dozing ? .7 : 0) - b.fluff) * .02;
-      if (!dozing && (b.next -= dt) <= 0) { const t = ACTS[(Math.random() * ACTS.length) | 0]; b.act = { type: t, t: 0, dur: { preen: 1400, stretch: 1100, fluff: 1300, flap: 500, bob: 700, turn: 300, scratch: 900 }[t] }; }
+      if (!dozing && (b.next -= dt) <= 0) { const t = ACTS[(Math.random() * ACTS.length) | 0]; b.act = { type: t, t: 0, dur: { preen: 1400, stretch: 1100, fluff: 1300, flap: 500, bob: 700, turn: 360, scratch: 900 }[t] }; }
     }
     if (b.flapA > 0 && (!b.act || b.act.type !== 'flap')) b.flapA = Math.max(0, b.flapA - dt / 450);
   }
@@ -170,25 +172,23 @@ function scene(id, cfg) {
 
   // ---------- drawing
   function drawPerched(b, x, y, s, blur) {
+    const O = ORI[b.ori] || ORI.side, flat = O.wing.sym;
     c.save(); if (blur > .2) c.filter = `blur(${blur}px)`;
-    const sq = b.sq * (1 + b.fluff * .1), sh = b.shake * .8, hop = b.hop || 0;
-    c.translate(x + sh, y - hop); c.scale(b.face * s * (1 + b.fluff * .08), s * sq); c.translate(-21, -30);
-    // legs
-    c.strokeStyle = COL.leg; c.lineWidth = 1.4; c.beginPath(); c.moveTo(20.4, 25.6); c.lineTo(20.2, 30); c.moveTo(23, 25.6); c.lineTo(23.2, 30);
-    if (b.scratch) { c.moveTo(23, 24); c.lineTo(26 + b.scratch * 2, 18 - b.scratch * 6); }
+    const sq = b.sq * (1 + b.fluff * .08), sh = b.shake * .8, hop = b.hop || 0;
+    c.translate(x + sh, y - hop); c.scale(b.face * s * 1.25 * (1 + b.fluff * .1), s * 1.25 * sq);
+    c.fillStyle = INK; c.strokeStyle = INK;
+    c.lineWidth = .9; c.beginPath(); c.moveTo(-1, -1); c.lineTo(-1, 0); c.moveTo(1, -1); c.lineTo(1, 0);
+    if (b.scratch) { c.moveTo(1, -2); c.lineTo(2.5 + b.scratch * 1.5, -6 - b.scratch * 6); }
     c.stroke();
-    // far wing raised for balance
-    if (b.flapA > .02) { c.save(); c.translate(22, 14); c.scale(.55, .55); c.fillStyle = COL.wing; c.globalAlpha = .9; c.fill(wingPath(Math.sin(now / 55) * .5 + .5 * b.flapA, b.flapA)); c.restore(); }
-    c.fillStyle = COL.tail; c.fill(P_TAIL);
-    c.fillStyle = COL.body; c.fill(P_BODY);
-    // folded wing panel with its two dark bars; stretched out behind when stretching
-    c.save(); if (b.stretch) { c.translate(14, 19); c.rotate(.5 * b.stretch); c.scale(1 + .5 * b.stretch, 1); c.translate(-14, -19); }
-    c.fillStyle = COL.wing; c.fill(P_WING); c.strokeStyle = COL.bar; c.lineWidth = 1.1; c.stroke(P_BARS); c.restore();
-    // near wing flapping for balance
-    if (b.flapA > .02) { c.save(); c.translate(22, 15); c.scale(.6, .6); c.fillStyle = COL.wing; c.fill(wingPath(Math.sin(now / 55 + 1) * .6 + .3 * b.flapA, b.flapA)); c.restore(); }
-    // neck sheen, head on its pivot
-    c.fillStyle = COL.body; c.fill(P_NECK); c.fillStyle = COL.sheen; c.beginPath(); c.ellipse(30.4, 13, 2, 2.8, -.4, 0, 7); c.fill();
-    c.save(); c.translate(NECK.x, NECK.y + b.headY); c.rotate(b.headRot); c.fillStyle = COL.head; c.fill(P_HEAD); c.fillStyle = '#8c8c88'; c.beginPath(); c.arc(2.6, -3.4, .5, 0, 7); c.fill(); c.restore();
+    c.fill(O.tail); c.fill(O.body);
+    // wings: flapped open for balance (both sides when seen front/back), or stretched down and back
+    const wing = (sx, a, sp) => { c.save(); c.translate(O.wing.x, O.wing.y); c.scale(sx * .55, .55); c.rotate(-.3); c.fill(wingPath(a, sp)); c.restore(); };
+    if (b.flapA > .02) { const a = Math.sin(now / 55) * .6 + .3 * b.flapA; if (flat) { wing(1, a, b.flapA); wing(-1, a, b.flapA); } else wing(-1, a, b.flapA); }
+    if (b.stretch > .02) { c.save(); c.translate(O.wing.x, O.wing.y + 2); c.rotate((flat ? 2.2 : 2.5) * b.stretch); c.scale(.5 * b.stretch + .1, .5); c.fill(wingPath(.2, 1)); c.restore(); }
+    // head on its pivot: tucks back to preen, droops when dozing; seen from front/back it only tilts
+    c.save(); c.translate(O.neck.x, O.neck.y + b.headY); c.rotate(flat ? b.headRot * .35 : -b.headRot * .9);
+    c.fill(O.head); O.beak && c.fill(O.beak); c.restore();
+    c.beginPath(); c.moveTo(O.neck.x - 2, O.neck.y + 1.5); c.lineTo(O.neck.x, O.neck.y + b.headY - 1.5); c.lineTo(O.neck.x + 2, O.neck.y + 1.5); c.fill();
     c.restore();
   }
   function drawFlying(b, s, blur) {
@@ -197,7 +197,7 @@ function scene(id, cfg) {
     if (b.mode === 'flare') { ang = -.6; a = Math.sin(b.ph) * .7 + .35; spread = 1.1; }
     c.save(); if (blur > .2) c.filter = `blur(${blur}px)`;
     c.translate(b.x, b.y); c.scale(face * s * 1.1, s * 1.1); c.rotate(ang);
-    c.fillStyle = COL.wing; c.globalAlpha = .7; c.fill(wingPath(clamp(a + .15, -1, 1), spread * .9)); c.globalAlpha = 1;
+    c.fillStyle = INK; c.globalAlpha = .85; c.fill(wingPath(clamp(a + .15, -1, 1), spread * .9)); c.globalAlpha = 1;
     c.fillStyle = COL.body; c.fill(F_BODY); c.fillStyle = COL.head; c.beginPath(); c.ellipse(7, -1.6, 3.6, 2.8, 0, 0, 7); c.fill();
     if (b.mode === 'flare') { c.strokeStyle = COL.leg; c.lineWidth = 1.1; c.beginPath(); c.moveTo(-1, 2.6); c.lineTo(1, 7); c.moveTo(1.5, 2.6); c.lineTo(3.4, 6.6); c.stroke(); }
     c.fillStyle = COL.wing; c.fill(wingPath(a, spread)); c.restore();
