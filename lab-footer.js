@@ -52,7 +52,9 @@ function scene(id, cfg) {
     S.wires = []; S.birds = []; cfg.build(S);
     S.wires.forEach(w => { w.plucks = []; w.waves = []; w.sag = w.sag || 0; w.lw = w.lw || 1; w.col = w.col || '#1d1d1c'; w.op = w.op ?? 1; w.ph = R(0, 6); w.wind = w.wind ?? .7; w.za = w.za ?? 1; w.zb = w.zb ?? w.za; w.L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]); });
     (cfg.perch ? cfg.perch(S) : []).forEach(([wi, u, s]) => S.birds.push(newBird({ wi, u, hu: u, s })));
-    (cfg.roam || []).forEach(([x, y, s]) => { const b = newBird({ s, st: 'fly', roam: true, x: x * W / 680, y, vx: R(140, 200), vy: R(-20, 20), fhz: R(7, 8.5), mode: 'flap', bt: 0, burst: R(.5, 1) }); b.wps = [{ x: W + 60, y: R(20, H * .5) }]; S.birds.push(b); });
+    // a few distant pigeons that cross the sky now and then as a small group, not a constant swarm
+    (cfg.roam || []).forEach(s => S.birds.push(newBird({ s, st: 'away', roam: true, t: 1e9 })));
+    S.nextFlock = performance.now() + R(1500, 3500);
   }
   setup();
   addEventListener('resize', () => { size(); setup(); });
@@ -145,20 +147,19 @@ function scene(id, cfg) {
     if (tgt === 'home') { const p = bpos(b); tgt = { x: p.x, y: p.y - 3, home: true }; }
     const dx = tgt.x - b.x, dy = tgt.y - b.y, d = Math.hypot(dx, dy) || 1;
     const flare = tgt.home && d < 80;
-    const speed = flare ? Math.max(30, d * 2.6) : b.roam ? 180 : 330;
+    const speed = flare ? Math.max(30, d * 2.6) : b.roam ? b.cruise : 330;
     const k = flare ? 7 : 2.8;
     b.vx += (dx / d * speed - b.vx) * Math.min(1, k * T); b.vy += (dy / d * speed - b.vy) * Math.min(1, k * T);
     // pigeons: steady flapping with short glides, wings held in a shallow V
     b.bt += T;
     if (flare) b.mode = 'flare';
     else if (b.mode === 'flap' && b.bt > b.burst) { b.mode = 'glide'; b.bt = 0; }
-    else if (b.mode === 'glide' && b.bt > R(.18, .4)) { b.mode = 'flap'; b.bt = 0; b.burst = R(.5, .9); }
+    else if (b.mode === 'glide' && b.bt > (b.roam ? R(.6, 1.1) : R(.18, .4))) { b.mode = 'flap'; b.bt = 0; b.burst = b.roam ? R(.25, .45) : R(.5, .9); }
     else if (b.mode === 'flare' && !flare) b.mode = 'flap';
     if (b.mode === 'glide') b.vy += 70 * T;
     b.x += b.vx * T; b.y += b.vy * T;
     if (b.mode !== 'glide') b.ph += (b.mode === 'flare' ? 6 : b.fhz) * T * Math.PI * 2;
-    if (!tgt.home && d < 46) { b.wps.shift(); if (!b.wps.length) { if (b.roam) b.wps = [{ x: W + 60, y: R(20, H * .5) }]; else { b.st = 'away'; b.t = R(2500, 6000); } } }
-    if (b.roam && b.x > W + 50) { b.x = -50; b.y = R(20, H * .5); b.wps = [{ x: W + 60, y: R(20, H * .5) }]; }
+    if (!tgt.home && d < 46) { b.wps.shift(); if (!b.wps.length) { b.st = 'away'; b.t = b.roam ? 1e9 : R(2500, 6000); } }
     if (tgt.home && d < 3) land(b);
   }
 
@@ -203,12 +204,19 @@ function scene(id, cfg) {
     const dt = Math.min(32, t - last); last = t; now = t;
     S.sm.x += (S.m.x - S.sm.x) * .06; S.sm.y += (S.m.y - S.sm.y) * .06;
     if (cfg.focusTarget) S.focus += (cfg.focusTarget(S) - S.focus) * .05;
+    if (cfg.roam && now > S.nextFlock) {
+      const idle = S.birds.filter(b => b.roam && b.st === 'away'), n = Math.min(idle.length, 3 + ((Math.random() * 3) | 0));
+      if (n) { const dir = Math.random() < .7 ? 1 : -1, y0 = R(18, H * .26), y1 = y0 + R(-30, 20), cruise = R(120, 160);
+        idle.slice(0, n).forEach((b, i) => { const ox = -i * R(22, 38), oy = R(-14, 14);
+          Object.assign(b, { st: 'fly', x: dir > 0 ? -40 + ox : W + 40 - ox, y: y0 + oy, vx: dir * cruise, vy: 0, ph: R(0, 6), fhz: R(6.5, 8), mode: Math.random() < .5 ? 'glide' : 'flap', bt: R(0, .4), burst: R(.25, .45), cruise, wps: [{ x: dir > 0 ? W + 60 : -60, y: y1 + oy }] }); }); }
+      S.nextFlock = now + R(7000, 14000);
+    }
     c.clearRect(0, 0, W, H); if (cfg.sky) cfg.sky(c, W, H, S);
     if (cfg.back) cfg.back(c, W, H, S, { par, blurFor });
     S.wires.forEach(w => { c.save(); c.strokeStyle = w.col; c.globalAlpha = w.op; const bl = blurFor((w.za + w.zb) / 2); if (bl > .2) c.filter = `blur(${bl * .6}px)`; c.lineWidth = w.lw * (cfg.depth ? (.45 + .55 * (w.za + w.zb) / 2) : 1); c.beginPath(); for (let i = 0; i <= 24; i++) { const u = i / 24, p = pt(w, u); i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); } c.stroke(); c.restore(); });
     if (cfg.front) cfg.front(c, W, H, S, { par, blurFor, now });
     S.birds.forEach(b => {
-      if (b.st === 'away') { if ((b.t -= dt) <= 0) { const side = Math.random() < .5 ? -1 : 1; Object.assign(b, { st: 'fly', x: side > 0 ? W + 50 : -50, y: R(14, H * .3), vx: -side * 260, vy: R(-20, 30), ph: 0, fhz: R(9, 10), mode: 'flap', bt: 0, burst: R(.5, .9), wps: [{ x: side > 0 ? W * R(.3, .6) : W * R(.4, .7), y: R(14, H * .3) }, 'home'] }); } return; }
+      if (b.st === 'away') { if (!b.roam && (b.t -= dt) <= 0) { const side = Math.random() < .5 ? -1 : 1; Object.assign(b, { st: 'fly', x: side > 0 ? W + 50 : -50, y: R(14, H * .3), vx: -side * 260, vy: R(-20, 30), ph: 0, fhz: R(9, 10), mode: 'flap', bt: 0, burst: R(.5, .9), wps: [{ x: side > 0 ? W * R(.3, .6) : W * R(.4, .7), y: R(14, H * .3) }, 'home'] }); } return; }
       if (b.st === 'crouch') { b.t += dt; b.sq = 1 - .18 * Math.sin(Math.min(1, b.t / 80) * Math.PI / 2); if (b.t > 80) { b.sq = 1; launch(b); } }
       else if (b.st === 'settle') { b.t += dt; b.sq = 1 - .14 * Math.sin(Math.min(1, b.t / 170) * Math.PI); b.flapA = Math.max(0, 1 - b.t / 520); if (b.t > 520) { b.st = 'perch'; b.sq = 1; b.next = R(800, 4000); } }
       else if (b.st === 'perch') idle(b, dt);
@@ -246,7 +254,7 @@ scene('v4', { grain: .32, grainAmp: 150,
   back(c, W, H) { const px = W * .72; c.fillStyle = '#1e1e1d'; c.beginPath(); c.moveTo(px - 6, H + 10); c.lineTo(px - 4, 170); c.lineTo(px + 4, 170); c.lineTo(px + 6, H + 10); c.fill(); c.fillRect(px - 30, 206, 60, 3); c.strokeStyle = '#2a2a28'; c.lineWidth = 1; c.beginPath(); c.moveTo(px + 2, 210); c.lineTo(px + 34, H + 10); c.stroke(); },
   knockHit: (S, m) => Math.abs(m.x - S.W * .72) < 14 && m.y > 165,
   perch: () => [[4, .14, .5], [4, .3, .5], [4, .76, .5], [4, .9, .48], [0, .72, .44]],
-  roam: [[60, 70, .4], [130, 56, .38], [190, 108, .36], [260, 82, .4], [330, 48, .4], [400, 96, .37], [470, 62, .36], [540, 30, .38]] });
+  roam: [.26, .24, .27, .23, .25] });
 
 scene('v5', { grain: .08, depth: true,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#e6e6e3'); g.addColorStop(.7, '#f2f2f0'); g.addColorStop(1, '#f7f7f5'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
