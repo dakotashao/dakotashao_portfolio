@@ -307,22 +307,24 @@ function scene(id, cfg) {
 }
 
 // ================= versions =================
-scene('v1', { grain: .06,
+const CFGS = {}; const def = (id, cfg) => { CFGS[id] = cfg; scene(id, cfg); };
+window.LabBirds = { scene, CFGS };
+def('v1', { grain: .06,
   build(S) { const W = S.W, ys = [64, 92, 120, 148, 176, 214], nm = document.getElementById('nm1'); nm.style.left = '72px'; nm.style.top = (120 - 28) + 'px'; const tx = 72 + (nm.offsetWidth || 150) + 16; ys.forEach((y, i) => S.wires.push({ a: [i === 2 ? tx : 46, y], b: [W + 10, y + 3], lw: i === 5 ? 1.7 : 1.05, wind: .5 })); },
   back(c, W, H) { c.fillStyle = '#1b1b1a'; c.save(); c.translate(26, 0); c.rotate(-.06); c.fillRect(0, 0, 8, H + 20); c.restore(); c.save(); c.translate(42, 0); c.rotate(-.04); c.fillRect(0, 0, 7, H + 20); c.restore(); [64, 92, 120, 148, 176, 214].forEach(y => { c.beginPath(); c.arc(39, y, 2.4, 0, 7); c.fill(); }); },
   perch: () => [[0, .12, .42], [1, .2, .4], [1, .3, .4], [3, .14, .4], [3, .26, .4], [3, .46, .4], [3, .6, .4], [4, .1, .4], [4, .2, .4], [4, .3, .4], [4, .42, .4], [4, .56, .4], [4, .78, .4], [2, .6, .42], [0, .72, .42]] });
 
-scene('v2', { grain: .05, scare: 64,
+def('v2', { grain: .05, scare: 64,
   build(S) { const W = S.W, H = S.H; S.wires.push({ a: [W * .18, -10], b: [W * .98, H + 10], lw: 2.1, wind: .4 }, { a: [W * .06, -10], b: [W * .86, H + 10], lw: 1.6, wind: .4 }, { a: [W * 0, 4], b: [W * .78, H + 10], lw: 1.6, wind: .4 }, { a: [W * .22, -4], b: [W * .5, -60], lw: .6, col: '#555' }); },
   perch: () => [[0, .24, .78], [0, .34, .76], [0, .44, .78], [0, .53, .77], [0, .62, .79], [0, .71, .78]] });
 
-scene('v3', { grain: .07,
+def('v3', { grain: .07,
   build(S) { const W = S.W, H = S.H, px = W * .62, py = 110; [[-20, 40], [-20, 110], [-20, 200], [-20, 300], [W * .2, H + 10], [W * .38, H + 10], [W + 20, 12], [W + 20, 84], [W + 20, 170], [W * .82, H + 10], [W * .95, H + 10], [W * .4, -10], [W * .7, -10]].forEach(([x, y], i) => S.wires.push({ a: [px + (x < px ? -3 : 3), py + (i % 3) * 3], b: [x, y], lw: i % 4 === 0 ? 1.4 : .9, op: i % 3 === 2 ? .6 : .95, wind: .5, fromPole: true })); },
   back(c, W, H) { const px = W * .62, py = 110; c.fillStyle = '#262624'; c.beginPath(); c.moveTo(px - 7, H + 10); c.lineTo(px - 5, py - 6); c.lineTo(px + 5, py - 6); c.lineTo(px + 7, H + 10); c.fill(); c.fillRect(px - 8, py + 4, 6, 26); c.fillRect(px + 2, py + 8, 6, 22); c.fillRect(px - 1.6, py - 32, 3.2, 28); c.save(); c.translate(px - 4, py - 38); c.rotate(-.18); c.beginPath(); c.ellipse(0, 0, 26, 9, 0, 0, 7); c.fill(); c.fillStyle = '#4a4a47'; c.beginPath(); c.ellipse(-2, 1, 15, 4.6, 0, 0, 7); c.fill(); c.restore(); for (let i = 0; i < 7; i++) { c.fillStyle = '#262624'; c.fillRect(px - (i % 2 ? 9 : -5), py + 80 + i * 28, 7, 2.2); } },
   knockHit: (S, m) => Math.abs(m.x - S.W * .62) < 14 && m.y > 70,
   perch: () => { const a = []; [[0, 3], [1, 3], [2, 2], [4, 4], [5, 2], [6, 3], [7, 4], [8, 2], [9, 2], [11, 2], [12, 2]].forEach(([wi, n]) => { for (let k = 0; k < n; k++) a.push([wi, .2 + k * (.66 / n) + R(-.02, .02), R(.46, .52)]); }); return a; } });
 
-scene('v4', { grain: .32, grainAmp: 150,
+def('v4', { grain: .32, grainAmp: 150,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#bdbdb9'); g.addColorStop(.55, '#d6d6d2'); g.addColorStop(1, '#c4c4c0'); c.fillStyle = g; c.fillRect(0, 0, W, H); const r = c.createRadialGradient(W * .4, H * .55, 10, W * .4, H * .55, W * .5); r.addColorStop(0, 'rgba(240,240,236,.55)'); r.addColorStop(1, 'rgba(240,240,236,0)'); c.fillStyle = r; c.fillRect(0, 0, W, H); },
   build(S) { const W = S.W, H = S.H, px = W * .72; S.wires.push({ a: [W * .18, H + 10], b: [W + 10, 48], lw: 1.2 }, { a: [W * .3, H + 10], b: [W + 10, 116], lw: 1.05 }, { a: [W * .4, H + 10], b: [W + 10, 150], lw: 1.05 }, { a: [W * .5, H + 10], b: [W + 10, 196], lw: .95 }, { a: [px - 38, 184], b: [px + 44, 188], lw: 5, col: '#1a1a19', wind: 0 }); },
   back(c, W, H) { const px = W * .72; c.fillStyle = '#1e1e1d'; c.beginPath(); c.moveTo(px - 6, H + 10); c.lineTo(px - 4, 170); c.lineTo(px + 4, 170); c.lineTo(px + 6, H + 10); c.fill(); c.fillRect(px - 30, 206, 60, 3); c.strokeStyle = '#2a2a28'; c.lineWidth = 1; c.beginPath(); c.moveTo(px + 2, 210); c.lineTo(px + 34, H + 10); c.stroke(); },
@@ -332,7 +334,7 @@ scene('v4', { grain: .32, grainAmp: 150,
   roam: [.5, .48, .5, .46, .5],
   roamLand: [[0, .55, .05], [1, .6, .05], [0, .82, .04], [2, .78, .05], [1, .4, .05]] });
 
-scene('v5', { grain: .08, depth: true,
+def('v5', { grain: .08, depth: true,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#e6e6e3'); g.addColorStop(.7, '#f2f2f0'); g.addColorStop(1, '#f7f7f5'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
   build(S) { const W = S.W, H = S.H, px = W * .76; S.px = px; S.far = []; for (let i = 0; i < 6; i++) { const z = .42 * Math.pow(.72, i), x = W * .5 - i * W * .085 * Math.pow(.88, i), top = H * .62 - 200 * z; S.far.push({ x, top, z, h: 260 * z }); }
     const arms = [[px - 58, 82], [px - 24, 78], [px + 26, 74], [px + 60, 70], [px - 40, 128], [px + 42, 124]]; S.arms = arms; const f1 = S.far[0];
@@ -350,17 +352,17 @@ scene('v5', { grain: .08, depth: true,
   knockHit: (S, m) => Math.abs(m.x - (S.px - S.sm.x * 26)) < 16 && m.y > 36,
   perch: () => { const a = []; [[0, [.12, .26, .42]], [1, [.16, .32]], [4, [.22, .4]], [5, [.3, .6]], [2, [.3, .6]], [3, [.4, .72]], [6, [.4]], [8, [.5]]].forEach(([wi, us]) => us.forEach(u => a.push([wi, u, .85]))); return a; } });
 
-scene('v6', { grain: .22, grainAmp: 120, track: 'ghost', autoScare: true, scare: 46,
+def('v6', { grain: .22, grainAmp: 120, track: 'ghost', autoScare: true, scare: 46,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9d9d5'); g.addColorStop(.6, '#e7e7e3'); g.addColorStop(1, '#dededa'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
-  build(S) { const W = S.W, H = S.H, px = W * .2;
-    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, W + 10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
-  back(c, W, H) { const px = W * .2; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
+  build(S) { const W = S.W, H = S.H, px = W * .8;
+    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, -10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
+  back(c, W, H) { const px = W * .8; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
   perch: () => { const a = []; [[0, 9, .3, .95], [1, 7, .35, .9], [2, 6, .3, .85], [3, 5, .3, .9], [4, 4, .45, .9]].forEach(([wi, n, u0, u1]) => { for (let k = 0; k < n; k++) a.push([wi, u0 + (u1 - u0) * (k + R(.1, .9)) / n, R(.48, .56)]); }); return a; } });
 
-scene('v7', { grain: .22, grainAmp: 120, track: 'motion', autoScare: true, scare: 46,
+def('v7', { grain: .22, grainAmp: 120, track: 'motion', autoScare: true, scare: 46,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9d9d5'); g.addColorStop(.6, '#e7e7e3'); g.addColorStop(1, '#dededa'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
-  build(S) { const W = S.W, H = S.H, px = W * .2;
-    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, W + 10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
-  back(c, W, H) { const px = W * .2; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
+  build(S) { const W = S.W, H = S.H, px = W * .8;
+    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, -10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
+  back(c, W, H) { const px = W * .8; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
   perch: () => { const a = []; [[0, 9, .3, .95], [1, 7, .35, .9], [2, 6, .3, .85], [3, 5, .3, .9], [4, 4, .45, .9]].forEach(([wi, n, u0, u1]) => { for (let k = 0; k < n; k++) a.push([wi, u0 + (u1 - u0) * (k + R(.1, .9)) / n, R(.48, .56)]); }); return a; } });
 })();
