@@ -1695,11 +1695,9 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 
 /* PREVIEW: one rhythm for the lower half of home */
 .hp { padding-top: 128px; }
-.projects.hp { padding-top: 96px; }
-.hp > .label.hs { font-size: 15px; color: var(--muted); margin-bottom: 20px; letter-spacing: -0.01em; }
-.hp > .label.hs b { font-weight: 400; color: var(--fg); }
-.projects.hp > .label.hs { margin-bottom: -36px; }
-.projects.hp { padding-bottom: 0; }
+.projects.hp { padding-top: 96px; padding-bottom: 0; }
+.hp > .label.hs { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.projects.hp > .label.hs { margin-bottom: -44px; }
 .hp-work .work { padding: 32px; min-height: 0; gap: 40px; }
 .hp-work .work h3 { font-size: 16px; font-weight: 500; }
 .hp-work .work p { font-size: 15px; }
@@ -1710,10 +1708,6 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 .faq.hp .qa .q { color: var(--fg); }
 .faq.hp .qa .q > span { max-width: none; }
 .foot { padding-top: 160px; }
-/* A: no headings, hairline between sections */
-html.va .hp:not(.projects) { padding-top: 112px; }
-html.va .hp:not(.projects)::before { content: ""; display: block; height: .5px; background: var(--rule); margin-bottom: 48px; }
-html.va .faq.hp::before { margin-bottom: 24px; }
 .vsw { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 99; display: flex; gap: 2px; padding: 4px; border-radius: 99px; background: rgba(20,20,20,.86); backdrop-filter: blur(10px); font-size: 13px; }
 .vsw a { color: #aaa; padding: 6px 14px; border-radius: 99px; text-decoration: none; }
 .vsw a.on { background: #fff; color: #111; }
@@ -1809,8 +1803,8 @@ html.va .faq.hp::before { margin-bottom: 24px; }
 
   // sections kept in the page but switched off for now (flip to true to bring one back)
   const V = (new URLSearchParams(location.search).get("v") || "a").toLowerCase();
-  const SHOW = { howIWork: V !== "c" };
-  const HEAD = { a: {}, b: { work: "How I <b>work</b>", projects: "Things I’ve <b>made</b>", testi: "What people <b>say</b>", faq: "Things people <b>ask</b>" }, c: {} }[V] || {};
+  const SHOW = { howIWork: V !== "b" };
+  const HEAD = { work: "How I Work", projects: "Projects", testi: "Testimonials" };
   const HH = (k) => HEAD[k] ? `<p class="label hs">${HEAD[k]}</p>` : "";
 
   const footer = () => `
@@ -1880,10 +1874,9 @@ ${SHOW.howIWork ? `
       </div>
     </section>
 
-    ${V === "c" ? "" : `<section class="faq wrap hp">
-      ${HH("faq")}
+    <section class="faq wrap hp">
       ${faqs.map(([q, a], i) => `<div class="qa"><button type="button" class="q" aria-expanded="false" aria-controls="qa-${i}"><span>${q}</span><i class="ic" aria-hidden="true"></i></button><div class="a" id="qa-${i}" role="region"><div><p class="ans">${a}</p></div></div></div>`).join("")}
-    </section>`}`;
+    </section>`;
 
 
   // Animated covers. Wildlink: habitat patches settle in, corridors draw between them, a mountain lion walks the corridors.
@@ -3085,7 +3078,7 @@ document.addEventListener("focusin", e => { const t = e.target.closest && e.targ
   window.addEventListener("hashchange", () => setTimeout(run, 400));
 })();
 </script>
-<nav class="vsw" aria-label="Preview versions"><a href="?v=a#home" data-v="a">A · no headings</a><a href="?v=b#home" data-v="b">B · sentence headings</a><a href="?v=c#home" data-v="c">C · like the references</a></nav>
-<script>(()=>{const v=(new URLSearchParams(location.search).get("v")||"a").toLowerCase();document.documentElement.classList.add("v"+v);document.querySelectorAll(".vsw a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));})();</script>
+<nav class="vsw" aria-label="Preview versions"><a href="?v=a#home" data-v="a">With How I Work</a><a href="?v=b#home" data-v="b">Without How I Work</a></nav>
+<script>(()=>{const v=(new URLSearchParams(location.search).get("v")||"a").toLowerCase();document.querySelectorAll(".vsw a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));})();</script>
 </body>
 </html>
