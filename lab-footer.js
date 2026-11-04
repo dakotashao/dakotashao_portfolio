@@ -41,9 +41,10 @@ function clap() { const a = audio(); if (!a) return; const t = a.currentTime; fo
 function thud() { const a = audio(); if (!a) return; const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(48, t + .22); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.5, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + .35); o.connect(g).connect(a.destination); o.start(t); o.stop(t + .4); noiseHit(a, t, .06, 900, .25); }
 
 function scene(id, cfg) {
-  const card = document.getElementById(id), cv = document.createElement('canvas'); card.prepend(cv);
+  const card = document.getElementById(id); if (!card) return;
+  const cv = document.createElement('canvas'); card.prepend(cv);
   const c = cv.getContext('2d'); let W, H;
-  const S = { nid: 0, trk: [], snaps: [], c, wires: [], birds: [], mouse: null, m: { x: 0, y: 0 }, sm: { x: 0, y: 0 }, focus: .3, lastMove: performance.now() };
+  const S = { nid: 0, mid: 0, trk: [], snaps: [], c, wires: [], birds: [], mouse: null, m: { x: 0, y: 0 }, sm: { x: 0, y: 0 }, focus: .3, lastMove: performance.now() };
   function size() { const d = Math.min(1.5, devicePixelRatio || 1); W = card.clientWidth; H = card.clientHeight; cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0); S.W = W; S.H = H; }
   size();
   const gr = document.createElement('div'); gr.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:overlay;opacity:${cfg.grain || .07};background:url(${noiseTile(180, cfg.grainAmp || 90).toDataURL()})`; cv.after(gr);
@@ -113,7 +114,17 @@ function scene(id, cfg) {
     const hi = () => R(14, Math.max(30, H * .28));
     if (b.roam || Math.random() < .2) b.wps = [{ x: p.x + side * 120, y: p.y - 140 }, { x: side > 0 ? W + 80 : -80, y: hi() }];
     else b.wps = [{ x: p.x + side * R(70, 120), y: p.y - R(110, 150) }, { x: side > 0 ? W * R(.82, .96) : W * R(.04, .18), y: hi() }, { x: side > 0 ? W * R(.25, .45) : W * R(.55, .75), y: hi() }, 'home'];
-    if (cfg.track) { const z = R(26, 58); S.snaps.push({ x: p.x + R(-12, 12), y: p.y - 10 + R(-14, 8), w: z * R(.85, 1.3), h: z, t: now, life: R(4500, 8000) }); if (S.snaps.length > 40) S.snaps.shift(); }
+    if (cfg.track === 'ghost') {
+      // the detector keeps seeing the bird that just left; its confidence drains away
+      S.snaps.push({ x: p.x + R(-1, 1), y: p.y - 7, w: R(14, 18), h: R(18, 22), t: now, life: R(5000, 9000), c0: R(.55, .74), id: b.id, d: R(0, 600) });
+    } else if (cfg.track === 'motion') {
+      // motion detection: the patch of sky that changed gets boxed; nearby take-offs grow the same patch
+      const x0 = p.x - 14, y0 = p.y - 26, x1 = p.x + 14, y1 = p.y + 6;
+      const m = S.snaps.find(f => now - f.t < 900 && x0 < f.x1 + 30 && x1 > f.x0 - 30 && y0 < f.y1 + 30 && y1 > f.y0 - 30);
+      if (m) { m.x0 = Math.min(m.x0, x0); m.y0 = Math.min(m.y0, y0); m.x1 = Math.max(m.x1, x1); m.y1 = Math.max(m.y1, y1); m.t = now; m.n++; }
+      else S.snaps.push({ x0, y0, x1, y1, t: now, born: now, life: R(1800, 2600), n: 1, id: ++S.mid });
+    }
+    if (S.snaps.length > 60) S.snaps.shift();
     b.u = clamp(b.hu + R(-.025, .025), .04, .96);
     pluck(S.wires[b.wi], b.u, -1.1);
   }
@@ -227,8 +238,23 @@ function scene(id, cfg) {
   }
   function drawSnaps() {
     S.snaps = S.snaps.filter(f => now - f.t < f.life);
-    S.snaps.forEach(f => { const k = (now - f.t) / f.life, a = k < .06 ? k / .06 : 1 - Math.pow((k - .06) / .94, 1.6);
-      c.save(); c.globalAlpha = a; c.fillStyle = 'rgba(246,246,243,.38)'; c.fillRect(f.x - f.w / 2, f.y - f.h / 2, f.w, f.h); c.strokeStyle = 'rgba(26,26,25,.55)'; c.lineWidth = .5; c.strokeRect(f.x - f.w / 2 + .5, f.y - f.h / 2 + .5, f.w, f.h); c.restore(); });
+    c.save(); c.font = MONO; c.textBaseline = 'bottom'; c.strokeStyle = c.fillStyle = '#1a1a19';
+    S.snaps.forEach(f => {
+      if (cfg.track === 'ghost') {
+        const age = now - f.t - f.d; if (age < 0) return; const k = age / (f.life - f.d), conf = f.c0 * Math.pow(1 - k, 1.4);
+        const x = Math.round(f.x - f.w / 2 + R(-.4, .4)) + .5, y = Math.round(f.y - f.h / 2 + R(-.4, .4)) + .5;
+        if (conf < .2 && Math.random() < .25) return;      // flickers out as the detector gives up
+        c.globalAlpha = Math.min(1, age / 200) * (.25 + .6 * conf / f.c0); c.lineWidth = .6; if (conf < .3) c.setLineDash([2, 2]);
+        c.strokeRect(x, y, f.w, f.h); c.setLineDash([]); c.fillText(`bird? ${conf.toFixed(2)}`, x, y - 2);
+      } else {
+        const k = (now - f.born) / 1000, a = 1 - Math.pow(Math.max(0, (now - f.t) / f.life), 2);
+        const x = Math.round(f.x0) + .5, y = Math.round(f.y0) + .5, w = f.x1 - f.x0, h = f.y1 - f.y0;
+        c.globalAlpha = a * .8; c.lineWidth = .7; c.strokeRect(x, y, w, h);
+        c.globalAlpha = a * .06; c.fillRect(x, y, w, h); c.globalAlpha = a * .8;
+        c.fillText(`MOTION ${String(f.id).padStart(2, '0')}  Δ${k.toFixed(1)}s  n=${f.n}`, x, y - 2);
+      }
+    });
+    c.restore();
   }
   function drawTrk() {
     c.save(); c.font = MONO; c.textBaseline = 'bottom';
@@ -324,7 +350,14 @@ scene('v5', { grain: .08, depth: true,
   knockHit: (S, m) => Math.abs(m.x - (S.px - S.sm.x * 26)) < 16 && m.y > 36,
   perch: () => { const a = []; [[0, [.12, .26, .42]], [1, [.16, .32]], [4, [.22, .4]], [5, [.3, .6]], [2, [.3, .6]], [3, [.4, .72]], [6, [.4]], [8, [.5]]].forEach(([wi, us]) => us.forEach(u => a.push([wi, u, .85]))); return a; } });
 
-scene('v6', { grain: .22, grainAmp: 120, track: true, autoScare: true, scare: 46,
+scene('v6', { grain: .22, grainAmp: 120, track: 'ghost', autoScare: true, scare: 46,
+  sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9d9d5'); g.addColorStop(.6, '#e7e7e3'); g.addColorStop(1, '#dededa'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
+  build(S) { const W = S.W, H = S.H, px = W * .2;
+    [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, W + 10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
+  back(c, W, H) { const px = W * .2; c.fillStyle = '#222220'; c.beginPath(); c.moveTo(px - 5, H + 10); c.lineTo(px - 3, 54); c.lineTo(px + 3, 54); c.lineTo(px + 5, H + 10); c.fill(); c.fillRect(px - 34, 66, 68, 3); c.fillRect(px - 24, 100, 48, 2.5); },
+  perch: () => { const a = []; [[0, 9, .3, .95], [1, 7, .35, .9], [2, 6, .3, .85], [3, 5, .3, .9], [4, 4, .45, .9]].forEach(([wi, n, u0, u1]) => { for (let k = 0; k < n; k++) a.push([wi, u0 + (u1 - u0) * (k + R(.1, .9)) / n, R(.48, .56)]); }); return a; } });
+
+scene('v7', { grain: .22, grainAmp: 120, track: 'motion', autoScare: true, scare: 46,
   sky(c, W, H) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9d9d5'); g.addColorStop(.6, '#e7e7e3'); g.addColorStop(1, '#dededa'); c.fillStyle = g; c.fillRect(0, 0, W, H); },
   build(S) { const W = S.W, H = S.H, px = W * .2;
     [[-10, 92, W + 10, 40, 1.1], [-10, 128, W + 10, 84, 1], [-10, 160, W + 10, 122, 1], [px, 70, W + 10, 196, .8], [-10, 240, W + 10, 214, .9]].forEach(([ax, ay, bx, by, lw], i) => S.wires.push({ a: [ax, ay], b: [bx, by], lw, sag: i === 3 ? 18 : 10, wind: .5 })); },
