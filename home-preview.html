@@ -1696,17 +1696,14 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 /* PREVIEW: one rhythm for the lower half of home */
 .hp { padding-top: 128px; }
 .projects.hp { padding-top: 96px; padding-bottom: 0; }
-.hp > .label.hs { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-.projects.hp > .label.hs { margin-bottom: -44px; }
+.hp > .label.hs { font-size: 20px; line-height: 1.3; letter-spacing: -0.02em; color: var(--muted); margin-bottom: 24px; }
+.projects.hp > .label.hs { margin-bottom: -32px; }
 .hp-work .work { padding: 32px; min-height: 0; gap: 40px; }
 .hp-work .work h3 { font-size: 16px; font-weight: 500; }
 .hp-work .work p { font-size: 15px; }
 .testi.hp { padding-bottom: 0; }
-.testi.hp .tcard { padding: 0; gap: 32px 40px; }
+.testi.hp .tcard { padding: 0 0 88px; gap: 32px 40px; }
 .testi.hp .tquote { color: var(--fg); font-size: 17px; line-height: 1.45; letter-spacing: -0.02em; }
-.faq.hp { max-width: var(--maxw); padding: 128px var(--pad) 0; }
-.faq.hp .qa .q { color: var(--fg); }
-.faq.hp .qa .q > span { max-width: none; }
 .foot { padding-top: 160px; }
 .vsw { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 99; display: flex; gap: 2px; padding: 4px; border-radius: 99px; background: rgba(20,20,20,.86); backdrop-filter: blur(10px); font-size: 13px; }
 .vsw a { color: #aaa; padding: 6px 14px; border-radius: 99px; text-decoration: none; }
@@ -1874,7 +1871,7 @@ ${SHOW.howIWork ? `
       </div>
     </section>
 
-    <section class="faq wrap hp">
+    <section class="faq wrap">
       ${faqs.map(([q, a], i) => `<div class="qa"><button type="button" class="q" aria-expanded="false" aria-controls="qa-${i}"><span>${q}</span><i class="ic" aria-hidden="true"></i></button><div class="a" id="qa-${i}" role="region"><div><p class="ans">${a}</p></div></div></div>`).join("")}
     </section>`;
 
