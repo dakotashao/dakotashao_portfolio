@@ -210,8 +210,7 @@ html.pointer-mode .ruler:focus-visible { box-shadow: none; }
         t.l.style.transform = t.a > 0.05 ? `rotate(${t.a.toFixed(2)}deg)` : '';
         t.l.style.transformOrigin = `${t.x}px ${FOOT}px`;
       }
-      rod.style.height = (46 + st.lift.x).toFixed(2) + 'px';
-      rod.style.transform = Math.abs(st.swing.x) > 0.01 ? `rotate(${st.swing.x.toFixed(3)}deg)` : '';
+      rod.style.height = '46px'; rod.style.transform = '';   // the line stays put: no swing, no lift
       el.classList.toggle('is-hover', st.hover && !st.pressed && !st.dragging);
       el.classList.toggle('is-press', st.pressed && !st.moved);
       el.classList.toggle('is-drag', st.dragging && st.moved);
