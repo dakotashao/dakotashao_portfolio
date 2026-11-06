@@ -237,7 +237,7 @@
           t.l.style.transform = Math.abs(t.a) > 0.05 ? `rotate(${t.a.toFixed(2)}deg)` : '';
           t.l.style.transformOrigin = `${t.x}px ${FOOT_R}px`;
         }
-        rod.style.transform = Math.abs(st.swing.x) > 0.01 ? `rotate(${st.swing.x.toFixed(3)}deg)` : '';
+        rod.style.transform = '';   // the line stays put: no swing
       }
       const kn = st.knock ? st.knock.dir * st.knock.amp * kShape(st.knock.ms / KMS) / kNorm * a : 0;
       const half = (el.offsetWidth || 304) / 2, pv = st.knock && st.knock.dir > 0 ? -half : half;
