@@ -1692,6 +1692,19 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
 @media (prefers-reduced-motion:reduce){#app .cs24 .seal.in{animation:none}}
 #app .cs24 .ostat.cards3 .sealc{width:132px;height:132px;right:15px;top:-31px;transform:scale(.44);transform-origin:100% 0}
 #app .cs24 .ostat.cards3 .sealc .seal{zoom:1;will-change:transform,opacity;backface-visibility:hidden}
+
+/* home lower half: one rhythm, plain grey section titles */
+.hp { padding-top: 128px; }
+.projects.hp { padding-top: 96px; padding-bottom: 0; }
+.hp > .label.hs { font-size: 20px; line-height: 1.3; letter-spacing: -0.02em; color: var(--muted); margin-bottom: 24px; }
+.projects.hp > .label.hs { margin-bottom: -32px; }
+.hp-work .work { padding: 32px; min-height: 0; gap: 40px; }
+.hp-work .work h3 { font-size: 16px; font-weight: 500; }
+.hp-work .work p { font-size: 15px; }
+.testi.hp { padding-bottom: 0; }
+.testi.hp .tcard { padding: 0 0 88px; gap: 32px 40px; }
+.testi.hp .tquote { color: var(--fg); font-size: 17px; line-height: 1.45; letter-spacing: -0.02em; }
+.foot { padding-top: 160px; }
 </style>
 </head>
 <body>
@@ -1783,7 +1796,9 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
   const faqs = [["Are you open to relocation?", "Yes! I’m based in Los Angeles, but happy to move for the right opportunity."], ["What do you do when you get stuck?", "I try to find one small thing I can figure out and start there. That usually helps me get going again."], ["What do people usually come to you for?", "A fresh perspective and an honest answer."], ["What are you like to work with?", "Curious, direct, and pretty involved. I ask a lot of questions, catch small inconsistencies, and usually keep pushing until the logic feels right."], ["Do you code?", "Enough to prototype ideas, understand what’s feasible, and have much better conversations with engineers."], ["What do you do outside of design?", "I dance, play guitar, recently started learning drums, and I’m usually picking up something new just because I want to know how it works."], ["What’s something people don’t expect about you?", "I can be very systems-oriented in my work, but I’m also drawn to playful, weird, and slightly unexpected interactions."]];
 
   // sections kept in the page but switched off for now (flip to true to bring one back)
-  const SHOW = { howIWork: false };
+  const SHOW = { howIWork: true };
+  const HEAD = { work: "How I Work", projects: "Projects", testi: "Testimonials" };
+  const HH = (k) => HEAD[k] ? `<p class="label hs">${HEAD[k]}</p>` : "";
 
   const footer = () => `
     <footer class="foot" id="contact-block">
@@ -1804,8 +1819,8 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
         <span class="avatar av-fx" role="img" aria-label="Dakota"><img src="img/avatar-gray.webp" alt=""><canvas aria-hidden="true"></canvas></span>
         <h1 class="slg" data-t="Break it down,&#10;build it back">Break it down,<br>build it back</h1>
         <p><b class="who">I’m Dakota</b>, an interaction designer.</p><p class="cyc s-act">I think best when I’m making <span class="slot" role="text" aria-live="polite"></span>.</p>
-        <p class="prev"><i>Prev.</i> <a href="https://www.linkedin.com/company/baidu-inc/posts/?feedView=all" target="_blank" rel="noopener">Baidu</a>, <a href="https://www.24hrcares.com" target="_blank" rel="noopener">24Hour Homecare</a></p>
-        <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Works</a></div>
+        <p class="prev"><i>Prev.</i> <a href="https://www.linkedin.com/company/baidu-inc/posts/?feedView=all" target="_blank" rel="noopener">Baidu</a>, <a href="https://www.24hrcares.com" target="_blank" rel="noopener">24 Hour Home Care</a></p>
+        <div class="btns"><a class="btn dark" href="mailto:${EMAIL}">Get in touch</a><a class="btn" href="#works" data-scroll="works-list">Projects</a></div>
         <div class="hint">Press <kbd>⌘</kbd> + <kbd>⌥</kbd> to ask AI</div>
       </div>
     </section>
@@ -1814,21 +1829,10 @@ body.pg-scrolled .pg-search { background: color-mix(in srgb, var(--card) 86%, tr
       <p class="tsent">I sketch in ${tw("Figma","img/wl-cover.webp")}, build with ${tw("Claude Code","img/autumn-list.webp",0,"tall")},<br class="tbr"> ship on ${tw("GitHub","pg/rotation-slider--dominoes-drag.html",1)}, and play in ${tw("Unity","img/unity-heart.webp")}.</p>
     </section>
 
-${SHOW.howIWork ? `
-    <section class="wrap">
-      <p class="label">How I Work</p>
-      <div class="trio">
-        <div class="work"><div><h3>Build to believe it.</h3><p>My sharpest tool is a working prototype.</p></div>
-          <div class="tags"><span class="chip">code-based</span><span class="chip">AI-native</span><span class="chip">creative technology</span></div></div>
-        <div class="work"><div><h3>Ask why first</h3><p>The clarity isn't from speed. It's from purpose.</p></div>
-          <div class="tags"><span class="chip">product strategy</span><span class="chip">0-1</span><span class="chip">outcome-driven</span></div></div>
-        <div class="work"><div><h3>Mapping.<br>Structuring.<br>Defining.</h3><p>Before I design screens, I define relationships.</p></div>
-          <div class="tags"><span class="chip">enterprise UX</span><span class="chip">role-based</span><span class="chip">system design</span></div></div>
-      </div>
-    </section>` : ""}
 
-    <section class="projects wrap" id="works-list">
-      <p class="label">[ Projects ]</p>
+
+    <section class="projects wrap hp" id="works-list">
+      ${HH("projects")}
       ${PROJECTS.map((p) => `
         <${p.locked || p.closed ? `div class="proj${p.locked ? " locked" : " closed"}"` : `a class="proj" href="#work-${p.slug}"`}>
           <div class="shot" style="aspect-ratio:${p.ratio}">
@@ -1840,17 +1844,21 @@ ${SHOW.howIWork ? `
         </${p.locked || p.closed ? "div" : "a"}>`).join("")}
     </section>
 
-    <section class="wrap">
-      <p class="label">How I Think</p>
+${SHOW.howIWork ? `
+    <section class="wrap hp hp-work">
+      ${HH("work")}
       <div class="trio">
-        <div class="think"><div><h3>Calibrator</h3><p class="t">Question deeper,<br>Connect wider.</p></div><p class="d">I keep asking why until the answer stops changing.</p></div>
-        <div class="think"><div><h3>Navigator</h3><p class="t">Find the goal,<br>Cut the noise.</p></div><p class="d">Trying to satisfy everything has a cost. I prioritize the things that can actually change the outcome.</p></div>
-        <div class="think"><div><h3>Igniter</h3><p class="t">Make the first move</p></div><p class="d">I notice gaps, learn what's needed, and find a way forward. That's how I keep momentum alive.</p></div>
+        <div class="work"><div><h3>Build to believe it.</h3><p>My sharpest tool is a working prototype.</p></div>
+          <div class="tags"><span class="chip">code-based</span><span class="chip">AI-native</span><span class="chip">creative technology</span></div></div>
+        <div class="work"><div><h3>Ask why first</h3><p>The clarity isn't from speed. It's from purpose.</p></div>
+          <div class="tags"><span class="chip">product strategy</span><span class="chip">0-1</span><span class="chip">outcome-driven</span></div></div>
+        <div class="work"><div><h3>Mapping.<br>Structuring.<br>Defining.</h3><p>Before I design screens, I define relationships.</p></div>
+          <div class="tags"><span class="chip">enterprise UX</span><span class="chip">role-based</span><span class="chip">system design</span></div></div>
       </div>
-    </section>
+    </section>` : ""}
 
-    <section class="testi wrap">
-      <p class="label">Testimonial</p>
+    <section class="testi wrap hp">
+      ${HH("testi")}
       <div class="tcard">
         <div class="authors" role="tablist" aria-label="Testimonials">
           ${TESTIMONIALS.map((t, i) => `<button type="button" class="author${i === 0 ? " sel" : ""}" role="tab" aria-selected="${i === 0}" data-i="${i}"><img src="${t.img}" alt=""><span class="nr"><b>${t.name}</b><small>${t.role}</small></span></button>`).join("")}
