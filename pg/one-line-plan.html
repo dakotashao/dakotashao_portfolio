@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>One-Line Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400&display=swap">
+<style>
+/* Layout: one sentence is the menu. Colored words drop their options. Time length = minutes; square corners = selected (hover previews it). */
+:root{
+  --ground:#1D1D1D; --muted:#7D7D7D; --ink:#141414;
+  --lemon:#EAEA00; --cobalt:#0A1EFF; --lilac:#DCCBF7; --violet:#8E1FEF;
+  --tang:#FF5C0F; --amber:#FFA800; --cream:#F5F0E8; --green:#08A455; --lime:#C8E27A;
+  --font:"Hanken Grotesk","Helvetica Neue",Arial,sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+/* One-Line Plan (adv_interface_wk08, set 1) on its fixed 1020 × 600 stage; kit.js scales the stage into the card.
+   Rect maths below divide by Z (the card's scale) so placement matches the full-size original. */
+.stage{color-scheme:dark;color:var(--cream);font-family:var(--font);font-weight:300;background:var(--ground);overflow:hidden;padding:72px 44px 40px}
+
+.line{position:relative;z-index:2;font-size:40px;line-height:1;letter-spacing:-.015em;
+  display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:18px;max-width:100%}
+.word{white-space:nowrap}
+.slot{position:relative;display:inline-flex;align-items:baseline}
+.cm{margin-left:4px;white-space:nowrap}
+
+.sh{--c:var(--lemon);--fg:var(--ink);position:relative;height:54px;border:0;background:var(--c);color:var(--fg);
+  font:300 30px/1 var(--font);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:10px;
+  padding:0 22px 0 14px;cursor:pointer;border-radius:999px;outline:none;white-space:nowrap;overflow:hidden;vertical-align:middle;
+  transition:width .55s var(--spring),border-radius .2s ease,transform .14s ease,background .3s}
+.sh:active{transform:scaleY(.88)}
+.sh:focus-visible{box-shadow:0 0 0 3px var(--ground),0 0 0 4px var(--cream)}
+.sh .g{width:24px;height:24px;flex:none;display:grid;place-items:center;transition:transform .5s var(--spring)}
+.sh .g svg{width:24px;height:24px;overflow:visible}
+.sh:hover .g,.sh:focus-visible .g{transform:rotate(90deg)}
+.trig[aria-expanded="true"]{border-radius:27px 27px 0 0}
+.trig[aria-expanded="true"] .g{transform:rotate(180deg)}
+.timed{padding-left:22px;padding-right:18px}
+.timed .u{font-size:13px;align-self:flex-start;margin:13px 0 0 -6px;opacity:.7}
+.ticks{flex:1;display:flex;justify-content:space-evenly;align-items:center;height:100%;min-width:0}
+.ticks i{width:1.3px;height:14px;background:currentColor;flex:none;transition:transform .35s var(--spring),opacity .3s}
+.ticks i.q{height:26px}
+.ticks i.out{transform:scaleY(0) translateY(-8px);opacity:0}
+.list .timed{padding-right:34px}
+.caret{display:inline-block;width:1px;height:26px;background:currentColor;margin-left:-8px;opacity:0}
+.typing .caret{opacity:1;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.trig.gone{transform:scale(0);transition:transform .35s cubic-bezier(.5,0,.75,0)}
+.trig.ticking{transition:width .1s linear,transform .35s cubic-bezier(.5,0,.75,0);padding-left:18px}
+.trig.ticking .u{display:none}
+.trig.ticking .caret{display:none}
+.line>*{transition:opacity .4s}
+/* the last phrase stays together, so the start arrow never sits alone on a line */
+.trig .lk{margin-left:auto;padding-left:14px;font-size:13px;letter-spacing:.04em;opacity:0;transition:opacity .2s;flex:none;white-space:nowrap}
+.trig:hover .lk,.trig:focus-visible .lk{opacity:.55}
+.trig{min-width:max-content}
+.trig.ticking{min-width:0}
+/* time words: a tiny stacked hint tucked into the right padding */
+.trig.timed{padding-right:34px}
+.lk2{position:absolute;right:12px;top:50%;transform:translateY(-50%);padding:0;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10px;line-height:1;letter-spacing:0}
+.lk2 b{font-weight:400}
+.trig.ticking .lk{display:none}
+.tail{display:inline-flex;align-items:center;flex-wrap:wrap;column-gap:14px;row-gap:18px;max-width:100%}
+.tail>*{transition:opacity .4s}
+.running .tail>*:not(.active):not(.goslot){opacity:.25}
+.line>.done{max-width:0!important;opacity:0;overflow:hidden;transition:max-width .5s cubic-bezier(.6,0,.3,1),opacity .25s}
+.running .line>*:not(.active):not(:last-child){opacity:.25}
+
+/* dropdown: all filled; square = selected, and the one under the cursor squares up to preview */
+.list{position:absolute;left:0;top:54px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-top:8px;z-index:5}
+.list[hidden]{display:none!important}
+.list .sh{height:48px;font-size:22px;transform-origin:left top;animation:drop .45s var(--spring) both}
+.list .sh:nth-child(2){animation-delay:.035s}.list .sh:nth-child(3){animation-delay:.07s}.list .sh:nth-child(4){animation-delay:.105s}.list .sh:nth-child(5){animation-delay:.14s}
+@keyframes drop{from{transform:translateY(-14px) scaleX(.2);opacity:0}to{transform:none;opacity:1}}
+.list .sh[aria-checked="true"],.list .sh:hover,.list .sh:focus-visible{border-radius:0}
+.list .sh .k{position:absolute;right:14px;font-size:12px;opacity:.45;transition:opacity .2s}
+.list .sh:hover .k,.list .sh:focus-visible .k{opacity:1}
+.list .sh:not(.timed){padding-right:40px}
+.list .sec{font-size:11px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:10px 0 -2px 4px;animation:drop .45s var(--spring) both}
+.list .sec:first-child{margin-top:0}
+.tag{font-size:12px;line-height:1;padding:4px 9px 5px;border:1px solid currentColor;border-radius:999px;flex:none;opacity:.85;letter-spacing:.02em}
+.row{display:flex;gap:8px;flex-wrap:nowrap;animation:drop .45s var(--spring) both}
+.row .sh{animation:none}
+.crow{position:relative;display:flex;align-items:flex-start;animation:drop .45s var(--spring) both}
+.crow .sh{animation:none}
+.crow .sub{position:absolute;left:calc(100% + 8px);top:0;z-index:6;flex-direction:column;align-items:flex-start;gap:8px;margin:0}
+.crow .sub .sh{animation:side .4s var(--spring) both}
+.crow .sub .sh:nth-child(2){animation-delay:.04s}.crow .sub .sh:nth-child(3){animation-delay:.08s}.crow .sub .sh:nth-child(4){animation-delay:.12s}
+.cat .chev{width:18px;height:18px;display:grid;place-items:center;margin-left:-2px;transition:transform .45s var(--spring)}
+.cat .chev svg{width:18px;height:18px}
+.cat[aria-expanded="true"] .chev{transform:translateX(4px)}
+.list .cat:hover .g{transform:rotate(90deg)}
+.row[hidden]{display:none!important}
+.list .more{--c:var(--violet);--fg:#fff;width:48px;padding:0;justify-content:center;border-radius:50%}
+.list .sh.more,.list .sh.more:hover,.list .sh.more:focus-visible{padding:0;border-radius:50%}
+.list .more .k{display:none}
+.list .more[aria-expanded="true"] .g{transform:rotate(90deg)}
+@keyframes side{from{transform:translateX(-16px) scaleX(.2);opacity:0}to{transform:none;opacity:1}}
+
+
+
+.goslot{width:54px;height:54px;vertical-align:middle}
+.go{--c:var(--violet);--fg:#fff;position:absolute;left:0;top:0;z-index:4;width:auto;min-width:54px;padding:0 13px;justify-content:center;gap:0;transition:padding .5s var(--spring),gap .5s var(--spring),transform .14s ease}
+.go.flip{left:auto;right:0}
+.go.armed,.go.run{padding:0 24px 0 14px;gap:10px}
+.go svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:1.2;flex:none;transition:transform .5s var(--spring)}
+.go .nm{font-size:22px;max-width:0;overflow:hidden;transition:max-width .55s var(--spring)}
+.go.armed .nm,.go.run .nm{max-width:320px}
+.go:hover svg,.go:focus-visible svg{transform:translateX(4px)}
+.go .st{opacity:0;transform:scale(.3);transform-origin:14px 14px;transition:opacity .2s,transform .45s var(--spring)}
+.go .ar{transition:opacity .2s}
+.go.run:not(.paused) .ar{opacity:0}
+.go.run:not(.paused) .st{opacity:1;transform:none}
+.cancel{position:absolute;top:0;z-index:4;background:none;color:var(--cream);box-shadow:inset 0 0 0 1.2px var(--cream);padding:0 22px 0 14px;font-size:22px;animation:side .4s var(--spring) both}
+.cancel svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.3}
+.cancel:hover,.cancel:focus-visible{background:var(--cream);color:var(--ink);border-radius:0}
+.cancel[hidden]{display:none}
+/* when the line has no room on the right, the circle stays a circle and its label hangs just below it */
+.go.compact,.go.compact.armed,.go.compact.run{padding:0 13px;gap:0}
+.go.compact .nm{max-width:0!important}
+.gobelow{position:absolute;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;white-space:nowrap}
+.gobelow[hidden]{display:none}
+[hidden]{display:none!important}
+.gotag{--c:var(--violet);--fg:#fff;font-size:22px;padding:0 24px 0 14px;gap:10px;animation:side .4s var(--spring) both}
+.gotag svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:1.2;flex:none}
+.go.run:hover svg,.go.run:focus-visible svg{transform:none}
+
+
+.read{position:absolute;left:44px;right:44px;bottom:28px;font-size:14px;color:var(--muted)}
+
+.stage{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="stage" id="stage" data-w="1020" data-h="600">
+  <div class="line" id="line" role="menubar" aria-label="Plan">
+    <span class="word">I want to</span>
+    <span class="slot" data-k="act"></span>
+    <span class="word">for</span>
+    <span class="slot" data-k="focus"><span class="cm">,</span></span>
+    <span class="word">then</span>
+    <span class="slot" data-k="rest"></span>
+    <span class="word">for</span>
+    <span class="slot" data-k="brk"><span class="cm">,</span></span>
+    <span class="word">with</span>
+    <span class="tail">
+    <span class="slot" data-k="sound"></span>
+    <span class="slot"><button class="sh go" id="go" aria-label="Start this plan"><svg viewBox="0 0 28 28"><path class="ar" d="M4 14h20M16 6l8 8-8 8"/><path class="st" d="M11 7v14M17 7v14"/></svg><span class="nm" id="goLbl">Start</span></button><span class="gobelow" id="gobelow" hidden><button class="sh gotag" id="gotag" tabindex="-1"></button></span><button class="sh cancel" id="cancel" hidden><svg viewBox="0 0 28 28"><path d="M8 8l12 12M20 8 8 20"/></svg><span>Cancel</span></button></span>
+    </span>
+  </div>
+    <div class="read" id="read">Tap a colored word, or press A F B T S. Enter starts.</div>
+</div>
+
+<script src="kit.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+/* card scale: screen px per stage px */
+const Z=()=>KIT.scale||1;
+/* simple solid shapes, each one standing for what it names */
+const S=d=>`<svg viewBox="0 0 24 24" fill="currentColor">${d}</svg>`;
+const Ln=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+/* each list alternates: solid, line, solid, line... */
+const G={
+  read:S('<path d="M11 7 2 5v13l9 2z"/><path d="M13 7l9-2v13l-9 2z"/>'),       // solid: two open pages
+  write:Ln('<path d="M5 19 19 5M3 22h8"/>'),                                    // line: a pen stroke
+  draw:S('<path d="M12 2c-4 6-6 9-6 12a6 6 0 0 0 12 0c0-3-2-6-6-12z"/>'),        // solid: a drop of paint
+  code:Ln('<path d="M8 5l-6 7 6 7M16 5l6 7-6 7"/>'),                            // line: < >
+  study:S('<rect x="3" y="16" width="18" height="5"/><rect x="5" y="10" width="14" height="5"/><rect x="2" y="4" width="15" height="5"/>'), // solid: stack of books
+  walk:Ln('<path d="M2 12h20M14 4l8 8-8 8"/>'),                                 // line: forward
+  stretch:S('<rect x="1" y="8" width="22" height="8" rx="4"/>'),                // solid: a stretched pill
+  snack:Ln('<path d="M21 13a9 9 0 1 1-10-9 3.6 3.6 0 0 0 5 4.6A3.6 3.6 0 0 0 21 13z"/>'), // line: cookie with a bite
+  nap:S('<path d="M15 2a10 10 0 1 0 7 16A8.5 8.5 0 0 1 15 2z"/>'),              // solid: moon
+  rain:Ln('<path d="M6 3v10M12 9v13M18 5v10"/>'),                               // line: streaks
+  ocean:S('<path d="M1 19c2-9 9-9 11 0 2-9 9-9 11 0z"/>'),                     // solid: two crests
+  cafe:'<svg viewBox="0 0 24 24"><circle cx="7" cy="12" r="5" fill="currentColor"/><circle cx="17" cy="12" r="4.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>', // one solid, one hollow: two voices
+  noise:Ln('<path d="M12 21V3M12 21 5 6M12 21l7-15M12 21 1 12M12 21l11-9"/>'), // line: sunburst
+  none:Ln('<ellipse cx="12" cy="12" rx="10" ry="5"/>'),                         // line: flat oval, stands up on hover
+  library:S('<rect x="3" y="4" width="4" height="17"/><rect x="9" y="7" width="4" height="14"/><path d="M15 6l4-1 3 15-4 1z"/>'), // solid: books on a shelf
+  birds:Ln('<path d="M2 10q4-4 8 1 4-5 8-1M10 18q3-3 6 1 3-4 6-1"/>'),         // line: two wings
+  fire:S('<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 3-7 1 2 2 3 2 5 1-3 1-6 1-10z"/>'), // solid: flame
+  train:Ln('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/>'), // line: train front
+  thunder:S('<path d="M14 1 4 14h7l-2 9 11-14h-7z"/>'),                     // solid: lightning
+  nature:S('<path d="M1 18a11 11 0 0 1 22 0z"/>'),                               // solid: sun on the horizon
+  scene:Ln('<rect x="3" y="4" width="18" height="16"/><path d="M3 10h18M12 10v10"/>'),  // line: a window
+  more:Ln('<path d="M9 5l7 7-7 7"/>')                                          // line: opens the next level
+};
+const M={
+  act:{c:'--lemon',sel:'code',opts:[['read','read'],['write','write'],['draw','draw'],['code','code'],['study','study']]},
+  focus:{c:'--lilac',sel:45,timed:true,opts:[[15,'15 min'],[30,'30 min'],[45,'45 min'],[60,'60 min']]},
+  rest:{c:'--tang',sel:'stretch',opts:[['walk','take a walk'],['stretch','stretch'],['snack','grab a snack'],['nap','nap']]},
+  brk:{c:'--amber',sel:10,timed:true,opts:[[5,'5 min'],[10,'10 min'],[15,'15 min'],[20,'20 min']]},
+  sound:{c:'--cobalt',fg:'#fff',sel:'rain',
+    opts:[['rain','rain'],['ocean','ocean waves'],['cafe','café'],['library','library'],['noise','white noise'],['none','silence'],['birds','birds'],['thunder','thunder'],['train','train'],['fire','fireplace']],
+    /* first level: two categories that open, then two sounds you pick directly */
+    cats:[['nature',['rain','ocean','birds','thunder']],['scene',['cafe','library','train','fire']]],direct:['noise','none']}
+};
+/* letter keys open each word without the mouse */
+const IDLE='Tap a colored word, or press A F B T S. Enter starts.';
+const KEY={act:'A',focus:'F',rest:'B',brk:'T',sound:'S'};
+/* badge: a small dot marks what you used last time */
+/* sound groups get their own colors, like the blocks in the reference */
+const CC={nature:'--cobalt',scene:'--green'};
+const SC={rain:'--cobalt',ocean:'--cobalt',cafe:'--green',library:'--green',noise:'--lilac',none:'--lilac',birds:'--cobalt',thunder:'--cobalt',train:'--green',fire:'--green'};
+const colorOf=(k,v)=>k==='sound'?[SC[v],SC[v]==='--cobalt'?'#fff':'var(--ink)']:[M[k].c,M[k].fg||'var(--ink)'];
+let last={act:'write',focus:30,rest:'walk',brk:5,sound:'cafe'};
+let u=3, open=null, running=null;
+/* one scale for both time words: 0 min = 125px (just fits the label), 45 min and up = 204px (fixed cap) */
+const WMIN=125,WMAX=204;
+const W=m=>Math.round(WMIN+(Math.min(WMAX,($('#line')?.clientWidth||900)-20)-WMIN)*Math.min(m,45)/45);   /* 45 and 60 share the longest width */
+/* ruler: one tick per 5 min, a tall one every 15 */
+const ticks=m=>Array.from({length:Math.ceil(m/5)},(_,i)=>`<i${(i+1)%3===0?' class="q"':''}></i>`).join('');
+function setTicks(b,n){const T=b.querySelector('.ticks'),live=[...T.children].filter(x=>!x.classList.contains('out'));
+  live.slice(n).forEach(x=>{x.classList.add('out');setTimeout(()=>x.remove(),350)})}
+const label=(k,v)=>M[k].timed?`${v} min`:M[k].opts.find(o=>o[0]===v)[1];
+/* fine-tune with ← →: step and range per time word */
+const FINE={focus:{step:5,min:5,max:60},brk:{step:5,min:5,max:20}};   /* same 5-min unit everywhere */
+
+const timers=new WeakMap();
+function typeTo(el,target){
+  const t=el.querySelector('.t');clearInterval(timers.get(el));el.classList.add('typing');
+  timers.set(el,setInterval(()=>{const cur=t.textContent;
+    if(cur===target){clearInterval(timers.get(el));el.classList.remove('typing');return}
+    t.textContent=target.startsWith(cur)?target.slice(0,cur.length+1):cur.slice(0,-1)},34));
+}
+function makeTrig(slot){
+  const k=slot.dataset.k,d=M[k];
+  const b=document.createElement('button');
+  b.className='sh trig'+(d.timed?' timed':'');b.setAttribute('aria-haspopup','menu');b.setAttribute('aria-expanded','false');
+  b.style.setProperty('--c',`var(${d.c})`);if(d.fg)b.style.setProperty('--fg',d.fg);
+  b.innerHTML=(d.timed?'':`<span class="g"></span>`)+`<span class="t"></span><span class="caret"></span>${d.timed?`<small class="lk lk2"><b>${KEY[k]}</b><b>←→</b></small>`:`<small class="lk">${KEY[k]}</small>`}`;
+  /* the shortcut shows in the hint line, never on top of the word */
+  const NAME={act:'activity',focus:'focus time',rest:'break',brk:'break time',sound:'sound'};
+  const hint=()=>{if(!open&&!running)$('#read').textContent=`${NAME[k]}: press ${KEY[k]} to open`+(d.timed?' · ← → adds or removes 5 min':'')};
+  const back=()=>{if(!open&&!running)$('#read').textContent=IDLE};
+  b.addEventListener('mouseenter',hint);b.addEventListener('focus',hint);b.addEventListener('mouseleave',back);b.addEventListener('blur',back);
+  b.onclick=e=>{e.stopPropagation();toggle(k)};
+  const L=document.createElement('div');L.className='list';L.setAttribute('role','menu');L.hidden=true;L.onclick=e=>e.stopPropagation();
+  slot.prepend(b);slot.append(L);render(k,false);
+}
+/* start label: grows to the right when the line has room, otherwise hangs below the circle */
+function setLbl(t){$('#goLbl').textContent=t;placeGo()}
+function placeGo(){const go=$('#go'),slot=go.parentElement;if(!slot.classList.contains('goslot'))return;
+  const nm=go.querySelector('.nm'),c=$('#cancel'),below=$('#gobelow'),tag=$('#gotag');
+  const paused=running==='paused';
+  const need=nm.scrollWidth+80+(paused?170:0);
+  const room=($('#stage').getBoundingClientRect().right-slot.getBoundingClientRect().left)/Z()-48;
+  const compact=room<need;go.classList.toggle('compact',compact);
+  /* paused with no room on the right: the circle steps out, and "Continue · N min" + Cancel sit on their own row under the sentence */
+  const row=compact&&paused;
+  go.style.visibility=row?'hidden':'';below.hidden=!row;tag.hidden=!row;
+  tag.innerHTML='<svg viewBox="0 0 28 28"><path d="M4 14h20M16 6l8 8-8 8"/></svg><span>'+nm.textContent+'</span>';
+  if(row){const lr=$('#line').getBoundingClientRect(),sr=slot.getBoundingClientRect();
+    below.style.left=(lr.left-sr.left)/Z()+'px';below.style.width=lr.width/Z()+'px';below.style.top=((lr.bottom-sr.top)/Z()+18)+'px';
+    if(c.parentElement!==below)below.appendChild(c);c.style.position='static'}
+  else if(!c.hidden){if(c.parentElement!==slot)slot.appendChild(c);c.style.position='';c.style.top='0';c.style.left=(go.offsetWidth+10)+'px'}}
+function render(k,animate=true){
+  const b=$(`.slot[data-k="${k}"] .trig`),d=M[k];
+  if(d.timed)b.style.width=W(d.sel)+'px';
+  else b.querySelector('.g').innerHTML=G[d.sel];
+  if(k==='sound'){const [cc,fg]=colorOf(k,d.sel);b.style.setProperty('--c',`var(${cc})`);b.style.setProperty('--fg',fg)}
+  const txt=label(k,d.sel);
+  animate?typeTo(b,txt):b.querySelector('.t').textContent=txt;
+  if(!running){setLbl(`Start · ${M.focus.sel+M.brk.sel} min`)}
+}
+function toggle(k){if(running)return;open===k?close():openList(k)}
+function item(k,v,i,d){
+  const o=document.createElement('button');o.className='sh'+(d.timed?' timed':'');o.setAttribute('role','menuitemradio');
+  o.setAttribute('aria-checked',v===d.sel);const [cc,fg]=colorOf(k,v);o.style.setProperty('--c',`var(${cc})`);o.style.setProperty('--fg',fg);
+  const dot=v===last[k]?'<span class="tag">last</span>':'';
+  if(d.timed){o.style.width=W(v)+'px';o.innerHTML=`<span>${v} min</span>${dot}`}
+  else o.innerHTML=`<span class="g">${G[v]}</span><span>${label(k,v)}</span>${dot}`;
+  if(i)o.insertAdjacentHTML('beforeend',`<span class="k">${i}</span>`);
+  o.onclick=()=>pick(k,v);return o;
+}
+let order=[];
+function openList(k){
+  close();open=k;const slot=$(`.slot[data-k="${k}"]`),L=slot.querySelector('.list'),d=M[k];L.innerHTML='';order=[];
+  const add=(el,v)=>{el.style.animationDelay=(L.children.length*30)+'ms';L.appendChild(el);if(v!==undefined)order.push([v,el])};
+  if(d.cats){
+    /* a category pill opens its sounds in a row to its right, in the category's color */
+    d.cats.forEach(([cat,vals])=>{
+      const r=document.createElement('div');r.className='crow';
+      const cb=document.createElement('button');cb.className='sh cat';cb.setAttribute('aria-haspopup','menu');cb.setAttribute('aria-expanded','false');
+      cb.setAttribute('aria-checked',vals.includes(d.sel));
+      cb.style.setProperty('--c',`var(${CC[cat]})`);cb.style.setProperty('--fg',CC[cat]==='--cobalt'?'#fff':'var(--ink)');
+      cb.innerHTML=`<span class="g">${G[cat]}</span><span>${cat}</span><span class="chev">${G.more}</span><span class="k">${order.length+1}</span>`;
+      const sub=document.createElement('div');sub.className='row sub';sub.setAttribute('role','menu');sub.hidden=true;
+      vals.forEach(v=>sub.appendChild(item(k,v,0,d)));
+      const show=v=>{if(v)$$('.crow .sub').forEach(x=>{if(x!==sub){x.hidden=true;x.previousSibling.setAttribute('aria-expanded','false')}});
+        sub.hidden=!v;cb.setAttribute('aria-expanded',v);
+        if(v){const wide=Math.max(...[...L.children].map(c=>c.offsetWidth));sub.style.left=(wide+8)+'px';   /* clear the widest first-level item */
+          const subW=Math.max(...[...sub.children].map(c=>c.offsetWidth)),sr=$('#stage').getBoundingClientRect(),right=(r.getBoundingClientRect().left-sr.left)/Z()+wide+8+subW,lim=sr.width/Z()-16;
+          if(right>lim)L.style.left=(parseFloat(L.style.left)||0)-(right-lim)+'px'}};
+      cb.onmouseenter=()=>show(true);cb.onclick=()=>{show(true);sub.querySelector('.sh').focus()};
+      cb.showSub=show;cb.subRow=sub;
+      r.append(cb,sub);add(r);order.push(['more',cb]);
+    });
+    d.direct.forEach(v=>add(item(k,v,order.length+1,d),v));
+  } else d.opts.forEach(([v],i)=>add(item(k,v,i+1,d),v));
+  L.hidden=false;slot.querySelector('.trig').setAttribute('aria-expanded','true');
+  L.style.left='0px';const sr=$('#stage').getBoundingClientRect(),lr=L.getBoundingClientRect();
+  const over=(lr.right-sr.left)/Z()-(sr.width/Z()-16);if(over>0)L.style.left=(-over)+'px';
+  $('#read').textContent=(d.timed?'← → adds or removes 5 min · ':'')+'Square = your choice · press a number to pick, Esc to close.';
+}
+function close(){if(!open)return;const s=$(`.slot[data-k="${open}"]`);s.querySelector('.list').hidden=true;
+  s.querySelector('.trig').setAttribute('aria-expanded','false');open=null;if(!running)$('#read').textContent=IDLE}
+function pick(k,v){M[k].sel=v;close();render(k)}
+document.addEventListener('click',e=>{if(open){close();e.stopPropagation();return}if(!running)$('#go').classList.remove('armed')});
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const key=e.key.toUpperCase();
+  if(e.key==='Escape'&&open){const t=$(`.slot[data-k="${open}"] .trig`);close();t.focus();return}
+  if(open&&/^[1-9]$/.test(e.key)){const o=order[+e.key-1];if(!o)return;
+    if(o[0]==='more'){o[1].showSub(true);o[1].subRow.querySelector('.sh').focus()}else pick(open,o[0]);return}
+  if(open&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();
+    const items=[...$(`.slot[data-k="${open}"] .list`).querySelectorAll('.sh')].filter(x=>x.offsetParent),i=items.indexOf(document.activeElement);
+    items[(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length].focus();return}
+  /* ← → step a time word down or up, from its list or when it has focus */
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    const tk=open&&M[open].timed?open:document.activeElement?.closest?.('.slot')?.dataset.k;
+    if(tk&&M[tk].timed&&!running){e.preventDefault();
+      const f=FINE[tk],nv=Math.min(f.max,Math.max(f.min,M[tk].sel+(e.key==='ArrowRight'?f.step:-f.step)));
+      if(nv===M[tk].sel)return;
+      M[tk].sel=nv;render(tk);
+      if(open===tk)order.forEach(([v,el])=>el.setAttribute('aria-checked',v===nv));
+      return}}
+  const k=Object.keys(KEY).find(x=>KEY[x]===key);
+  if(k&&!running){e.preventDefault();open===k?close():openList(k);return}
+  if(e.key==='Enter'&&!open&&(document.activeElement===document.body||document.activeElement===$('#go'))){e.preventDefault();$('#go').click()}
+});
+
+
+/* run: each time shape shrinks smoothly into a circle, then disappears; the step in progress stays lit (demo: 1 s = 1 min)
+   the button pauses; a paused plan can continue or be cancelled */
+let RS=null;
+const STEPS=[['focus','act'],['brk','rest']];
+function begin(){const [k,a]=STEPS[RS.i],b=$(`.slot[data-k="${k}"] .trig`);
+  $$('.slot').forEach(s=>s.classList.remove('active'));
+  [k,a].forEach(x=>$(`.slot[data-k="${x}"]`).classList.add('active'));
+  b.classList.add('ticking');RS.cur={b,total:M[k].sel,left:M[k].sel,w0:b.offsetWidth}}
+function tick(){const c=RS.cur;
+  c.left=Math.max(0,c.left-.1);
+  c.b.style.width=Math.round(54+(c.w0-54)*c.left/c.total)+'px';
+  c.b.querySelector('.t').textContent=Math.ceil(c.left);
+  if(c.left<=0){collapse(RS.i);RS.i++;
+    if(RS.i>=STEPS.length){clearInterval(running);setTimeout(stop,600);return}
+    begin()}}
+const minsLeft=()=>Math.ceil(RS.cur.left)+(RS.i===0?M.brk.sel:0);
+function resume(){running=setInterval(tick,100);$('#go').classList.remove('paused');$('#cancel').hidden=true;
+  setLbl('Pause');$('#read').textContent='Demo speed: one second is one minute.'}
+function pause(){clearInterval(running);running='paused';$('#go').classList.add('paused');
+  $('#cancel').hidden=false;setLbl(`Continue · ${minsLeft()} min`);
+  $('#read').textContent='Paused. Continue where you left off, or cancel the plan.'}
+$('#go').onclick=e=>{e.stopPropagation();close();
+  if(running==='paused')return resume();
+  if(running)return pause();
+  RS={i:0};begin();
+  last={act:M.act.sel,focus:M.focus.sel,rest:M.rest.sel,brk:M.brk.sel,sound:M.sound.sel};
+  $('#stage').classList.add('running');$('#go').classList.add('run');resume();
+};
+$('#cancel').onclick=e=>{e.stopPropagation();stop()};
+/* a finished half of the sentence folds away; the rest slides forward */
+const CLAUSE=[[0,1,2,3,4],[5,6,7]];   /* commas live inside their time slot, so they never wrap alone */
+function collapse(n){const kids=[...$('#line').children];
+  CLAUSE[n].forEach(j=>{const el=kids[j];el.style.maxWidth=el.offsetWidth+'px';void el.offsetWidth;el.classList.add('done');
+    setTimeout(()=>{if(el.classList.contains('done'))el.hidden=true},520)})}
+function stop(){clearInterval(running);running=null;RS=null;$('#go').classList.remove('run','armed','paused');$('#cancel').hidden=true;$('#gobelow').hidden=true;
+  [...$('#line').children].forEach(el=>{el.hidden=false;el.classList.remove('done');el.style.maxWidth=''});
+  $('#stage').classList.remove('running');$$('.slot').forEach(s=>s.classList.remove('active'));
+  $$('.trig').forEach(b=>b.classList.remove('gone','ticking'));
+  render('focus');render('brk');$('#read').textContent=IDLE}
+
+function scale(){placeGo();
+  ['focus','brk'].forEach(k=>$(`.slot[data-k="${k}"] .trig`).style.width=W(M[k].sel)+'px')}
+$$('.slot[data-k]').forEach(makeTrig);
+/* start: one circle in the sentence; on hover the label grows over the page, away from the edge, without moving anything */
+{const go=$('#go');go.parentElement.classList.add('goslot');
+  const grow=()=>{go.classList.remove('flip');go.classList.add('armed')};
+  const shrink=()=>{if(!running)go.classList.remove('armed');placeGo()};
+  const slot=go.parentElement;
+  slot.addEventListener('mouseenter',()=>{grow();placeGo()});go.addEventListener('focus',()=>{grow();placeGo()});
+  slot.addEventListener('mouseleave',shrink);go.addEventListener('blur',shrink);
+  $('#gotag').onclick=e=>{e.stopPropagation();go.click()};}
+addEventListener('resize',scale);scale();
+document.fonts&&document.fonts.ready.then(scale);
+
+/* reset to the original's opening sentence */
+const START={act:'code',focus:45,rest:'stretch',brk:10,sound:'rain'};
+window.__card={reset(){stop();close();Object.keys(START).forEach(k=>{M[k].sel=START[k];render(k,false)});last={act:'write',focus:30,rest:'walk',brk:5,sound:'cafe'}}};
+/* demo: change the activity, shorten focus, pick a sound through a category, start, pause, cancel */
+KIT.demo(async c=>{
+  const opt=(k,txt)=>[...$(`.slot[data-k="${k}"] .list`).querySelectorAll('.sh')].find(b=>b.textContent.trim().startsWith(txt));
+  const trig=k=>$(`.slot[data-k="${k}"] .trig`);
+  await c.click(...c.at(trig('act')),700); await c.wait(500);
+  await c.move(...c.at(opt('act','write'),.4)); await c.wait(250);
+  await c.move(...c.at(opt('act','read'),.4)); await c.wait(250);
+  await c.click(...c.at(opt('act','read'),.4)); await c.wait(700);
+  await c.click(...c.at(trig('focus'))); await c.wait(500);
+  await c.move(...c.at(opt('focus','30'),.5)); await c.wait(250);
+  await c.click(...c.at(opt('focus','15'),.5)); await c.wait(900);
+  await c.click(...c.at(trig('sound'))); await c.wait(450);
+  const nat=$('.slot[data-k="sound"] .cat');
+  await c.move(...c.at(nat,.5)); await c.wait(500);
+  await c.move(...c.at(nat,.97)); 
+  const oc=[...nat.subRow.children].find(b=>b.textContent.includes('ocean'));
+  await c.move(...c.at(oc,.5)); await c.wait(250);
+  await c.click(...c.at(oc,.5)); await c.wait(900);
+  await c.click(...c.at('#go')); await c.wait(4200);
+  await c.click(...c.at('#go',.3)); await c.wait(1200);
+  const cn=$('#cancel'); await c.click(...c.at(cn.hidden?'#go':cn,.4)); await c.wait(900);
+  await c.leave();
+},{tint:'#8E1FEF',reset(){window.__card.reset()}});
+</script>
+
+</body>
+</html>
