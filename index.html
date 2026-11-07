@@ -2231,8 +2231,6 @@ function run(){
   const H = {"one-line-plan": 600, "autumn-full-bleed": 680, "avant-garde-booklet": 260, "dominoes-list--rows": 420, "dominoes-list--tape": 404, "dominoes-list--wheel": 408, "film": 259, "fling-loader-indeterminate": 600, "fling-loader": 600, "fluid-interface": 440, "information-has-weight": 520, "liquid-glass": 440, "liquid-sliders--fade-out": 300, "liquid-sliders--rain": 300, "liquid-sliders--sleep-timer": 300, "liquid-sliders--volume": 300, "mix-of-615": 340, "notifications-pile-up": 640, "push-loader--determinate": 380, "push-loader--indeterminate": 380, "reading-pile": 640, "resolving-data--badge-content": 300, "resolving-data--badge-dot": 300, "resolving-data--tooltip-plain": 380, "resolving-data--tooltip-rich": 380, "rotation-slider--domino-stacks": 300, "rotation-slider--dominoes-drag": 300, "rotation-slider--plumb-bob": 300, "selection-has-weight--checkbox": 340, "selection-has-weight--radio": 340, "selection-has-weight--toggle": 340, "tide-loader--smooth-endless": 420, "tide-loader--smooth": 420, "tide-loader--strips-endless": 420, "tide-loader--strips": 420, "weight-sliders--balance-usage": 320, "weight-sliders--balance-visible": 320, "weight-sliders--keep-for": 320, "weight-sliders--lever-usage": 320, "weight-sliders--lever-visible": 320, "weight-sliders--offline-downloads": 320};
   
   const ITEMS = [
-    { slug:"one-line-plan", name:"One-Line Plan", type:"Menus", week:8, verb:"Tap", url:"adv_interface_wk08/one-line-plan/",
-      say:"A plan written as one sentence. Each colored word drops its own options, and time words are as long as their minutes. Start it and the finished half folds away." },
     { slug:"dominoes-list--rows", name:"Dominoes List", type:"Lists", week:5, verb:"Drag", url:"adv_interface_wk05/domino-list/",
       say:"Photo edits as a list. Drag a row sideways and it turns into a slider. Hold the title to peek at the original." },
     { slug:"autumn-full-bleed", name:"Autumn", type:"Lists", week:5, verb:"Hover",
@@ -2295,6 +2293,8 @@ function run(){
     { name:"Resolving Badge", type:"Badges & Tooltips", week:2, tone:"Nostalgic", verb:"Click",
       say:"Click and the number scrambles before it locks in, like an old terminal.", url:"adv_interface_wk02/nostalgic/",
       axes:[["Type",["Content","Dot"]]], grid:["resolving-data--badge-content","resolving-data--badge-dot"] },
+    { slug:"one-line-plan", name:"One-Line Plan", type:"Menus", week:8, verb:"Tap", url:"adv_interface_wk08/one-line-plan/",
+      say:"A plan written as one sentence. Each colored word drops its own options, and time words are as long as their minutes. Start it and the finished half folds away." },
   ];
   
   const CARD_H = { "one-line-plan": 320, "avant-garde-booklet": 340, "mix-of-615": 400, "liquid-dial": 340 };
