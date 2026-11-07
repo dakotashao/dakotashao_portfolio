@@ -230,7 +230,7 @@
         const W = winW();
         rod.style.left = (134 + W / 2) + 'px';
         // without the pill the line stops short of the row's edges, so lines in neighbouring rows don't join up
-        const rh = 28 + 20 * a; rod.style.height = rh.toFixed(2) + 'px'; rod.style.top = ((48 - rh) / 2).toFixed(2) + 'px';
+        rod.style.height = '48px'; rod.style.top = '0px';   // full height from the start: the line never grows
         tape.style.transform = `translateX(${offX().toFixed(2)}px)`;
         for (const t of ticks) {
           t.l.classList.toggle('on', Math.abs(t.a) > 1);
@@ -244,6 +244,16 @@
       const ty = st.dip.x + st.hit.x;
       el.style.transform = Math.abs(st.prot.x) + Math.abs(ty) + Math.abs(kn) > 0.002
         ? `translateY(${ty.toFixed(2)}px) rotate(${st.prot.x.toFixed(3)}deg) translateX(${pv}px) rotate(${kn.toFixed(3)}deg) translateX(${-pv}px)` : '';
+      // the line stays put on screen: undo the row's and the list's tilt, dip and knock for the line only
+      if (vis > 0.005) {
+        const full = n => { const cs = getComputedStyle(n); if (cs.transform === 'none') return new DOMMatrix();
+          const [x, y] = cs.transformOrigin.split(' ').map(parseFloat);
+          return new DOMMatrix().translate(x, y).multiply(new DOMMatrix(cs.transform)).translate(-x, -y); };
+        const list = el.offsetParent, P = new DOMMatrix().translate(el.offsetLeft, el.offsetTop);
+        const G = (list ? full(list) : new DOMMatrix()).multiply(P).multiply(full(el)).inverse().multiply(P);
+        const ox = parseFloat(rod.style.left) || 0;
+        rod.style.transform = new DOMMatrix().translate(-ox, 0).multiply(G).translate(ox, 0).toString();
+      } else rod.style.transform = '';
     }
 
     (() => { const tg = targets(); ticks.forEach((t) => { t.a = tg[t.i]; t.v = 0; }); st.nFallen = nDown(); })();
