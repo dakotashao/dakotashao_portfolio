@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" data-theme="light"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weight Sliders · Offline downloads</title>
@@ -100,6 +100,175 @@ html.pointer-mode .ball:focus-visible, html.pointer-mode #s-vol .ball:focus-visi
 .srow.probing .val { opacity: 0; }
 #v-aud, #v-prec, #v-prec2 { display: none; }
 .tip { display: none; }
+
+/* ---------- Outline pass: the original Storage engine, drawn as a line drawing on black.
+   One contour per slider wraps the rope, its two pins and the value, and is recomputed every frame from where they
+   really are, so it stretches with them: the number lifting on hover pushes it up; a hop pulls it into a triangle. ---------- */
+:root {
+  --o-bg: #0e0e0e; --o-ink: #ffffff; --o-mid: #8a8a8f; --o-faint: #3a3a3e; --o-hover: #1c1c1f;
+  --bg: var(--o-bg) !important; --card: transparent !important; --panel: var(--o-bg) !important; --panel-line: transparent !important;
+  --ink: var(--o-ink) !important; --muted: var(--o-mid) !important; --line: var(--o-faint) !important; --press: var(--o-hover) !important;
+  --rail: var(--o-mid) !important; --stop: var(--o-mid) !important; --fill-a: var(--o-ink) !important; --fill-b: var(--o-ink) !important;
+  --solid: var(--o-ink) !important; --tip-bg: var(--o-ink) !important; --tip-ink: var(--o-bg) !important; --ball-shadow: 0, 0, 0 !important;
+  --card-shadow: none !important; color-scheme: dark !important;
+}
+/* White version: the same drawing, inverted. */
+:root[data-theme="light"] { --o-bg: #ffffff; --o-ink: #111113; --o-mid: #8c8c92; --o-faint: #dcdce0; --o-hover: #f2f2f4; color-scheme: light !important; }
+body { background: var(--bg); }
+.list { background: none; box-shadow: none; border: 1px solid var(--o-faint); padding: 12px 8px 16px; }   /* the card, drawn as a line like everything else */
+.srow { position: relative; background: none; box-shadow: none; }
+.srow + .srow { margin-top: 44px; }
+.srow > .olsvg { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.olsvg.under { z-index: 0; } .olsvg.over { z-index: 2; }
+.olsvg .c-out { fill: var(--o-ink); stroke: var(--o-ink); stroke-linejoin: round; opacity: .42; transition: opacity 180ms ease; }
+.srow.is-live .olsvg .c-out { opacity: 1; }   /* the container steps back at rest, comes forward while you hover, hold or focus it */
+.olsvg .c-in { fill: var(--o-bg); stroke: var(--o-bg); stroke-linejoin: round; }
+.sl .pin { fill: var(--o-bg); stroke: var(--o-ink); stroke-width: 1.5; transition: opacity 120ms ease; }
+.srow > .sl, .srow > .head { position: relative; z-index: 1; }
+/* Head room: the words sit high enough that a hop (the contour's highest reach) never crosses them. */
+.sl { margin-top: 38px; }
+/* Line hierarchy: solid ink = the one thing that carries the value; dotted = rope still free; hollow = a fixed point. */
+.sl .rail { stroke: var(--o-mid); stroke-width: 1.5; stroke-dasharray: 0.01 5; stroke-linecap: round; }
+.sl .fill { stroke-width: 1.5; }
+.sl .stopdot, .sl .stopdot.under { r: 2.5px; fill: var(--o-bg); stroke: var(--o-mid); stroke-width: 1; opacity: 1; }
+.sl .stopdot.under { stroke: var(--o-ink); }
+.ball, #s-vol .ball, #s-freq .ball { background: var(--o-bg); box-shadow: inset 0 0 0 1.5px var(--o-ink), 0 0 0 2px var(--o-bg) !important; }
+html:not(.pointer-mode) .ball:focus-visible { box-shadow: inset 0 0 0 1.5px var(--o-ink), 0 0 0 2px var(--o-bg), 0 0 0 3.5px var(--o-ink) !important; }
+
+.stops > span, :root[data-theme] .stops > span { color: var(--muted); }
+.stops > span.on, :root[data-theme] .stops > span.on { color: var(--ink); }
+.dock { background: none; box-shadow: none; }
+.btn { background: none; box-shadow: inset 0 0 0 1px var(--o-faint); color: var(--ink); }
+.btn:hover { background: var(--o-hover); }
+.check input { accent-color: var(--o-ink); }
+#spec-btn { display: none; }
+.parked { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; overflow: hidden; visibility: hidden; }
+
+/* ---------- Thick-track pass: the rope itself is the control. ----------
+   A 26 track (a 1 edge round it) that bends with the rope's weight; the filled part is a 20 bar inset in it; the number
+   rides at the end of the fill as the handle. No pins, no knob, no dotted rope. When the number hops, the track's skin is
+   pulled after it (the hull) and lets go when it lands. */
+:root { --o-surface: #232327; --o-edge: #36363c; --panel: var(--o-surface) !important; }
+:root[data-theme="light"] { --o-surface: #ededf0; --o-edge: #dadade; }
+.sl .pin { display: none; }
+.ball, #s-vol .ball, #s-freq .ball { opacity: 1; width: 12px; height: 12px; margin: -6px 0 0 -6px; background: var(--o-surface); box-shadow: inset 0 0 0 1.5px var(--o-ink), 0 0 0 2px var(--o-surface) !important; }
+/* the knob is back (as in Outline): a small ring on the rope. Docked, the number sits over it; hovered, the number
+   hops up and the ring is left on the line, marking where the value is */
+.sl .rail, .sl .fill { visibility: hidden; }   /* the engine still computes them; the track is redrawn below from the same rope */
+.sl .trk, .sl .fil { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sl .trk { stroke: var(--o-surface); stroke-width: 12; }
+.sl .fil { stroke: var(--o-ink); stroke-width: 1.5; }   /* the filled part is a line again, as in Outline */
+.sl .edge { fill: none; stroke: var(--o-edge); stroke-width: 28; stroke-linecap: round; stroke-linejoin: round; }
+.sl .rail { stroke: var(--o-surface); stroke-width: 26; stroke-dasharray: none; stroke-linecap: round; stroke-linejoin: round; }
+.sl .fill { stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
+.sl .stopdot, .sl .stopdot.under { r: 2.5px; fill: var(--o-surface); stroke: var(--o-mid); stroke-width: 1; opacity: 1; }   /* hollow, as in Outline, so a stop reads apart from the dots */
+.sl .stopdot.under { fill: var(--o-ink); stroke: var(--o-surface); }
+.sl .edge { display: none; }   /* the track's skin is the contour: it wraps the track and whatever the number does */
+/* the grey body is the frame: it is the rope grown by 6 all round, so its edge stands 6 off the number and the fill */
+.olsvg .c-out, .srow.is-live .olsvg .c-out { fill: var(--o-edge); stroke: var(--o-edge); opacity: 1; }
+.olsvg .c-in { fill: var(--o-surface); stroke: var(--o-surface); }
+/* the rope still to go, dotted (from Outline): it shows the whole rope and its sag on both sides of the number */
+.sl .trk { display: inline; stroke: var(--o-mid); stroke-width: 1.5; stroke-dasharray: 0.01 5; }
+.sl { margin-top: 18px; }
+#s-freq .stops { top: 42px; }
+.list { padding-top: 22px; }
+/* Rows back in their own panels (as in the original Week 4 card): title on the card, each slider in a panel.
+   Inset: the bar's body is cut into the panel (it takes the card's ground colour), so the bar reads as a groove. */
+:root { --o-panel: #1c1c20; --o-surface: #0e0e0e; }
+:root[data-theme="light"] { --o-panel: #f1f1f4; --o-surface: #ffffff; }
+.srow { background: var(--o-panel); border-radius: 20px; padding: 12px 14px 14px; }
+.ctitle { padding-bottom: 12px; }
+.head .ch { transform-origin: 50% 80%; }   /* room above the title for when the number shoves the words up */
+
+/* ---------- Original Week 4 form: grey ground, a white card that floats (shadow, no stroke), grey panels, and every
+   shape drawn by its fill alone — no strokes on the card, the panels, the bar's body or the dock. ---------- */
+:root { --o-bg: #f1f1f2; --o-card: #ffffff; --o-panel: #f6f6f8;
+  --o-card-shadow: 0 1px 2px rgba(26, 28, 36, 0.04), 0 28px 56px -28px rgba(26, 28, 36, 0.22), 0 0 0 1px rgba(23, 24, 27, 0.03); }
+:root[data-theme="light"] { --o-bg: #f1f1f2; --o-card: #ffffff; --o-panel: #f6f6f8; }
+:root:not([data-theme="light"]) { --o-bg: #121212; --o-card: #282828; --o-panel: #303030; --o-card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03); }
+.list { background: var(--o-card); border: 0; box-shadow: var(--o-card-shadow); }
+.srow { background: var(--o-panel); }
+.olsvg .c-out, .srow.is-live .olsvg .c-out { fill: var(--o-surface); stroke: var(--o-surface); }
+.dock { background: var(--o-card); box-shadow: var(--o-card-shadow); }
+.btn { background: var(--o-panel); box-shadow: none; }
+.btn:hover { background: var(--o-hover); }
+:root:not([data-theme="light"]) { --o-surface: #1e1e1e; --o-hover: #3a3a3a; }
+:root[data-theme="light"] { --o-surface: #ffffff; --o-hover: #ececef; }
+
+/* ---------- Line: the original card and panels (fill only), but the frame round the rope is a line again — it is the
+   idea, so it is the one thing drawn as a stroke. Inside it is just the panel. ---------- */
+.olsvg .c-out { fill: var(--o-ink); stroke: var(--o-ink); opacity: .55; transition: opacity 180ms ease; }
+.srow.is-live .olsvg .c-out { fill: var(--o-ink); stroke: var(--o-ink); opacity: 1; }
+.olsvg .c-in { fill: var(--o-panel); stroke: var(--o-panel); }
+:root { --panel: var(--o-panel) !important; --o-surface: var(--o-panel) !important; }
+
+/* ---------- Line 2: everything that moves is a line, one weight (1.25), and the frame is always there.
+   - the number stays a solid pill (the one filled thing)
+   - frame, filled rope, dotted rope, knob ring and number edge all 1.25
+   - at rest the frame is mid grey (solid, readable); hovered / held / focused it turns ink
+   - the frame stands 7 off what it holds: at rest a round-ended tube, its ends echoing the panel's corners ---------- */
+.olsvg .c-out { fill: var(--o-mid); stroke: var(--o-mid); opacity: 1; transition: fill 180ms ease, stroke 180ms ease; }
+.srow.is-live .olsvg .c-out { fill: var(--o-ink); stroke: var(--o-ink); opacity: 1; }
+.sl .fil { stroke-width: 1.25; }
+.sl .trk { stroke-width: 1.25; }
+.ball, #s-vol .ball, #s-freq .ball { box-shadow: inset 0 0 0 1.25px var(--o-ink), 0 0 0 2px var(--o-panel) !important; }
+.sl .stopdot, .sl .stopdot.under { stroke-width: 1.25; }
+
+/* ---------- Line 3: all line. No fills anywhere but the number: the card, the panels, the frame round the rope and
+   the dock are 1 lines on the plain ground. Hierarchy by colour, not weight: card and panels faint, the frame mid grey
+   (ink when live), the number the one solid thing. ---------- */
+:root[data-theme="light"] { --o-bg: #ffffff; --o-card: #ffffff; --o-panel: #ffffff; --o-surface: #ffffff; --o-faint: #dcdce0; }
+:root:not([data-theme="light"]) { --o-bg: #0e0e0e; --o-card: #0e0e0e; --o-panel: #0e0e0e; --o-surface: #0e0e0e; --o-faint: #36363b; }
+.list { background: none; box-shadow: none; border: 1px solid var(--o-faint); }
+.srow { background: none; box-shadow: inset 0 0 0 1px var(--o-faint); }
+.dock { background: none; box-shadow: none; }
+.btn { background: none; box-shadow: inset 0 0 0 1px var(--o-faint); }
+.btn:hover { background: var(--o-hover); }
+
+/* ---------- Line 3, refined: two levels of line only (the card, and the frame round the rope); no box inside the box.
+   Hairline card, generous inner margin, hierarchy from type and spacing, the frame the only drawn object. ---------- */
+:root[data-theme="light"] { --o-faint: #e4e4e8; --o-mid: #a4a4ab; }
+:root:not([data-theme="light"]) { --o-faint: #2a2a2f; --o-mid: #6e6e75; }
+.list { width: 300px; padding: 22px 12px 20px; border-radius: 28px; border: 1px solid var(--o-faint); }
+.ctitle { padding: 0 14px 14px; font-weight: 600; letter-spacing: -0.01em; }
+.srow { box-shadow: none; padding: 6px 14px 8px; }
+.head .label { color: var(--o-ink); }
+.head .val { color: var(--o-mid); }
+.stops > span, :root[data-theme] .stops > span { color: var(--o-mid); }
+.sl .trk { stroke: var(--o-mid); }
+.dock { gap: 6px; padding: 0; }
+.btn { height: 34px; padding: 0 14px; font-weight: 500; box-shadow: inset 0 0 0 1px var(--o-faint); }
+.btn.icon { width: 34px; }
+
+/* Hairline: the refined Line 3 as it stands. */
+
+/* from the reference: stops are solid dots inside the track instead of a dotted line; colours, card and type are Hairline's */
+.sl .trk { display: none; }
+.sl .rd, .sl .stopdot, .sl .stopdot.under { r: 2.5px; fill: var(--o-faint); stroke: none; opacity: 1; }
+:root[data-theme="light"] .sl .rd, :root[data-theme="light"] .sl .stopdot { fill: #d2d2d6; }
+
+/* active: a soft bar trails the handle from the start, in the ink at low strength (the reference's red trail, in Hairline's colour) */
+/* one grey for the bar, one for the dots, both solid (no see-through overlap that darkens a dot under the bar);
+   while you hover, hold or focus, the bar steps darker */
+:root[data-theme="light"] { --rd-bar: #ebebee; --rd-bar-on: #dfdfe3; --rd-dot: #c9c9ce; }
+:root:not([data-theme="light"]) { --rd-bar: #232326; --rd-bar-on: #2e2e32; --rd-dot: #4a4a50; }
+.sl .fil { stroke-width: 10; stroke: var(--rd-bar); transition: stroke 160ms ease; }
+.srow.is-live .sl .fil { stroke: var(--rd-bar-on); }
+.sl .rd, .sl .stopdot, .sl .stopdot.under, :root[data-theme="light"] .sl .rd, :root[data-theme="light"] .sl .stopdot { fill: var(--rd-dot); stroke: none; opacity: 1; }
+
+/* grey ground (the original Week 4 grey); the card stays white */
+:root[data-theme="light"] { --o-bg: #f1f1f2; --o-card: #ffffff; --o-panel: #ffffff; --o-surface: #ffffff; --o-faint: #dcdce0; --o-hover: #e6e6e9; }
+:root[data-theme="light"] .list { background: var(--o-card); }   /* white card on the grey ground, as in the original */
+
+/* dark mirrors the light layout: a dark grey card on a near-black ground (as the original's dark mode) */
+:root:not([data-theme="light"]) { --o-bg: #121212; --o-card: #282828; --o-panel: #282828; --o-surface: #282828; --o-faint: #3a3a3e; --o-hover: #333336; --rd-bar: #36363a; --rd-bar-on: #424247; --rd-dot: #5a5a60; }
+:root:not([data-theme="light"]) .list { background: var(--o-card); }
+.list { border: 0 !important; box-shadow: var(--o-card-shadow); }   /* white card like the others: no outline */
+
+/* playground: transparent page (the gallery card is the ground), white card with shadow only, no outlines */
+body { background: transparent !important; }
+.list { border: 0 !important; background: #ffffff !important; box-shadow: 0 1px 2px rgba(26, 28, 36, 0.04), 0 28px 56px -28px rgba(26, 28, 36, 0.22) !important; }
+.srow { box-shadow: none !important; }
 </style>
 </head><body>
 <div id="stage" data-w="460" data-h="320">
@@ -764,7 +933,9 @@ html.pointer-mode .ball:focus-visible, html.pointer-mode #s-vol .ball:focus-visi
       if (s.numb.textContent !== t) s.numb.textContent = t;
       const w = s.numb.offsetWidth, up = clamp(-s.nl.x / 26, 0, 1);
       const m = clamp(s.morph.x, 0, 1.15), sx = (12 + (w - 12) * m) / w, sy = (12 + 12 * m) / 24;   // m 0: the 12 ball, 1: the number
-      s.numb.style.transform = `translate(${(bxp - w / 2).toFixed(2)}px, ${(by - 12 + s.nl.x).toFixed(2)}px) translate(${(w / 2).toFixed(2)}px, 24px) rotate(${s.nRot.x.toFixed(2)}deg) translate(0, -12px) scale(${sx.toFixed(3)}, ${sy.toFixed(3)}) translate(${(-w / 2).toFixed(2)}px, -12px)`;
+      // display only: the number never overhangs the pins (its outer edge stops flush with the rope's end); the knob keeps its true place
+      const ew = 12 + (w - 12) * Math.min(m, 1), nx = clamp(bxp, L0 - 3.5 + ew / 2, L1 + 3.5 - ew / 2);
+      s.numb.style.transform = `translate(${(nx - w / 2).toFixed(2)}px, ${(by - 12 + s.nl.x).toFixed(2)}px) translate(${(w / 2).toFixed(2)}px, 24px) rotate(${s.nRot.x.toFixed(2)}deg) translate(0, -12px) scale(${sx.toFixed(3)}, ${sy.toFixed(3)}) translate(${(-w / 2).toFixed(2)}px, -12px)`;
       s.numb.style.color = m < 0.6 ? 'transparent' : '';
       s.numb.style.boxShadow = `0 0 0 2px var(--panel), 0 ${(1 + up * 5).toFixed(1)}px ${(2 + up * 10).toFixed(1)}px ${(-1 - up * 4).toFixed(1)}px rgba(var(--ball-shadow), ${(0.14 + up * 0.12).toFixed(3)})`;   // shadow tucked inside the ring: the ring always reads as the background
     }
@@ -871,6 +1042,147 @@ html.pointer-mode .ball:focus-visible, html.pointer-mode #s-vol .ball:focus-visi
   const root = document.documentElement;
   addEventListener('pointerdown', () => root.classList.add('pointer-mode'), true);
   addEventListener('keydown', (e) => { if (!e.metaKey && !e.ctrlKey && !e.altKey) root.classList.remove('pointer-mode'); }, true);
+})();
+</script>
+<script>
+/* Contour overlay. Reads where the rope, the knob and the number are after the engine's frame, takes their convex hull,
+   and draws it grown by GAP with a 1.5 line (a white hull, a black hull GAP inside it). Reads only: no physics here. */
+(() => {
+  const T = 12;   // track thickness
+  const NS = 'http://www.w3.org/2000/svg', GAP = 7, LINE = 1.25, ROPE = 1.5, PIN = 3.5;
+  function hull(pts) {
+    pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+  function pillPts(cx, cy, w, h, a, out) {
+    const r = Math.min(w, h) / 2, c = Math.cos(a), s = Math.sin(a), half = Math.max(0, w / 2 - r);
+    for (const sx of [-1, 1]) for (let k = 0; k <= 8; k++) {
+      const t = (sx < 0 ? Math.PI / 2 : -Math.PI / 2) + Math.PI * k / 8;
+      const lx = sx * half + r * Math.cos(t), ly = r * Math.sin(t);
+      out.push([cx + lx * c - ly * s, cy + lx * s + ly * c]);
+    }
+  }
+  const mk = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.append(e); return e; };
+  const rows = ['s-vol', 's-freq'].filter((id) => document.getElementById(id)).map((id) => {
+    const sl = document.getElementById(id), row = sl.closest('.srow');
+    const under = mk('svg', { class: 'olsvg under', 'aria-hidden': 'true' }), over = sl.querySelector('svg');   // pins go in the slider's svg: over the rope, under the knob and number
+    const out = mk('path', { class: 'c-out', 'stroke-width': 2 * (GAP + LINE) }, under), inn = mk('path', { class: 'c-in', 'stroke-width': 2 * GAP }, under);
+    const pinL = mk('circle', { class: 'pin', r: PIN }, over), pinR = mk('circle', { class: 'pin', r: PIN }, over);
+    row.prepend(under);
+    if (id === 's-freq') { const sd = sl.querySelectorAll('.stopdot'); sd[0].style.display = 'none'; sd[sd.length - 1].style.display = 'none'; }   // the ends are the pins (the original rule, kept now pins share the svg)
+    // live = hovered, held or keyboard-focused
+    let hov = false, held = false, foc = false;
+    const sync = () => row.classList.toggle('is-live', hov || held || foc);
+    sl.addEventListener('pointerenter', () => { hov = true; sync(); });
+    sl.addEventListener('pointerleave', () => { hov = false; sync(); });
+    sl.addEventListener('pointerdown', () => { held = true; sync(); });
+    addEventListener('pointerup', () => { if (held) { held = false; sync(); } });
+    addEventListener('pointercancel', () => { if (held) { held = false; sync(); } });
+    sl.addEventListener('focusin', (e) => { foc = e.target.matches(':focus-visible') && !document.documentElement.classList.contains('pointer-mode'); sync(); });   // a click also focuses the knob; only keyboard focus counts
+    sl.addEventListener('focusout', () => { foc = false; sync(); });
+    const edge = mk('path', { class: 'edge' }), trk = mk('path', { class: 'trk' }), fil = mk('path', { class: 'fil' }); sl.querySelector('.rail').before(edge, trk, fil);
+    return { row, sl, under, out, inn, pinL, pinR, edge, trk, fil, fillEl: sl.querySelector('.fill'), rail: sl.querySelector('.rail'), ball: sl.querySelector('.ball'), numb: sl.querySelector('.numb') };
+  });
+  const num = (re, s, d) => { const m = re.exec(s); return m ? m.slice(1).map(Number) : d; };
+  const slowBox = document.getElementById('slow');
+  function frame() {
+    for (const R of rows) {
+      const m = R.under.getScreenCTM(); if (!m) continue;
+      const inv = m.inverse(), loc = (x, y) => { const p = new DOMPoint(x, y).matrixTransform(inv); return [p.x, p.y]; };
+      const centre = (el) => { const b = el.getBoundingClientRect(); return loc(b.left + b.width / 2, b.top + b.height / 2); };
+      const pts = [];
+      // the number first: when it sits on a pin it takes the pin's place (the pin and the last bit of rope go under it)
+      let nb = null;
+      if (R.numb) {
+        const tf = R.numb.style.transform, [rot] = num(/rotate\(([-\d.]+)deg\)/, tf, [0]), [sx, sy] = num(/scale\(([-\d.]+), ([-\d.]+)\)/, tf, [1, 1]);
+        const [x, y] = centre(R.numb), w = R.numb.offsetWidth * sx, hh = R.numb.offsetHeight * sy;
+        pillPts(x, y, w, hh, rot * Math.PI / 180, pts); nb = { x, y, w, h: hh };
+      }
+      const [bx0, by0] = centre(R.ball), br = R.ball.offsetWidth / 2;
+      const onKnob = (p) => Math.hypot(p[0] - bx0, p[1] - by0) < br + PIN + 1.5;   // the knob touching a pin takes its place too
+      const under = (p, m) => nb && Math.abs(p[0] - nb.x) < nb.w / 2 + m && Math.abs(p[1] - nb.y) < nb.h / 2 + m;
+      const rm = R.rail.getScreenCTM(), L = R.rail.getTotalLength();
+      if (rm && L) for (let i = 0; i <= 24; i++) {
+        const q = R.rail.getPointAtLength(L * i / 24).matrixTransform(rm), p = loc(q.x, q.y);
+        if (i === 0 || i === 24) {
+          const pin = i ? R.pinR : R.pinL, o = R.rail.getPointAtLength(i ? L : 0), hid = under(p, PIN + 3) || onKnob(p);
+          pin.setAttribute('cx', o.x.toFixed(2)); pin.setAttribute('cy', o.y.toFixed(2)); pin.style.opacity = hid ? 0 : 1;
+          pillPts(p[0], p[1], 4, 4, 0, pts);   // the rope's ends (the 6 all round makes them round)
+        } else pts.push([p[0], p[1] - 2], [p[0], p[1] + 2]);
+      }
+      pillPts(bx0, by0, 2 * br, 2 * br, 0, pts);
+      // the track, redrawn from the engine's rope: where the handle sits within a track's width of an end, that end comes
+      // level with it (a 26 bar cannot kink up over the last 7 px to its anchor without a lump)
+      { const kb = R.ball.getBoundingClientRect(), km = rm && new DOMPoint(kb.left + kb.width / 2, kb.top + kb.height / 2).matrixTransform(rm.inverse());
+        const samp = (el) => { const n = el.getTotalLength(), out = []; if (!n) return out; for (let i = 0; i <= 32; i++) { const q = el.getPointAtLength(n * i / 32); out.push([q.x, q.y]); } return out; };
+        const level = (P) => { if (!km || !P.length) return P; for (const e of [P[0], P[P.length - 1]]) { const d = Math.abs(e[0] - km.x); if (d < T) { const u = d / T; e[1] = km.y + (e[1] - km.y) * u * u; } } return P; };
+        const toD = (P) => P.length ? 'M' + P.map((q) => q[0].toFixed(2) + ' ' + q[1].toFixed(2)).join('L') : '';
+        const rP = level(samp(R.rail));
+        // the filled part is the track from its start up to the value, always lying in the track (never lifted off it
+        // with the hopping number); too short to show past the number's own width at the start, it is not drawn
+        const fRaw = samp(R.fillEl), xEnd = fRaw.length ? Math.max(...fRaw.map((q) => q[0])) : -Infinity, fP = [];
+        if (rP.length && xEnd - rP[0][0] > 2) {
+          for (let i = 0; i < rP.length; i++) {
+            if (rP[i][0] <= xEnd) { fP.push(rP[i].slice()); continue; }
+            const a = rP[i - 1], b = rP[i], u = (xEnd - a[0]) / ((b[0] - a[0]) || 1); fP.push([xEnd, a[1] + (b[1] - a[1]) * u]); break;
+          }
+        }
+        R.edge.setAttribute('d', toD(rP)); R.trk.setAttribute('d', toD(rP)); R.fil.setAttribute('d', toD(fP)); }
+      // the skin only shows while the number is in the air (shrunk to a ball); it fades as it lands
+      if (R.numb) R.row.classList.toggle('is-flying', num(/scale\(([-\d.]+), ([-\d.]+)\)/, R.numb.style.transform, [1, 1])[1] < 0.92);
+      const hp = hull(pts), d = 'M' + hp.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+      R.out.setAttribute('d', d); R.inn.setAttribute('d', d);
+      // the frame bumps the words, letter by letter: only a letter the frame's top actually reaches (within 4) is hit;
+      // a letter that flies as far as the title bounces off it. (Uses the CSS translate property, so the engine's own letter
+      // kicks, which use transform, still add on top.)
+      const dt = (slowBox && slowBox.checked ? 0.25 : 1) / 60, edge = GAP + LINE;
+      const vtop = (x) => { let t = Infinity; for (let i = 0, n = hp.length; i < n; i++) { const p = hp[i], q = hp[(i + 1) % n];
+        if ((p[0] - x) * (q[0] - x) > 0 || p[0] === q[0]) continue; t = Math.min(t, p[1] + (q[1] - p[1]) * (x - p[0]) / (q[0] - p[0])); } return t - edge; };
+      if (!R.lets) {
+        const head = R.row.querySelector('.head'), title = R.row.closest('.list').querySelector('.ctitle');
+        const box = (el, base) => { const r = el.getBoundingClientRect(), b0 = base.getBoundingClientRect(); return { x: r.left - b0.left + r.width / 2, w: r.width, bottom: r.bottom - b0.top, top: r.top - b0.top }; };
+        R.lets = [...head.querySelectorAll('.ch')].map((el) => ({ el, s: { x: 0, v: 0, r: { x: 0, v: 0 } }, ...box(el, R.row) }));
+        R.ceil = box(title, R.row).bottom + 2;   // the title is left whole (split letters lose their kerning)
+        R.title = title; R.tb = { x: 0, v: 0 };
+      }
+      // a bump, not a carry: the letter is a small weight. What hits it from below throws it up a little faster than it
+      // was moving (so it leaves the frame and flies a bit), gravity brings it down, it lands on its line with a small
+      // bounce, and it gets a little spin from the knock that springs straight again.
+      const G = 1500, push = (s, lim) => {
+        const fv = s.lim === undefined ? 0 : (lim - s.lim) / dt; s.lim = lim;
+        s.v += G * dt; s.x += s.v * dt;
+        if (s.x > lim) { s.x = lim; if (s.v > fv) { const hit = fv < -25, kick = hit ? Math.min(fv * 2.2, -170) : Math.min(0, fv); if (hit && s.v > -40) s.r.v += (Math.random() < .5 ? -1 : 1) * Math.min(520, 120 - kick * 0.6); s.v = kick; } }
+        if (s.x > 0) { s.x = 0; s.v = s.v > 80 ? -s.v * 0.32 : 0; }
+        s.r.v += (-260 * s.r.x - 10 * s.r.v) * dt; s.r.x += s.r.v * dt;
+      };
+      const draw = (l) => { l.el.style.translate = l.s.x < -0.05 ? `0 ${l.s.x.toFixed(2)}px` : ''; l.el.style.rotate = Math.abs(l.s.r.x) > 0.05 ? `${l.s.r.x.toFixed(2)}deg` : ''; };
+      { const tb = R.tb; tb.v += G * dt; tb.x += tb.v * dt; if (tb.x > 0) { tb.x = 0; tb.v = tb.v > 80 ? -tb.v * 0.3 : 0; } if (tb.x < -16) { tb.x = -16; tb.v = Math.max(tb.v, 0); }
+        R.title.style.translate = tb.x < -0.05 ? `0 ${tb.x.toFixed(2)}px` : ''; }
+      for (const l of R.lets) {
+        const t = Math.min(vtop(l.x - l.w / 2), vtop(l.x), vtop(l.x + l.w / 2));
+        push(l.s, Math.min(0, t - 4 - l.bottom));
+        const top = R.ceil + R.tb.x - l.top; if (l.s.x < top) { l.s.x = top; if (l.s.v < R.tb.v) { R.tb.v = Math.min(R.tb.v, l.s.v * 0.55); l.s.v = -l.s.v * 0.25; } }   // bonk: the title (one word) takes the knock and hops, the letter drops back
+        draw(l);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+/* Riding dots (from the reference): the continuous rope gets stop dots at 0/20/…/100 that sit on the rope and sag with it. */
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const rows = ['s-vol', 's-freq'].filter((id) => document.getElementById(id)).map((id) => { const sl = document.getElementById(id), svg = sl.querySelector('svg'), rail = sl.querySelector('.rail'), dots = [];
+    if (!sl.querySelector('.stopdot')) for (let i = 0; i <= 5; i++) { const c = document.createElementNS(NS, 'circle'); c.setAttribute('class', 'rd'); svg.append(c); dots.push(c); /* on top of the bar: one colour wherever it sits */ }
+    return { rail, dots }; });
+  (function frame() { for (const R of rows) { const L = R.rail.getTotalLength(); if (L) R.dots.forEach((c, i) => { const p = R.rail.getPointAtLength(L * i / 5); c.setAttribute('cx', p.x.toFixed(2)); c.setAttribute('cy', p.y.toFixed(2)); }); } requestAnimationFrame(frame); })();
 })();
 </script>
 <script>
