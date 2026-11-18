@@ -201,7 +201,7 @@ svg.line path{fill:none;stroke-linecap:round;transition:opacity .35s}
     <div class="rm" aria-hidden="true"><canvas id="room"></canvas><canvas id="tv"></canvas></div>
     <div class="scrim"></div>
     <div class="c" id="C"></div>
-    <button class="dn" id="dn" type="button" role="switch" aria-checked="true" aria-label="Daytime"><i class="dnk"></i><span class="ms sun">light_mode</span><span class="ms moon">dark_mode</span></button>
+    <button class="dn" id="dn" type="button" role="switch" aria-checked="false" aria-label="Daytime"><i class="dnk"></i><span class="ms sun">light_mode</span><span class="ms moon">dark_mode</span></button>
   </div>
   <div class="row">
     <div class="seg" id="seg" role="radiogroup" aria-label="Climate display"><span>Climate</span><button role="radio" data-v="level" aria-checked="true">Liquid level</button><button role="radio" data-v="beads" aria-checked="false">Beads</button><button role="radio" data-v="ticks" aria-checked="false">Tick ring</button></div>
@@ -815,13 +815,13 @@ const TV=(()=>{
 })();
 
 /* room sync: the photo follows committed values, and previews the focused option while a ring is open */
-let dayT=1, tableT=0, pendT=1.15;
+let dayT=0, tableT=0, pendT=1.15;
 /* pend: how strongly the ceiling light shines; Reading turns it up so the room is bright enough to read in, by day and by night */
 const SCENE={Reading:{ceil:1,floor:100,blinds:1,table:1,pend:2},Movie:{ceil:-1,floor:10,blinds:2,table:0,pend:1.15},Dinner:{ceil:0,floor:35,blinds:0,table:1,pend:1.15},Night:{ceil:-1,floor:0,blinds:2,table:.35,pend:1.15}};
 const ix=l=>DEV.findIndex(d=>d.label===l);
 const MUS_I=DEV.findIndex(d=>d.music), iC=ix('Ceiling light'), iF=ix('Floor lamp'), iB=ix('Blinds'), iS=ix('Scenes');
 /* the TV is on by day and off by night (the page opens by day); the Night scene also switches it off; playing music again (play, a new playlist or song) turns it back on. Pausing the music leaves it on. */
-let tvOff=false, wasPaused=null;
+let tvOff=true, wasPaused=null;
 function tvSync(){ const m=MUS(), pi=m.sel, si=m.song[pi], p=m.opts[pi].pal;
   if(wasPaused===true&&!m.paused) tvOff=false; wasPaused=m.paused;
   let off=tvOff; if(s.open&&s.f===iS&&s.of!==DEV[iS].sel) off=DEV[iS].opts[s.of].label==='Night'; /* previewing a scene */
