@@ -1959,7 +1959,9 @@ function run(){
     [["Dominoes Jukebox", "full"]],
   ];
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
-  const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
+  const IF_ZOOM = { "liquid-dial": 0.8, "reading-pile": 1.25, "fling-loader": 0.95, "fling-loader-indeterminate": 0.95 };
+  const ifSrc = (slug, big) => slug === "liquid-dial" ? `pg/liquid-dial.html?soft=1&zoom=${IF_ZOOM[slug]}&detail=1`
+    : big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${IF_ZOOM[slug] || ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
     ...ITEMS.filter((it) => !["Booklets", "Film"].includes(it.type)).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
