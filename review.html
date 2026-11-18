@@ -1497,6 +1497,15 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .if-wall .if-set.ext .if-veil span { background: rgba(255,255,255,.14); color: rgba(255,255,255,.86); }
 .if-wall .if-set.ext:has(.if-stage[style*="#fff"]) .if-veil span, .if-wall .if-set.ext:has(.if-stage[style*="#f6f6f6"]) .if-veil span { background: rgba(0,0,0,.06); color: rgba(0,0,0,.72); }
 @media (max-width: 900px) { .if-wall { grid-template-columns: 1fr; grid-auto-rows: 75cqw; } .if-wall .if-set { grid-column: auto !important; grid-row: auto !important; } }
+
+.if-wall .s-full2 { grid-column: 1 / -1; grid-row: span 2; }
+/* breathing room: 12px inside a group, 56px between groups */
+.if-wall { gap: 12px; grid-auto-rows: calc((100cqw - 24px) / 3 * .75); }
+.if-wall + .if-wall { margin-top: 56px; }
+.if-hero + .if-wall { margin-top: 56px; }
+.if-wall .s-full { grid-column: 1 / -1; }
+.if-wall .s-fr { grid-column: 2 / span 2; grid-row: 1 / span 2; }
+.if-wall .s-fr ~ .if-set:not(.s-fr) { grid-column: 1; }
 </style>
 </head>
 <body>
@@ -1935,11 +1944,25 @@ function run(){
     { name: "Pinball Slab", verb: "Hold", f: "pinball-slab", w: 900, h: 600, c: [48, 56, 804, 520], bg: "#f6f6f6", span: "n" },
     { name: "Dominoes Jukebox", verb: "Turn · Press", f: "dominoes-jukebox", w: 1200, h: 750, c: [64, 28, 1072, 448], bg: "#f4f4f4", span: "w" },
   ];
+  // the wall, in groups: a big piece leads each group, small ones fill around it, a breath between groups
+  const IF_LAYOUT = [
+    [["Autumn", "f"], ["Dominoes List", "n"], ["Fling Loader", "n"]],
+    [["Lever Slider", "n"], ["Surface Slider", "n"], ["Rope Slider", "n"]],
+    [["Liquid Dial", "full2"]],
+    [["Margin Toolbar", "f"], ["Toggle", "n"], ["Radio", "n"]],
+    [["Workout Game", "full"]],
+    [["Reading Pile", "n"], ["Fluid Interface", "n"], ["Information Has Weight", "n"]],
+    [["Dominoes Wheel", "n"], ["Dominoes Tape", "n"], ["Radical Swap", "fr"]],
+    [["Balance Slider", "n"], ["Domino Slider", "n"], ["Tide Loader", "n"]],
+    [["Lumen", "w"], ["Workout Watch", "n"]],
+    [["One-Line Plan", "n"], ["Push Loader", "n"], ["Pinball Slab", "n"]],
+    [["Dominoes Jukebox", "full"]],
+  ];
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
   const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
-    ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type) && it.name !== "Plumb Bob Slider").map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
+    ...ITEMS.filter((it) => !["Booklets", "Film"].includes(it.type)).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
     ...EXT.map((e, n) => ({ ...e, id: "e" + n, ext: true })),
   ];
   // which file a block shows for the chosen variant (one segment per axis)
@@ -1962,9 +1985,7 @@ function run(){
   const interfacesPage = (p) => {
     const its = ifItems();
     return `<img class="if-hero" src="img/ifc-hero.webp" alt="Liquid Dial, a smart-home dial, on an iPad held in two hands">
-      <div class="if-wall">${(() => { const feat = its.find((i) => i.slug === "autumn-full-bleed");
-        const light = its.filter((i) => !i.ext && i !== feat), dark = its.filter((i) => i.ext);
-        return [ifSet(feat, "feat"), ...light.map((i) => ifSet(i, "one")), ...dark.map((i) => ifSet(i, "ext"))].join(""); })()}</div>`;
+      ${IF_LAYOUT.map((g) => `<div class="if-wall">${g.map(([name, span]) => { const it = its.find((i) => i.name === name); return it ? ifSet({ ...it, span }, ["f", "fr", "full", "full2"].includes(span) && !it.ext ? "feat" : it.ext ? "ext" : "one") : ""; }).join("")}</div>`).join("")}`;
   };
   // frames load near the viewport, play their demo on a loop, and stand still while a hand is on them
   const IFX = { io: null, frames: new Map() };
@@ -1976,7 +1997,7 @@ function run(){
       if (st.classList.contains("ext")) { f.style.width = st.dataset.w + "px"; f.style.height = st.dataset.h + "px"; }
       st.appendChild(f); return f; };
     const fitExt = (st) => { const [cx, cy, cw, ch] = st.dataset.c.split(",").map(Number), W = st.clientWidth, H = st.clientHeight;
-      const s = Math.min(W / cw, H / ch), ox = (W - cw * s) / 2 - cx * s, oy = (H - ch * s) / 2 - cy * s;
+      const s = Math.min(W / cw, H / ch) * (st.dataset.k ? +st.dataset.k : 1), ox = (W - cw * s) / 2 - cx * s, oy = (H - ch * s) / 2 - cy * s;
       const fw = +st.dataset.w, fh = +st.dataset.h;
       st.querySelectorAll("iframe").forEach((f) => { f.style.transform = `translate(${ox}px,${oy}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${16 / s}px)`; }); };
     const ro = new ResizeObserver((es) => es.forEach((en) => fitExt(en.target)));
