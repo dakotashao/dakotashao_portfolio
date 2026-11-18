@@ -583,8 +583,30 @@ function chip(p,t){const c=document.createElement('div');c.className='chip';c.te
 const pencilEl=$('#pencil'),gestEl=$('#gest');let gestT=null,gestFrom='';
 const PENCIL_IC='<svg viewBox="0 0 24 24"><path d="M4 20l2.5-.6L19 6.9a1.5 1.5 0 0 0 0-2.1l-.8-.8a1.5 1.5 0 0 0-2.1 0L3.6 16.5z"/></svg>';
 function gest(name,detail){clearTimeout(gestT);gestEl.innerHTML=`${PENCIL_IC}<b>${name}</b>${detail?`<span>${detail}</span>`:''}`;gestEl.classList.add('on');gestT=setTimeout(()=>gestEl.classList.remove('on'),1600)}
-const SHOW_PENCIL=false; /* Pencil cursor off for now — set true to bring it back */
+const SHOW_PENCIL=false; /* Pencil cursor for the visitor's own mouse: off. The demo below shows it while it plays. */
 if(SHOW_PENCIL)document.body.classList.add('pencil-on');else pencilEl.style.display='none';
+/* ---- autoplay (embedded only): a Pencil hops between tools with the quick switch, then double-taps to the eraser and back ---- */
+const DEMO=(()=>{let on=false,run=0;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const at=p=>{pencilEl.style.transform=`translate(${p.x}px,${p.y}px)`};
+  async function glide(a,b,ms,id){const t0=performance.now();while(true){if(id!==run)throw 0;const k=Math.min(1,(performance.now()-t0)/ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;const p={x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e};at(p);if(ring)moveRing(p);if(k>=1)return;await sleep(16)}}
+  const OFF={up:{x:0,y:-60},right:{x:60,y:0},down:{x:0,y:60},left:{x:-60,y:0}};
+  async function pick(c,dir,id){await glide(cur,c,700,id);cur=c;await sleep(250);pencilEl.classList.add('down');await sleep(260);
+    openRing(c);gestFrom='Hold, then slide';gest('Hold, then slide','to a tool');await sleep(420);
+    const t={x:c.x+OFF[dir].x,y:c.y+OFF[dir].y};await glide(c,t,520,id);await sleep(500);closeRing();pencilEl.classList.remove('down');cur=t;await sleep(1300)}
+  let cur={x:0,y:0};
+  async function loop(id){const W=screen.clientWidth,H=screen.clientHeight;cur={x:W*.78,y:H*.86};at(cur);pencilEl.style.display='';pencilEl.classList.add('on');
+    try{for(;;){const c={x:W*.66,y:H*.52};
+      await pick(c,'up',id);await pick({x:W*.6,y:H*.62},'right',id);await pick({x:W*.7,y:H*.45},'left',id);
+      await glide(cur,{x:W*.62,y:H*.4},600,id);cur={x:W*.62,y:H*.4};await sleep(400);
+      for(let i=0;i<2;i++){pencilEl.classList.add('down');await sleep(120);pencilEl.classList.remove('down');await sleep(900);
+        const k=tool==='er'?(prevTool==='er'?'pen':prevTool):'er';setTool(k);gest('Double-tap','→ '+NAMES[k]);await sleep(1400)}
+      await sleep(800)}}catch(e){}}
+  function start(){if(on)return;on=true;run++;loop(run)}
+  function stop(){if(!on)return;on=false;run++;closeRing(true);pencilEl.classList.remove('on','down');pencilEl.style.display='none'}
+  return {start,stop}})();
+if(EMBED){let back=null;addEventListener('message',e=>{const d=e.data||{};if(d.type==='demo'){d.on?DEMO.start():DEMO.stop()}});
+  addEventListener('pointermove',e=>{if(!e.isTrusted)return;DEMO.stop();clearTimeout(back);back=setTimeout(()=>DEMO.start(),2500)},{passive:true});
+  setTimeout(()=>DEMO.start(),800)}
 addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const r=screen.getBoundingClientRect(),inside=e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom;
   pencilEl.classList.toggle('on',inside);if(inside){const p=local(e,screen);pencilEl.style.transform=`translate(${p.x}px,${p.y}px)`}},{passive:true});
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')pencilEl.classList.add('down')});

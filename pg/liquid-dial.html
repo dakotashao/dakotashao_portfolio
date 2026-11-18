@@ -129,9 +129,6 @@ KIT.demo(async c => {
   for (let i = 0; i < 3; i++) { scroll(c, 1); await c.wait(1000); }
   await c.click(...spot(dial('.recC'))); await c.wait(1400);
 
-  await zoomTo(c, true);
-  await c.click(...spot(dial('#dn'))); await c.wait(1800);
-  await zoomTo(c, false);
 
   await c.click(...lobe('Floor lamp')); await c.wait(700);
   await c.click(...lobe('Floor lamp')); await c.wait(900);
@@ -141,9 +138,9 @@ KIT.demo(async c => {
   await c.drag(...spot(tank, .3), 900); await c.up(); await c.wait(1200);
 
   await c.click(...toStage(380, 600)); await c.wait(400);
-}, { reset() { // every run starts folded and by day
+}, { reset() { // every run starts folded and at night
   frame.contentWindow.postMessage('liquid-dial:rest', '*'); wide = false;
-  const dn = dial('#dn'); if (dn && dn.getAttribute('aria-checked') !== 'true') dn.click(); } });
+  const dn = dial('#dn'); if (dn && dn.getAttribute('aria-checked') !== 'false') dn.click(); } });
 const kitStop = KIT.stop; KIT.stop = n => { kitStop(n); wide = false; syncZoom(); };
 </script>
 </body></html>
