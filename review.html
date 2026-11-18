@@ -1456,11 +1456,26 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .if-stage.on iframe.b { opacity: 1; pointer-events: auto; }
 .if-stage:has(iframe.b).on iframe.a { opacity: 0; }
 .if-stage.ext iframe { inset: auto; left: 0; top: 0; transform-origin: 0 0; }
-/* the original playground's glass labels: top left, only on hover */
-.if-veil { position: absolute; top: 10px; left: 10px; display: flex; gap: 4px; pointer-events: none; opacity: 0; transition: opacity .25s ease; z-index: 2; }
-.if-set:hover .if-veil { opacity: 1; }
-.if-veil span { font-size: 13px; line-height: 14px; letter-spacing: -0.02em; padding: 5px 10px; border-radius: 40px; color: rgba(0,0,0,.72); background: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); white-space: nowrap; }
-@media (hover: none) { .if-veil { opacity: 1; } }
+/* on hover: the variant switch bottom left, the expand button bottom right (as on dakotashao.com/playground) */
+.if-vsw { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px; z-index: 2; opacity: 0; transition: opacity .25s ease; }
+.if-open { all: unset; cursor: pointer; position: absolute; right: 10px; bottom: 10px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: #fff; color: #0d0d0d; z-index: 2; opacity: 0; transition: opacity .25s ease, background-color .2s; }
+.if-open:hover { background: #e8e8e8; }
+.if-set:hover .if-vsw, .if-set:hover .if-open, .if-set:focus-within .if-vsw, .if-set:focus-within .if-open, .if-vsw.on { opacity: 1; }
+@media (hover: none) { .if-vsw, .if-open { opacity: 1; } }
+.if-seg { position: relative; display: flex; padding: 3px; border-radius: 10px; background: rgba(0,0,0,.05); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.if-seg .th { position: absolute; top: 3px; bottom: 3px; left: 3px; border-radius: 7px; background: #fff; transition: left .35s cubic-bezier(.25,.8,.25,1), width .35s cubic-bezier(.25,.8,.25,1); }
+.if-seg button { all: unset; position: relative; cursor: pointer; padding: 6px 10px; font-size: 13px; line-height: 16px; letter-spacing: -0.01em; color: rgba(0,0,0,.4); transition: color .2s; white-space: nowrap; }
+.if-seg button[aria-pressed="true"], .if-seg button:hover { color: #0d0d0d; }
+.if-dlg { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; opacity: 0; transition: opacity .25s ease; }
+.if-dlg.in { opacity: 1; }
+.if-scrim { all: unset; position: absolute; inset: 0; background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.if-big { position: relative; width: min(1180px, 88vw); height: min(780px, 84vh); border-radius: 20px; overflow: hidden; background: #f4f4f4; transform: scale(.98); transition: transform .3s cubic-bezier(.25,.8,.25,1); }
+.if-dlg.in .if-big { transform: none; }
+.if-big iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.if-big.ext iframe { inset: auto; left: 50%; top: 50%; transform-origin: 50% 50%; }
+.if-big .if-vsw { left: 14px; bottom: 14px; }
+.if-x { all: unset; cursor: pointer; position: absolute; right: 14px; top: 14px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: #fff; color: #0d0d0d; z-index: 2; }
+.if-x:hover { background: #e8e8e8; }
 .nk-im .if-thumb { position: absolute; inset: 0; border-radius: 0; background: #f4f4f4; }
 @media (max-width: 900px) { .if-grid, .if-grid.wide { grid-template-columns: 1fr; } .if-set.feat { grid-column: auto; } }
 .sw { display: none !important; }
@@ -1904,18 +1919,23 @@ function run(){
   const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1&max=1.6` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
-    ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type)).map((it) => {
-      const g = it.grid || [it.slug], k = g.length > 2 ? g.length / 2 : 1, L = it.axes ? combos(it.axes) : [];
-      return { ...it, week: it.week || IF_WEEK[it.name], a: g[0], b: g.length > 1 ? g[k] : null, aL: L[0], bL: L[k], ratio: "4 / 3" };
-    }),
-    ...EXT.map((e) => ({ ...e, ext: true, ratio: `${e.w} / ${e.h}` })),
+    ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type)).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
+    ...EXT.map((e, n) => ({ ...e, id: "e" + n, ext: true, ratio: `${e.w} / ${e.h}` })),
   ];
-  const ifStage = (it, feat) => it.ext
-    ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" style="aspect-ratio:${it.ratio}"></div>`
-    : `<div class="if-stage" data-src="${ifSrc(it.a, feat)}"${it.b ? ` data-alt="${ifSrc(it.b)}"` : ""} style="aspect-ratio:${it.ratio}"></div>`;
+  // which file a block shows for the chosen variant (one segment per axis)
+  const ifSlug = (it) => it.axes ? it.grid[it.sel.reduce((acc, k, a) => acc * it.axes[a][1].length + k, 0)] : it.slug;
+  const IFI = {};
+  const ifSegs = (it) => (it.axes || []).map(([name, opts], a) => `<span class="if-seg" role="radiogroup" aria-label="${esc(name)}"><i class="th"></i>${opts.map((o, k) =>
+    `<button type="button" data-a="${a}" data-k="${k}" aria-pressed="${it.sel[a] === k}">${esc(o)}</button>`).join("")}</span>`).join("");
+  const EXPAND = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" aria-hidden="true"><path d="M5 9V5h4M15 5h4v4M19 15v4h-4M9 19H5v-4"/></svg>';
   const ifSet = (it, cls) => {
-    const tags = [it.name, it.verb].filter(Boolean);
-    return `<div class="if-set ${cls}">${ifStage(it, cls === "feat")}<div class="if-veil">${tags.map((x) => `<span>${esc(x)}</span>`).join("")}</div></div>`;
+    IFI[it.id] = it;
+    const stage = it.ext
+      ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" style="aspect-ratio:${it.ratio}"></div>`
+      : `<div class="if-stage" data-src="${ifSrc(ifSlug(it), cls === "feat")}" style="aspect-ratio:${it.ratio}"></div>`;
+    return `<div class="if-set ${cls}" data-id="${it.id}">${stage}
+      ${it.axes ? `<div class="if-vsw">${ifSegs(it)}</div>` : ""}
+      <button class="if-open" type="button" aria-label="Open ${esc(it.name)} larger">${EXPAND}</button></div>`;
   };
   const IF_SECS = () => { const its = ifItems(); return IF_ORDER.filter((t) => its.some((i) => i.type === t)); };
   const interfacesPage = (p) => {
@@ -1943,7 +1963,6 @@ function run(){
       if (en.isIntersecting) {
         st.dataset.vis = "1";
         if (!f) { f = make(st, st.dataset.src, "a");
-          if (st.dataset.alt) make(st, st.dataset.alt, "b");
           if (st.classList.contains("ext")) { fitExt(st); ro.observe(st); }
           f.addEventListener("load", () => { IFX.frames.set(f.contentWindow, st); setTimeout(() => play(st), 400 + Math.random() * 900); }); }
         else setTimeout(() => play(st), 300);
@@ -1955,6 +1974,35 @@ function run(){
       st.addEventListener("pointerleave", () => { delete st.dataset.hand; st.classList.remove("on"); clearTimeout(st._t); st._t = setTimeout(() => play(st), 2500); });
     });
     IFX.play = play;
+    const thumbs = (el) => el.querySelectorAll(".if-seg").forEach((sg) => { const on = sg.querySelector('[aria-pressed="true"]'), th = sg.querySelector(".th"); if (on) { th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px"; } });
+    root.querySelectorAll(".if-set").forEach((s) => { s.addEventListener("pointerenter", () => thumbs(s), { once: true }); });
+    if (!root._ifc) root._ifc = 1, root.addEventListener("click", (e) => {
+      const set = e.target.closest(".if-set"); if (!set) return; const it = IFI[set.dataset.id];
+      const b = e.target.closest(".if-seg button");
+      if (b) { it.sel[+b.dataset.a] = +b.dataset.k; set.querySelectorAll(".if-seg button").forEach((x) => x.setAttribute("aria-pressed", it.sel[+x.dataset.a] === +x.dataset.k)); thumbs(set);
+        const st = set.querySelector(".if-stage"), f = st.querySelector("iframe.a"), src = ifSrc(ifSlug(it), set.classList.contains("feat")); st.dataset.src = src; if (f) { IFX.frames.delete(f.contentWindow); f.src = src; f.addEventListener("load", () => IFX.frames.set(f.contentWindow, st), { once: true }); } return; }
+      if (e.target.closest(".if-open")) ifOpen(it);
+    });
+  }
+
+  // the enlarged view: one block, as big as the window allows, with its variant switch
+  function ifOpen(it) {
+    const box = document.createElement("div"); box.className = "if-dlg"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", it.name);
+    const src = (it2) => it2.ext ? `pg/ext/${it2.f}.html` : `pg/${ifSlug(it2)}.html?max=1.6&detail=1`;
+    box.innerHTML = `<button class="if-scrim" aria-label="Close"></button><div class="if-big${it.ext ? " ext" : ""}"><iframe title="${esc(it.name)}" src="${src(it)}"></iframe>
+      ${it.axes ? `<div class="if-vsw on">${ifSegs(it)}</div>` : ""}<button class="if-x" type="button" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+    document.body.appendChild(box); document.documentElement.style.overflow = "hidden";
+    const big = box.querySelector(".if-big"), f = big.querySelector("iframe");
+    if (it.ext) { const fit = () => { const s = Math.min(big.clientWidth / it.w, big.clientHeight / it.h); f.style.width = it.w + "px"; f.style.height = it.h + "px"; f.style.transform = `translate(-50%,-50%) scale(${s})`; }; fit(); addEventListener("resize", fit); box._fit = fit; }
+    const thumbs = () => box.querySelectorAll(".if-seg").forEach((sg) => { const on = sg.querySelector('[aria-pressed="true"]'), th = sg.querySelector(".th"); th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px"; });
+    requestAnimationFrame(() => { box.classList.add("in"); thumbs(); });
+    const close = () => { box.classList.remove("in"); document.documentElement.style.overflow = ""; if (box._fit) removeEventListener("resize", box._fit); removeEventListener("keydown", esc_); setTimeout(() => box.remove(), 250); };
+    const esc_ = (e) => { if (e.key === "Escape") close(); }; addEventListener("keydown", esc_);
+    box.addEventListener("click", (e) => {
+      if (e.target.closest(".if-scrim, .if-x")) return close();
+      const b = e.target.closest(".if-seg button"); if (!b) return;
+      it.sel[+b.dataset.a] = +b.dataset.k; box.querySelectorAll(".if-seg button").forEach((x) => x.setAttribute("aria-pressed", it.sel[+x.dataset.a] === +x.dataset.k)); thumbs(); f.src = src(it);
+    });
   }
   addEventListener("message", (e) => {
     const st = IFX.frames.get(e.source); const d = e.data || {};
