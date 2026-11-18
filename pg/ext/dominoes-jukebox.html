@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominoes Jukebox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f6f6; --card: #ffffff; --ink: #17181b; --muted: #62666d; --line: #dfe0e4; --press: #eeeef1;
+  --rail: #eeeef1; --rail-press: #e3e3e7; --stop: #b9bcc2; --ink-rgb: 23, 24, 27;
+  --card-shadow: 0 22px 44px -14px rgba(26, 28, 36, 0.18), 0 3px 8px rgba(26, 28, 36, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1012; --card: #202226; --ink: #eeeff1; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
+    --rail: #2f3237; --rail-press: #393c42; --stop: #5a5e66; --ink-rgb: 238, 239, 241;
+    --card-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1012; --card: #202226; --ink: #eeeff1; --muted: #9a9ea5; --line: #2a2c31; --press: #2c2f34;
+  --rail: #2f3237; --rail-press: #393c42; --stop: #5a5e66; --ink-rgb: 238, 239, 241;
+  --card-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.page { min-height: 100%; display: flex; flex-direction: column; }
+.stage { flex: 1; display: flex; justify-content: center; padding: 9vh 16px 32px; overflow-x: auto; }
+.anchor { position: relative; width: 992px; flex: none; min-height: 360px; }
+
+.top { display: none; }
+/* The device: a screen and one knob. Turn to move, press to go in, hold (or ⟲) to come back. */
+.device { position: relative; width: 992px; border-radius: 28px; background: var(--card); box-shadow: var(--card-shadow); display: flex; align-items: stretch; }
+.screen { position: relative; width: 816px; height: 368px; flex: none; }
+.hw { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; flex: 1; border-left: 1px solid var(--line); }
+/* Knob: 104, the card's own white, a hairline; 24 ticks like the ruler. A tick tips as it passes the marker. */
+.knob { position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; outline: none;
+  background: var(--card); box-shadow: inset 0 0 0 1px var(--line), 0 8px 18px -10px rgba(26,28,36,.28); transition: background-color 120ms ease, transform 90ms ease; }
+.knob:hover { background: var(--press); }
+.knob.down { background: var(--rail-press); transform: scale(.97); cursor: grabbing; }
+.knob .ring { position: absolute; inset: 0; }
+.knob .kt { position: absolute; inset: 0; will-change: transform; }
+.knob .kt b { position: absolute; left: 50%; top: 9px; width: 1.25px; height: 12px; margin-left: -0.6px; border-radius: 1px; background: var(--stop); transform-origin: 50% 100%; }
+.mark { position: absolute; left: 50%; top: -11px; width: 1.5px; height: 8px; margin-left: -0.75px; border-radius: 1px; background: var(--ink); }
+.back { appearance: none; height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font: 400 13px/1 var(--sans); cursor: pointer; transition: background-color 120ms ease; }
+.back:hover { background: var(--press); }
+.back:active { background: var(--rail-press); }
+.np { position: absolute; left: 14px; bottom: -26px; font: 400 13px/16px var(--sans); color: var(--muted); white-space: nowrap; }
+.zone { transition: opacity 200ms ease; }
+.zone.dim { opacity: .5; }
+
+.trigger { appearance: none; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font: 500 14px/1 var(--sans); cursor: pointer; transition: background-color 120ms ease; }
+.trigger:hover { background: var(--press); }
+.trigger[aria-expanded="true"] { background: var(--ink); color: var(--bg); box-shadow: none; }
+.trigger svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+
+/* Card 760 × 296, 8 padding, 24 radius. Window 280; the rail runs through all three levels. */
+.menu { position: absolute; left: 0; top: 0; width: 816px; padding: 48px 16px 40px; visibility: hidden; outline: none; }
+.win { position: relative; height: 280px; user-select: none; -webkit-user-select: none; touch-action: none; cursor: default; }
+.rail { position: absolute; left: 0; right: 0; top: 117px; height: 46px; border-radius: 23px; background: var(--rail); transition: background-color 140ms ease; }
+.menu.is-press .rail { background: var(--rail-press); }
+.zone { position: absolute; top: 0; bottom: 0; overflow: hidden; }
+.z-album { left: 0; width: 224px; -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent); }
+.z-song { left: 224px; width: 304px; }
+.z-act { left: 528px; right: 0; -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); }
+.cnt { margin-left: 10px; font-variant-numeric: tabular-nums; color: var(--stop); }
+.cnt b { font-weight: 500; color: inherit; }
+.lvl.on .cnt b { color: var(--ink); }
+.np b { font-weight: 500; color: var(--ink); }
+.lvl { position: absolute; top: -30px; font: 500 12px/16px var(--sans); letter-spacing: 0; color: var(--stop); transition: color 140ms ease; pointer-events: none; }
+.lvl.on { color: var(--muted); }
+
+/* Level 1 · albums: 88 square, facing you. Scroll past one and it tips back, up, out of the way. */
+.alab .at { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arow { position: absolute; left: 0; top: 0; height: 40px; margin-top: -20px; display: flex; align-items: center; gap: 18px; padding-left: 6px; will-change: transform, opacity; }
+.twrap { position: relative; width: 34px; height: 34px; flex: none; perspective: 110px; perspective-origin: 50% 20%; transform-origin: 50% 50%; will-change: transform; }
+/* a record: round, the art on it, a spindle hole; it stands on its bottom edge and falls back flat */
+.thumb { position: absolute; inset: 0; border-radius: 50%; transform-origin: 50% 100%; will-change: transform; backface-visibility: visible;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), inset 0 0 0 6px rgba(255,255,255,.06); }
+.thumb::after { content: ""; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px rgba(0,0,0,.18); }
+
+.alab { max-width: 156px; display: flex; height: 30px; align-items: center; padding: 0 12px; margin-left: -10px; border-radius: 15px; transform-origin: 50% 100%; will-change: transform; font: 400 15px/20px var(--sans); letter-spacing: -0.01em; white-space: nowrap; }
+
+/* Level 2 · Week 4's Dominoes Drag, ported as it is: a 160 window, a tick every 6.65 (10 s of the album),
+   14 tall on a foot at 30, a full-height line hung from the top at the window's centre. The value is the song's
+   start; a song is one detent. Same physics: passed dominoes rest on each other, lower further back (≤ 76°). */
+.slab { position: absolute; left: 6px; top: 140px; height: 30px; margin-top: -15px; max-width: 128px; display: flex; align-items: baseline; gap: 7px; padding: 5px 12px 0; border-radius: 15px;
+  font: 400 15px/20px var(--sans); letter-spacing: -0.01em; white-space: nowrap; will-change: transform; }
+.slab span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.slab .n { font: 400 13px/16px var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.r-window { position: absolute; left: 136px; width: 160px; top: 117px; height: 46px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.r-window svg { position: absolute; left: 0; top: 0; overflow: visible; transition: opacity 160ms ease; }
+.tk { stroke: var(--stop); stroke-width: 1; stroke-linecap: round; }
+.tk.on { stroke: var(--muted); stroke-width: 1.25; }
+.tk.post { stroke: var(--muted); }
+.tnum { font: 500 10px var(--sans); font-variant-numeric: tabular-nums; fill: var(--muted); }
+.tnum.cur { fill: var(--ink); }
+.ttl { font: 400 13px var(--sans); fill: var(--muted); transition: fill 120ms ease; }
+.ttl.cur { fill: var(--ink); }
+.sr.vB .slab { display: none; }
+.sr.vB .r-window { left: 8px; width: 288px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.sr.vB .r-rod { left: 108px; }
+/* the song ruler is its own group, so it can take Domino Stacks' knock and flash without moving the rest of the rail */
+.sr { position: absolute; inset: 0; will-change: transform; }
+.sr-flash { position: absolute; left: 0; width: 304px; top: 117px; height: 46px; border-radius: 23px; background: rgb(23, 24, 27); opacity: 0; pointer-events: none; }
+.r-rod { position: absolute; left: 216px; top: 117px; width: 1px; height: 46px; margin-left: -0.5px; background: var(--ink); transform-origin: 50% 0; pointer-events: none; will-change: transform; }
+
+/* Level 3 · what to do with the song. */
+.col { position: absolute; left: 0; top: 0; width: 100%; height: 0; will-change: transform; }
+.c { position: absolute; display: flex; align-items: center; white-space: nowrap; transform-origin: 50% 0; }
+.c-icon { left: 18px; width: 16px; height: 16px; margin-top: -8px; }
+.c-icon svg { width: 16px; height: 16px; }
+.c-label { left: 40px; height: 30px; margin-top: -15px; padding: 0 10px; border-radius: 15px; font: 400 15px/20px var(--sans); letter-spacing: -0.01em; }
+.c-sect { left: 50px; height: 16px; margin-top: -8px; font: 500 12px/16px var(--sans); color: var(--muted); }
+.c-end { right: 16px; height: 20px; margin-top: -10px; gap: 3px; color: var(--muted); }
+.c-end svg { width: 14px; height: 14px; }
+.key { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--stop); font: 400 11px/1 var(--sans); }
+.badge { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--stop); font: 500 11px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); }
+.ico { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ico.fill { fill: currentColor; }
+
+/* Submenu: Add to playlist › — a small column standing up beside the card, on the rail's line. */
+.sub { position: absolute; top: 0; left: 0; width: 184px; padding: 6px; border-radius: 18px; background: var(--card); box-shadow: var(--card-shadow); visibility: hidden; }
+.opt { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 12px; border-radius: 12px; font: 400 14px/20px var(--sans); transform-origin: 0 50%; cursor: default; }
+.opt.on { background: var(--rail); }
+.opt svg { width: 14px; height: 14px; color: var(--muted); }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 8px; padding: 0 16px 28px; }
+.btn { appearance: none; height: 42px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font: 400 14px/1 var(--sans); cursor: pointer; }
+.btn:hover { background: var(--press); }
+.check { display: inline-flex; align-items: center; gap: 8px; }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); }
+#spec-btn[aria-expanded="true"] { background: var(--ink); color: var(--bg); box-shadow: none; }
+.seg { display: inline-flex; gap: 4px; }
+.seg .btn[aria-checked="true"] { background: var(--ink); color: var(--bg); box-shadow: none; }
+.spec { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 5; width: min(1040px, 100%); max-height: 64vh; overflow-y: auto; padding: 20px 24px calc(24px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; background: var(--card); box-shadow: 0 -12px 40px -12px rgba(26, 28, 36, 0.2), 0 0 0 1px var(--line); }
+.spec[hidden] { display: none; }
+.spec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.spec-head h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; }
+.spec-head span { color: var(--muted); font: 12px/16px var(--mono); }
+.spec-close { margin-left: auto; appearance: none; border: 0; background: var(--press); color: var(--ink); font: 500 13px/20px var(--sans); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px 32px; }
+.spec-group h3 { margin: 0 0 8px; font: 500 11px/16px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.spec-group dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0 16px; }
+.spec-group dt, .spec-group dd { margin: 0; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 18px; }
+.spec-group dt { color: var(--muted); }
+.spec-group dd { font-family: var(--mono); font-size: 12px; display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.spec-group dd i { width: 12px; height: 12px; border-radius: 3px; flex: none; box-shadow: inset 0 0 0 1px var(--line); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.menu:focus-visible { outline: none; }
+html.pointer-mode *:focus-visible { outline: none; }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="stage">
+    <div class="anchor" id="anchor">
+      <div class="top">
+        <button class="trigger" id="trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.6"/></svg>Music</button>
+        
+      </div>
+      <div class="device" id="device">
+      <div class="screen">
+      <div class="menu" id="menu" role="menu" aria-label="Music" tabindex="0">
+        <div class="win" id="win">
+          <div class="rail"></div>
+          <div class="zone z-album" id="zA"></div>
+          <div class="zone z-song" id="zS"></div>
+          <div class="zone z-act" id="zT"></div>
+          <span class="lvl" style="left:14px" data-l="0">Album<span class="cnt"></span></span>
+          <span class="lvl" style="left:242px" data-l="1">Song<span class="cnt"></span></span>
+          <span class="lvl" style="left:546px" data-l="2">Action<span class="cnt"></span></span>
+          <span class="np" id="status" aria-live="polite"></span>
+        </div>
+      </div>
+      </div>
+      <div class="hw">
+        <div class="knob" id="knob" role="slider" aria-label="Knob: turn to move, press to select" tabindex="0"><span class="mark"></span><div class="ring" id="ring"></div></div>
+        <button class="back" id="back" type="button">Back</button>
+      </div>
+      </div>
+      <div class="sub" id="sub" role="menu" aria-label="Add to playlist"></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="seg" role="radiogroup" aria-label="Song level">
+      <button class="btn" type="button" role="radio" data-v="A" aria-checked="false">A · Song name</button>
+      <button class="btn" type="button" role="radio" data-v="B" aria-checked="false">B · Titles on the tape</button>
+      <button class="btn" type="button" role="radio" data-v="D" aria-checked="true">D · Numbered stops</button>
+    </div>
+    <label class="btn check"><input type="checkbox" id="slow"> Slow motion</label>
+    <button class="btn" id="spec-btn" type="button" aria-expanded="false" aria-controls="spec">Spec</button>
+  </div>
+</main>
+
+<section class="spec" id="spec" hidden aria-label="Spec">
+  <div class="spec-head"><h2>Dominoes Jukebox</h2><span>Quirky · Week 6 Menus</span><button class="spec-close" id="spec-close" type="button">Close</button></div>
+  <div class="spec-grid">
+    <div class="spec-group"><h3>Idea</h3><dl>
+      <dt>Device</dt><dd>a record player: one screen, one knob</dd>
+      <dt>Three levels</dt><dd>album → song → action</dd>
+      <dt>Knob</dt><dd>turn moves the active level · push goes in · hold goes back</dd>
+      <dt>The rail</dt><dd>reads as one sentence: this album, this song, do this</dd>
+      <dt>Album</dt><dd>faces you; scroll on and it tips back, up, away</dd>
+      <dt>Song</dt><dd>passed ones lie down, ones ahead stand</dd>
+      <dt>Chain</dt><dd>a change upstream knocks over what depends on it</dd>
+      <dt>Submenu</dt><dd>Add to playlist › stands up beside the card</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Card</h3><dl>
+      <dt>Device</dt><dd>992 × 368 · r 28 · screen 816 · knob panel 176</dd>
+      <dt>Rail</dt><dd><i style="background:#eeeef1"></i>784 × 46 · r 23 · #EEEEF1</dd>
+      <dt>Pressed rail</dt><dd><i style="background:#e3e3e7"></i>#E3E3E7</dd>
+      <dt>Zones</dt><dd>album 224 · song 304 · action 256</dd>
+      <dt>Level label</dt><dd>Geist Mono 500 10 · 0.1 em · #B9BCC2 → #62666D active</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Album</h3><dl>
+      <dt>Row</dt><dd>40 · a record ⌀ 34 with a 5 spindle hole · title Geist 400 15</dd>
+      <dt>Ahead</dt><dd>below · leaning toward you 62°</dd>
+      <dt>Title</dt><dd>falls and stands with its record, a touch late (spring 900 / 56, no wobble), hinged on its bottom edge</dd>
+      <dt>Stand up</dt><dd>starts when the one before lands (70 ms) · comes up just past upright and settles (560 / 30, ≤ 10° back) · a small hop as it lands upright · grows to 118 % (420 / 30)</dd>
+      <dt>Passed</dt><dd>above · tipped back 88°: only its edge, a line</dd>
+      <dt>Fall</dt><dd>hinged on its bottom edge · perspective 110 · pushed off at 220°/s · gravity 5200 · lands with a −10 % knock</dd>
+      <dt>Passed</dt><dd>falls back flat (88°) under gravity, one after another 30 ms apart</dd>
+      <dt>In the rail</dt><dd>grows to 118 % (spring 420 / 20), centred in the rail's rounded end · outlined while active</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Song</h3><dl>
+      <dt>Source</dt><dd>Week 4 Domino Stacks (stepped), same code and numbers</dd>
+      <dt>Tape</dt><dd>the whole album · a domino every 10 s · 6.65 apart</dd>
+      <dt>Domino</dt><dd>1 × 14 #B9BCC2 on a foot at 30 · down 1.25 #62666D</dd>
+      <dt>Versions</dt><dd>A: song name, every domino alike, the line is knocked back by a stop · B: every title rides the tape above its first domino, glides like Dominoes Drag (170 / 26), no hit · D: numbered taller stops, the line stays still</dd>
+      <dt>Line</dt><dd>1 × 46 · ink</dd>
+      <dt>Press + drag</dt><dd>scrubs through the song 1:1 · elapsed time beside the title</dd>
+      <dt>Passed</dt><dd>rest on each other: a + asin(3.65 / 14 · cos a) · ≤ 76°</dd>
+      <dt>Song start</dt><dd>a stop: 1 × 20 #62666D · number Geist Mono 9 above</dd>
+      <dt>Turn</dt><dd>one song per detent · arrives with a light hit (120), as Domino Stacks' keys · tape 500 / 40 · dominoes 700 / 50</dd>
+      <dt>Hit</dt><dd>fill flashes ink ≤ 9 % (200 ms) · the whole rail takes a one-sided knock 0.15–0.55° (360 ms) and dips · the device dips · nothing stays tilted · label hops</dd>
+      <dt>Standing stop</dt><dd>rocks, 500 / 18</dd>
+      <dt>Hover</dt><dd>line lifts 5, its foot taps the next domino</dd>
+      <dt>Label</dt><dd>no. Geist Mono 11 · title Geist 400 15 · max 128 · dips on change</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Action row</h3><dl>
+      <dt>Height</dt><dd>40</dd>
+      <dt>Left icon</dt><dd>x 18 · 16 · stroke 1.5</dd>
+      <dt>Label</dt><dd>x 40 · Geist 400 · 15 / 20</dd>
+      <dt>Shortcut</dt><dd>key per square · 20 · r 4</dd>
+      <dt>Badge</dt><dd>pill 20 · Geist Mono 500 11</dd>
+      <dt>Right icon / ›</dt><dd>14 · #62666D</dd>
+      <dt>Section</dt><dd>Geist Mono 500 · 11 · caps</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Knob</h3><dl>
+      <dt>Size</dt><dd>104 · #FFFFFF · hairline 1 #DFE0E4</dd>
+      <dt>Detent ticks</dt><dd>24 · 1.25 × 12 · #B9BCC2 · 15° apart · tip ≤ 60° passing the marker</dd>
+      <dt>Marker</dt><dd>1.5 × 8 · ink · fixed at 12 o'clock</dd>
+      <dt>Back</dt><dd>34 · pill · Geist 400 13 · hairline</dd>
+    </dl></div>
+    <div class="spec-group"><h3>States</h3><dl>
+      <dt>Default</dt><dd>still</dd>
+      <dt>Hover</dt><dd>nothing moves; text to ink, domino leans 20°</dd>
+      <dt>Active level</dt><dd>full · the others at 50 %</dd>
+      <dt>Pressed</dt><dd>rail darkens · knob sinks to 96.5 %</dd>
+      <dt>Release</dt><dd>rolls into the rail, then runs</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Motion</h3><dl>
+      <dt>Album tip</dt><dd>gravity · ≈ 110 ms · 60 ms per album passed</dd>
+      <dt>Songs swap</dt><dd>old fall, new stand from the rail outward · 30 ms</dd>
+      <dt>Actions</dt><dd>only rows whose text changes tip and relabel</dd>
+      <dt>Rolls</dt><dd>spring 520 / 34 · 34 ms per column</dd>
+    </dl></div>
+    <div class="spec-group"><h3>Input</h3><dl>
+      <dt>Knob turn</dt><dd>drag it round · 1 step per 15° · or the wheel: one swipe = one step</dd>
+      <dt>Knob push</dt><dd>click · ↵ · next level, or run</dd>
+      <dt>Back</dt><dd>hold the knob 450 ms · BACK · esc</dd>
+      <dt>Keys</dt><dd>arrows turn · ↵ push · esc back</dd>
+      <dt>Touch</dt><dd>tapping the screen also works</dd>
+    </dl></div>
+  </div>
+</section>
+
+<script>
+(() => {
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const I = {
+  play: '<path d="M5 3.5v9l7.5-4.5z"/>',
+  stop: '<rect x="4" y="4" width="8" height="8" rx="1.5"/>',
+  restart: '<path d="M3.5 8a4.5 4.5 0 1 0 1.3-3.2"/><path d="M4.5 2.5v2.5H7"/>',
+  next: '<path d="M3 3.5v9l6-4.5z"/><path d="M12.5 3.5v9"/>',
+  plus: '<path d="M2.5 4h7M2.5 8h7M2.5 12h4"/><path d="M12.5 9.5v5M10 12h5"/>',
+  heart: '<path d="M8 13.5S2.5 10.2 2.5 6.4A2.9 2.9 0 0 1 8 5a2.9 2.9 0 0 1 5.5 1.4C13.5 10.2 8 13.5 8 13.5z"/>',
+  lyrics: '<path d="M3 4h10M3 7.5h10M3 11h6"/>',
+  info: '<circle cx="8" cy="8" r="5.5"/><path d="M8 7.5v3.5M8 5.2v.1"/>',
+  open: '<path d="M6 3H3.5A1 1 0 0 0 2.5 4v8.5a1 1 0 0 0 1 1H12a1 1 0 0 0 1-1V10"/><path d="M9 2.5h4.5V7M13.5 2.5L7.5 8.5"/>',
+  chev: '<path d="M6 3.5L10.5 8 6 12.5"/>',
+  list: '<path d="M3 4.5h10M3 8h10M3 11.5h6"/>',
+};
+const ico = (k, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 16 16" aria-hidden="true">${I[k]}</svg>`;
+
+// Dakota's Spotify: albums behind this month's top tracks (tracklists and lengths from Spotify).
+// Covers are abstract colour fields in each sleeve's palette, not the artwork. Liked = in her top tracks.
+const ALBUMS = [
+  { t: 'Still Crazy After All These Years', a: 'Paul Simon', y: 1975, art: 'linear-gradient(160deg, #e9dcc2 0%, #c9b28b 55%, #7a6346 100%)',
+    s: [['Still Crazy After All These Years', '3:26'], ['My Little Town', '3:51'], ['I Do It for Your Love', '3:34'], ['50 Ways to Leave Your Lover', '3:37', 2, 1], ['Night Game', '2:57'],
+        ['Gone at Last', '3:40'], ['Some Folks\' Lives Roll Easy', '3:13'], ['Have a Good Time', '3:26'], ["You're Kind", '3:19'], ['Silent Eyes', '4:05']] },
+  { t: 'Buffalo Springfield', a: 'Buffalo Springfield', y: 1966, art: 'radial-gradient(circle at 35% 35%, #f3d36b 0 30%, transparent 31%), linear-gradient(180deg, #e2b33c, #b07d22)',
+    s: [["For What It's Worth", '2:33', 1, 1], ['Go and Say Goodbye', '2:23'], ['Sit Down I Think I Love You', '2:33'], ["Nowadays Clancy Can't Even Sing", '3:27'], ['Hot Dusty Roads', '2:54'], ["Everybody's Wrong", '2:31'],
+        ['Flying on the Ground Is Wrong', '2:43'], ['Burned', '2:19'], ['Do I Have to Come Right out and Say It', '3:05'], ['Leave', '2:45'], ['Out of My Mind', '3:08'], ['Pay the Price', '2:41']] },
+  { t: "What's Going On", a: 'Marvin Gaye', y: 1971, art: 'linear-gradient(200deg, #6f8fa6 0%, #2f4a63 55%, #1a2633 100%)',
+    s: [["What's Going On", '3:53', 1], ["What's Happening Brother", '2:43'], ["Flyin' High (In The Friendly Sky)", '3:49'], ['Save The Children', '4:03'], ['God Is Love', '1:41'],
+        ['Mercy Mercy Me (The Ecology)', '3:13', 0, 1], ['Right On', '7:32'], ['Wholy Holy', '3:07'], ['Inner City Blues (Make Me Wanna Holler)', '5:27', 2, 1]] },
+  { t: 'Travelling Without Moving', a: 'Jamiroquai', y: 1996, art: 'radial-gradient(circle at 50% 50%, #e04a2f 0 26%, transparent 27%), linear-gradient(135deg, #5b0f0f, #1d0606)',
+    s: [['Virtual Insanity', '5:40'], ['Cosmic Girl', '4:04'], ['Use the Force', '4:00'], ['Everyday', '4:28'], ['Alright', '4:23', 1, 1], ['High Times', '6:00'], ['Drifting Along', '4:05'],
+        ['Didjerama', '3:50'], ['Didjital Vibrations', '5:49'], ['Travelling Without Moving', '3:40'], ['You Are My Love', '3:55'], ['Spend a Lifetime', '4:14'], ['Funktion', '8:27']] },
+  { t: 'Ege Bamyasi', a: 'CAN', y: 1972, art: 'linear-gradient(180deg, #e9792b 0 62%, #3f7d3a 62% 100%)',
+    s: [['Pinch', '9:28'], ['Sing Swan Song', '4:49'], ['One More Night', '5:35'], ['Vitamin C', '3:34', 1], ['Soup', '10:31'], ["I'm So Green", '3:04'], ['Spoon', '3:05', 0, 1]] },
+  { t: 'This Old Dog', a: 'Mac DeMarco', y: 2017, art: 'linear-gradient(170deg, #efe6d4 0%, #d8c7a6 60%, #9c8461 100%)',
+    s: [['My Old Man', '3:41'], ['This Old Dog', '2:30', 1], ["Baby You're Out", '2:37'], ['For the First Time', '3:02', 0, 1], ['One Another', '2:46'], ['Still Beating', '3:01'], ['Sister', '1:18'],
+        ['Dreams from Yesterday', '3:27'], ['A Wolf Who Wears Sheeps Clothes', '2:49'], ['One More Love Song', '4:01'], ['On the Level', '3:47'], ['Moonlight on the River', '7:02'], ['Watching Him Fade Away', '2:23']] },
+  { t: 'Brown Sugar', a: "D'Angelo", y: 1995, art: 'radial-gradient(circle at 60% 40%, #b97a45 0 22%, transparent 23%), linear-gradient(160deg, #6b4022, #2c180c)',
+    s: [['Brown Sugar', '4:22', 2, 1], ['Alright', '5:13'], ['Jonz In My Bonz', '5:56'], ["Me And Those Dreamin' Eyes Of Mine", '4:46'], ['Smooth', '4:19'], ["Cruisin'", '6:24'],
+        ['When We Get By', '5:44'], ['Lady', '5:46'], ['Higher', '5:27']] },
+  { t: "Mama's Gun", a: 'Erykah Badu', y: 2000, art: 'linear-gradient(180deg, #9fd1cf 0%, #4f9aa3 55%, #1f5560 100%)',
+    s: [['Penitentiary Philosophy', '6:09'], ["Didn't Cha Know", '3:58', 1, 1], ['My Life', '3:59'], ['...& On', '3:34'], ['Cleva', '3:45'], ['Hey Sugah', '0:51'], ['Booty', '4:04'],
+        ['Kiss Me On My Neck', '5:34'], ['A.D. 2000', '4:51'], ['Orange Moon', '7:10'], ['In Love With You', '5:21'], ['Bag Lady', '5:48'], ["Time's A Wastin", '6:40'], ['Green Eyes', '10:04']] },
+];
+ALBUMS.forEach(al => al.songs = al.s.map(([t, d, notes = 0, liked = 0], i) => ({ t, d, notes, liked, no: i + 1 })));
+// level 3: what you can do with the song in the rail
+const ACTS = [
+  // the first two follow what's playing: the song in the rail is playing → Stop / Restart; otherwise Play / Play next
+  { id: 'play', icon: (s) => isOn(s) ? 'stop' : 'play', keys: '⏎', text: (s) => isOn(s) ? 'Stop' : 'Play' },
+  { id: 'next', icon: (s) => isOn(s) ? 'restart' : 'next', keys: '⌘ ⏎', text: (s) => isOn(s) ? 'Restart' : 'Play next' },
+  { id: 'add', icon: 'plus', sub: true, text: () => 'Add to playlist' },
+  { id: 'like', icon: 'heart', iconFill: (s) => s.liked, text: (s) => s.liked ? 'Liked' : 'Like', keys: 'L' },
+  { sect: 'More' },
+  { id: 'notes', icon: 'lyrics', badge: (s) => s.notes, text: () => 'Notes' },
+  { id: 'credits', text: () => 'Song credits' },
+  { id: 'artist', end: 'open', text: (s, al) => al.a },
+];
+let playing = null;
+const isOn = (s) => !!playing && playing.s === s;
+const PLAYLISTS = ['Late drives', 'Focus', 'Sunday', 'New playlist…'];
+const ROW = 40, BAND = 140, SONG_X = 84, SONG_GAP = 168, HAND = 0.034;
+
+const $ = (s) => document.querySelector(s);
+const menu = $('#menu'), knob = $('#knob'), ring = $('#ring'), win = $('#win'), zA = $('#zA'), zS = $('#zS'), zT = $('#zT'), subEl = $('#sub'), status = $('#status');
+let slow = 1; $('#slow').addEventListener('change', (e) => { slow = e.target.checked ? 0.12 : 1; });
+let clock = 0;
+const spring = (o, p, v, tgt, k, d, h) => { o[v] += (-(o[p] - tgt) * k - o[v] * d) * h; o[p] += o[v] * h; };
+
+/* ---------- level 1: albums ---------- */
+const APHI = [0]; for (let k = 1; k <= 12; k++) APHI.push(Math.min(76, APHI[k - 1] + Math.asin(0.62 * Math.cos(APHI[k - 1] * Math.PI / 180)) * 180 / Math.PI));
+const aRest = (i, cur) => i < cur ? 88 : i === cur ? 0 : -62;
+let ai = 2, VAR = 'D';   // song level: A (song name, all dominoes alike, line knocked back) or D (numbered stops, line still)
+const A = { x: ai, v: 0 };
+ALBUMS.forEach((al, k) => {
+  const e = document.createElement('div'); e.className = 'arow';
+  e.innerHTML = `<div class="twrap"><div class="thumb" style="background:${al.art}"></div></div><div class="alab"><span class="at">${al.t}</span></div>`; zA.appendChild(e);
+  Object.assign(al, { el: e, thumb: e.querySelector('.thumb'), tw: e.querySelector('.twrap'), lab: e.querySelector('.alab'), ang: aRest(k, ai), av: 0, tgt: aRest(k, ai), sc: k === ai ? 1.18 : 1, hop: 0, hv: 0, la: aRest(k, ai), lv: 0, sv: 0, at: 0, falling: false, songSel: 0 });
+});
+function goAlbum(k) {
+  k = clamp(k, 0, ALBUMS.length - 1); if (k === ai) return;
+  closeSub();
+  const from = ai;
+  ALBUMS.forEach((al, i) => { const t = aRest(i, k); if (t !== al.tgt) { al.prev = al.tgt; al.tgt = t; al.at = k > from ? clock + (i >= from ? (i - from) * 0.06 : 0) + (i === k ? 0.07 : 0) : clock + Math.max(0, (from - 1 - i)) * 0.03 + (i === k ? 0.05 : 0); } });
+  ai = k; if (!playing && !sayBusy()) status.innerHTML = nowLine(); buildTape(ALBUMS[k]); slab.innerHTML = slabHTML(SONG()); if (!REDUCE) DR.dig.v -= 60;
+  relabel();
+}
+
+/* ---------- level 2: Dominoes Drag ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const PXs = 0.665, TSTEP = 10, DH = 14, FOOT = 30, GAP = TSTEP * PXs - 3, CAP = 76;
+const CXs = () => VAR === 'B' ? 100 : 80;   // the line, inside the window   // 6.65 apart, like the ruler
+const deg = (r) => r * 180 / Math.PI, rad = (d) => d * Math.PI / 180;
+const secs = (d) => { const [m, x] = d.split(':').map(Number); return m * 60 + x; };
+const sr = document.createElement('div'); sr.className = 'sr'; zS.appendChild(sr);
+const srFlash = document.createElement('div'); srFlash.className = 'sr-flash'; sr.appendChild(srFlash);
+const slab = document.createElement('div'); slab.className = 'slab'; sr.appendChild(slab);
+const rwin = document.createElement('div'); rwin.className = 'r-window'; sr.appendChild(rwin);
+const rod = document.createElement('span'); rod.className = 'r-rod'; sr.appendChild(rod);
+// Domino Stacks: a stop is hit, the group takes a one-sided knock (360 ms), the fill flashes, the label hops
+const KNOCK_MS = 360, knockShape = (u) => Math.sin(2 * Math.PI * u * KNOCK_MS / 170) * Math.exp(-3.2 * u) * (1 - u);
+const knockNorm = (() => { let m = 0; for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(knockShape(i / 200))); return m; })();
+const mmss = (x) => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
+const slabHTML = (s) => `<span class="n">${String(s.no).padStart(2, '0')}</span><span>${s.t}</span>` + (DR.pos > 0 || DR.scrubbing ? `<span class="n">${mmss(DR.pos)}</span>` : '');
+const DR = { prot: { x: 0, v: 0 }, wallDir: 0, pill: { x: 0, v: 0 }, cdip: { x: 0, v: 0 }, crot: { x: 0, v: 0 }, flash: 0, knock: null, knocks: [], value: 0, prev: 0, sv: 0, tapeV: 0, swing: { x: 0, v: 0 }, lift: { x: 0, v: 0 }, dig: { x: 0, v: 0 }, tapAt: 0, hover: false, svg: null, ticks: [], al: null };
+const spx = (o, t, k, c, h) => { if (REDUCE) { o.x = t; o.v = 0; return; } o.v += (-k * (o.x - t) - c * o.v) * h; o.x += o.v * h; };
+function targetsD() {
+  const tg = DR.ticks.map(() => 0); let f = -1;
+  for (const t of DR.ticks) if ((DR.value - t.u) * PXs > 0.01) f = t.i;
+  if (f < 0) return tg;
+  let a = deg(Math.asin(clamp((DR.value - DR.ticks[f].u) * PXs, 0, GAP) / DH)); tg[f] = a;
+  for (let k = f - 1; k >= 0; k--) { a = Math.min(CAP, a + deg(Math.asin((GAP / DH) * Math.cos(rad(a))))); tg[k] = a; }
+  return tg;
+}
+function impact(dir, v) {   // Domino Stacks' hit, by speed: k 0 (a touch) … 1 (a slam)
+  const k = clamp((v - 12) / 400, 0, 1);
+  DR.flash = Math.max(DR.flash, 0.4 + 0.6 * k);
+  if (REDUCE) return;
+  DR.dig.v -= (40 + 50 * Math.random()) * (0.35 + 0.65 * k);
+  DR.knocks.push({ at: clock + 0.03, dir, amp: 0.15 + 0.4 * k });   // the bar: a one-sided knock
+  DR.pill.v += 2 + 6 * k;                                            // the bar dips
+  DR.cdip.v += 5 + 15 * k;                                           // the card dips (no tipping)
+  if (VAR === 'A') { DR.swing.v = dir * (140 + 200 * k); DR.wallDir = dir; DR.wallUntil = clock + 1.2; }   // A: the line is knocked back off the stop
+  // the line is what runs into the stop: knocked back the way it came (≈10° … 18°) and swings, bouncing off the stop (75 %)
+
+}
+function buildTape(al) {
+  if (DR.svg) { const old = DR.svg; old.style.opacity = 0; setTimeout(() => old.remove(), 200); }
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('height', 46); rwin.appendChild(svg);
+  let total = 0; al.songs.forEach((sg) => { sg.u0 = total; total += secs(sg.d); });
+  const ticks = [], nums = [];
+  // every song starts on its own domino (a stop: taller, darker, numbered), then one every 10 s
+  al.songs.forEach((sg, k) => {
+    const end = k < al.songs.length - 1 ? al.songs[k + 1].u0 : total + 0.01;
+    for (let u = sg.u0; u < end - 4; u += TSTEP) {
+      const post = VAR === 'D' && u === sg.u0, x = u * PXs;
+      const l = document.createElementNS(NS, 'line'); l.setAttribute('class', 'tk' + (post ? ' post' : ''));
+      l.setAttribute('x1', x); l.setAttribute('x2', x); l.setAttribute('y1', FOOT - (post ? 20 : DH)); l.setAttribute('y2', FOOT); svg.appendChild(l);
+      ticks.push({ u, x, i: ticks.length, a: 0, v: 0, l, post, song: k });
+    }
+    if (VAR === 'B') {
+      const segW = ((k < al.songs.length - 1 ? al.songs[k + 1].u0 : total) - sg.u0) * PXs, max = Math.max(4, Math.floor((segW - 14) / 6.6));
+      const t = document.createElementNS(NS, 'text'); t.setAttribute('class', 'ttl'); t.setAttribute('x', sg.u0 * PXs + 6); t.setAttribute('y', 12);
+      t.textContent = sg.t.length > max ? sg.t.slice(0, max - 1).trimEnd() + '…' : sg.t; svg.appendChild(t); nums.push(t); return;
+    }
+    if (VAR !== 'D') return;
+    const t = document.createElementNS(NS, 'text'); t.setAttribute('class', 'tnum'); t.setAttribute('x', sg.u0 * PXs + 3); t.setAttribute('y', 10); t.textContent = String(sg.no).padStart(2, '0'); svg.appendChild(t); nums.push(t);
+  });
+  DR.nums = nums;
+  Object.assign(DR, { svg, ticks, al, value: al.songs[al.songSel].u0, prev: al.songs[al.songSel].u0, sv: 0 });
+  const tg = targetsD(); ticks.forEach((t) => { t.a = tg[t.i]; });
+}
+const AL = () => ALBUMS[ai], SONG = () => AL().songs[AL().songSel];
+function goSong(k) {
+  const al = AL(); k = clamp(k, 0, al.songs.length - 1); if (k === al.songSel) return;
+  const dir = k > al.songSel ? 1 : -1;
+  closeSub(); al.songSel = k; DR.pos = 0; slab.innerHTML = slabHTML(al.songs[k]);
+  if (VAR === 'B') { if (!REDUCE) DR.dig.v -= 60; } else impact(dir, 120);   // A / D: Domino Stacks' hit · B: Dominoes Drag's glide
+  relabel();
+}
+zS.addEventListener('pointerenter', () => { DR.hover = true; if (!REDUCE) DR.tapAt = clock + 0.09; });   // lifted, the foot taps the next domino
+zS.addEventListener('pointerleave', () => { DR.hover = false; });
+
+/* ---------- level 3: actions ---------- */
+const cols = [];
+for (let c = 0; c < 3; c++) { const el = document.createElement('div'); el.className = 'col'; zT.appendChild(el); cols.push({ el, y: ROW / 2, v: 0 }); }
+ACTS.forEach((r, i) => {
+  r.c = i * ROW + ROW / 2;
+  const mk = (c, cls) => { const e = document.createElement('div'); e.className = 'c ' + cls; e.style.top = r.c + 'px'; cols[c].el.appendChild(e); return e; };
+  r.cells = []; r.cellCol = [];
+  const add = (c, cls) => { const e = mk(c, cls); r.cells.push(e); r.cellCol.push(c); return e; };
+  if (r.sect) { add(1, 'c-sect').textContent = r.sect; }
+  else { r.ic = r.icon ? add(0, 'c-icon') : null; r.lab = add(1, 'c-label'); r.en = (r.keys || r.badge || r.end || r.sub) ? add(2, 'c-end') : null; }
+  Object.assign(r, { ang: 0, av: 0, pend: null, at: 0, shown: null });
+});
+const ACT_ROWS = ACTS.map((r, i) => r.sect ? -1 : i).filter(i => i >= 0);
+let as = 0;
+const VH = [{ t: -1, T: ACTS[0].c }];
+const T_at = (t) => { for (let k = VH.length - 1; k >= 0; k--) if (VH[k].t <= t) return VH[k].T; return VH[0].T; };
+const curT = () => VH[VH.length - 1].T;
+const settled = () => Math.abs(cols[2].y - ACTS[as].c) < 0.6;
+function content(r) {
+  const s = SONG(), al = AL();
+  const ik = typeof r.icon === 'function' ? r.icon(s) : r.icon;
+  const icon = ik ? ico(ik, r.iconFill && r.iconFill(s) ? 'fill' : '') : '';
+  let end = '';
+  if (r.keys) end = r.keys.split(' ').map(k => `<span class="key">${k}</span>`).join('');
+  else if (r.badge) end = `<span class="badge">${r.badge(s)}</span>`;
+  else if (r.end) end = ico(r.end);
+  else if (r.sub) end = ico('chev');
+  return { icon, text: r.text(s, al), end };
+}
+function relabel(instant) {
+  ACTS.forEach((r, i) => {
+    if (r.sect) return;
+    const c = content(r), key = c.icon + '|' + c.text + '|' + c.end;
+    if (instant || r.shown === null) { apply(r, c, key); return; }
+    if (key !== r.shown) { r.pend = { c, key }; r.at = clock + 0.1 + Math.abs(i - as) * 0.025; }
+  });
+}
+function apply(r, c, key) { r.shown = key; if (r.ic) r.ic.innerHTML = c.icon; r.lab.innerHTML = `<span>${c.text}</span>`; if (r.en) r.en.innerHTML = c.end; }
+function goAct(i) { if (i < 0 || i === as) return; closeSub(); as = i; VH.push({ t: clock, T: ACTS[i].c }); }
+function stepAct(d) { const k = ACT_ROWS.indexOf(as); goAct(ACT_ROWS[clamp(k + d, 0, ACT_ROWS.length - 1)]); }
+
+/* ---------- submenu ---------- */
+let sub = null;
+function openSub() {
+  if (sub) return;
+  subEl.innerHTML = '';
+  sub = { sel: 0, opts: PLAYLISTS.map((t, k) => { const e = document.createElement('div'); e.className = 'opt'; e.setAttribute('role', 'menuitem'); e.innerHTML = `${ico(k === PLAYLISTS.length - 1 ? 'plus' : 'list')}<span>${t}</span>`; subEl.appendChild(e);
+    e.addEventListener('pointerenter', () => { if (sub) sub.sel = k; });
+    e.addEventListener('pointerdown', (ev) => { ev.preventDefault(); if (sub) { sub.sel = k; run(); } });
+    return { t, el: e, ang: 90, av: 0, at: clock + k * 0.04 }; }) };
+  subEl.style.visibility = 'visible';
+  const dv = $('#device');
+  subEl.style.left = (dv.offsetLeft + 816 - 200) + 'px'; subEl.style.top = (dv.offsetTop + 48 + BAND + 26) + 'px';
+}
+function closeSub() { if (!sub) return; sub = null; subEl.style.visibility = 'hidden'; }
+
+/* ---------- focus level, open / close, run ---------- */
+let level = 0, isOpen = false, closing = false, openAt = 0, closeAt = 0, pendingRun = false;
+const setLevel = (l) => { level = clamp(l, 0, 2); document.querySelectorAll('.lvl').forEach(e => e.classList.toggle('on', +e.dataset.l === level)); [zA, zS, zT].forEach((z, k) => z.classList.toggle('dim', k !== level)); };
+function open() {
+  if (isOpen && !closing) return;
+  isOpen = true; closing = false; openAt = clock;
+  menu.style.visibility = 'visible'; menu.focus({ preventScroll: true });
+  ALBUMS.forEach((al, i) => { al.ang = aRest(i, ai); al.av = 0; al.prev = al.tgt = aRest(i, ai); al.at = clock; });
+  buildTape(AL()); slab.innerHTML = slabHTML(SONG());
+  ACTS.forEach((r, i) => { r.ang = 90; r.at = clock + 0.16 + i * 0.022; });
+  setLevel(level);
+}
+function close() {
+  if (!isOpen || closing) return;
+  closeSub(); closing = true; closeAt = clock;
+}
+let sayT = 0, sayUntil = 0;
+const sayBusy = () => performance.now() < sayUntil;
+const albumLine = () => { const al = AL(), m = Math.round(al.songs.reduce((x, sg) => x + secs(sg.d), 0) / 60); return `<b>${al.a}</b> · ${al.y} · ${al.songs.length} songs · ${m} min`; };
+const nowLine = () => playing ? `<b>Now playing</b> · ${playing.s.t} — ${playing.al.a}` : albumLine();
+function say(msg) {   // a result shows for 1.8 s, then the line goes back to what's playing
+  status.innerHTML = msg; clearTimeout(sayT); sayUntil = performance.now() + 1800;
+  sayT = setTimeout(() => { status.innerHTML = nowLine(); }, playing ? 1800 : 1800);
+}
+function run() {
+  const s = SONG(), al = AL(), r = ACTS[as];
+  let msg;
+  if (sub) msg = `Added ${s.t} to ${sub.opts[sub.sel].t}`;
+  else if (r.sub) { openSub(); return; }
+  else if (r.id === 'like') { s.liked = s.liked ? 0 : 1; relabel(); return; }
+  else if (r.id === 'play' && isOn(s)) { playing = null; msg = `Stopped ${s.t}`; }
+  else if (r.id === 'play') { playing = { s, al }; msg = `<b>Now playing</b> · ${s.t} — ${al.a}`; }
+  else if (r.id === 'next' && isOn(s)) msg = `Restarted ${s.t}`;
+  else if (r.id === 'next') msg = `${s.t} plays next`;
+  else if (r.id === 'notes') msg = `${s.notes} note${s.notes === 1 ? '' : 's'} on ${s.t}`;
+  else if (r.id === 'credits') msg = `Credits · ${s.t}`;
+  else msg = `Opening ${al.a}`;
+  say(msg);
+  relabel();   // Play ⇄ Stop, Play next ⇄ Restart tip over and relabel
+  closeSub();
+}
+/* ---------- the knob ---------- */
+const KT = [];
+for (let k = 0; k < 24; k++) { const t = document.createElement('i'); t.className = 'kt'; t.innerHTML = '<b></b>'; ring.appendChild(t); KT.push({ el: t, b: t.firstChild, base: k * 15, ang: 0, av: 0 }); }
+let knobAng = 0, knobV = 0;
+function turn(d) {
+  knobAng += d * 15;
+  if (sub) { sub.sel = clamp(sub.sel + d, 0, sub.opts.length - 1); return; }
+  if (level === 0) goAlbum(ai + d); else if (level === 1) goSong(AL().songSel + d); else stepAct(d);
+}
+function push() {
+  menu.classList.add('is-press'); setTimeout(() => menu.classList.remove('is-press'), 120);
+  if (sub) { run(); return; }
+  if (level < 2) { setLevel(level + 1); return; }
+  if (settled()) run(); else pendingRun = true;
+}
+function back() { if (sub) { closeSub(); return; } setLevel(level - 1); }
+let kd = null;
+knob.addEventListener('pointerdown', (e) => {
+  knob.setPointerCapture(e.pointerId); knob.classList.add('down');
+  const r = knob.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  kd = { cx, cy, a: Math.atan2(e.clientY - cy, e.clientX - cx), acc: 0, moved: false, t: setTimeout(() => { if (kd && !kd.moved) { kd.held = true; back(); } }, 450) };
+});
+knob.addEventListener('pointermove', (e) => {
+  if (!kd) return;
+  const a = Math.atan2(e.clientY - kd.cy, e.clientX - kd.cx);
+  let da = (a - kd.a) * 180 / Math.PI; if (da > 180) da -= 360; if (da < -180) da += 360;
+  kd.a = a; kd.acc += da;
+  if (Math.abs(kd.acc) > 3) kd.moved = true;
+  while (Math.abs(kd.acc) >= 15) { const s = Math.sign(kd.acc); kd.acc -= s * 15; turn(s); }
+});
+const kup = (ok) => { if (!kd) return; clearTimeout(kd.t); knob.classList.remove('down'); if (ok && !kd.moved && !kd.held) push(); kd = null; };
+knob.addEventListener('pointerup', () => kup(true));
+knob.addEventListener('pointercancel', () => kup(false));
+knob.addEventListener('keydown', (e) => menu.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, shiftKey: e.shiftKey, bubbles: false })));
+$('#back').addEventListener('click', back);
+// One swipe (with its momentum) is one step, as in Domino Stacks: a new swipe is told from the fading tail by its
+// deltas rising again, a change of direction, or a 120 ms gap. A mouse notch is one step.
+let gT = 0, gPeak = 0, gFaded = false, gLast = 0, gDir = 0, gUsed = false, gAcc = 0;
+function gesture(d, stepFn) {
+  if (!d) return;
+  const now = performance.now(), gap = now - gT, abs = Math.abs(d); gT = now;
+  const fresh = gap > 120 || Math.sign(d) !== gDir || (gFaded && abs > gLast * 1.5 && abs > 4);
+  if (fresh) { gPeak = abs; gFaded = false; gDir = Math.sign(d); gUsed = false; gAcc = 0; }
+  gPeak = Math.max(gPeak, abs); if (abs < gPeak * 0.5) gFaded = true; gLast = abs;
+  gAcc += d;
+  if (!gUsed && (abs >= 50 || Math.abs(gAcc) >= 12)) { gUsed = true; stepFn(Math.sign(d)); }
+}
+document.addEventListener('wheel', (e) => {
+  if (!e.target.closest('.device')) return;
+  e.preventDefault();
+  gesture(Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY, turn);
+}, { passive: false });
+
+/* ---------- pointer: each level answers on its own axis ---------- */
+const zoneOf = (e) => { const r = win.getBoundingClientRect(), x = e.clientX - r.left; return x < 224 ? 0 : x < 528 ? 1 : 2; };
+const local = (e) => { const r = win.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+const albumAt = (p) => { const k = Math.round(A.x + (p.y - BAND) / ROW); return k >= 0 && k < ALBUMS.length ? k : -1; };
+const songAt = (p) => -1;
+const actAt = (p) => { const yy = p.y - BAND + cols[1].y; let best = -1; ACTS.forEach((r, i) => { if (!r.sect && Math.abs(yy - r.c) < ROW / 2) best = i; }); return best; };
+let hover = { z: -1, k: -1 }, drag = null;
+win.addEventListener('pointermove', (e) => {
+  const p = local(e), z = zoneOf(e);
+  if (drag) {
+    const dx = p.x - drag.p.x, dy = p.y - drag.p.y;
+    if (!drag.moved && Math.hypot(dx, dy) > 5) drag.moved = true;
+    if (drag.moved) {
+      menu.classList.remove('is-press');
+      if (drag.z === 0) goAlbum(Math.round(drag.k0 - dy / ROW));
+      if (drag.z === 1) { DR.scrubbing = true; DR.pos = clamp(drag.pos0 - dx / PXs, 0, secs(SONG().d) - 1); slab.innerHTML = slabHTML(SONG()); }   // press and drag: scrub through the song
+      if (drag.z === 2) VH.push({ t: clock, T: clamp(drag.T0 - dy, ACTS[ACT_ROWS[0]].c, ACTS[ACT_ROWS[ACT_ROWS.length - 1]].c) });
+    }
+    return;
+  }
+  hover = { z, k: z === 0 ? albumAt(p) : z === 1 ? songAt(p) : actAt(p) };
+});
+win.addEventListener('pointerleave', () => { if (!drag) hover = { z: -1, k: -1 }; });
+win.addEventListener('pointerdown', (e) => {
+  if (!isOpen || closing) return;
+  win.setPointerCapture(e.pointerId);
+  const p = local(e), z = zoneOf(e); setLevel(z); closeSub();
+  drag = { p, z, moved: false, pos0: DR.pos || 0, k0: z === 0 ? ai : z === 1 ? AL().songSel : 0, T0: curT(), hit: z === 0 ? albumAt(p) : z === 1 ? songAt(p) : actAt(p) };
+  menu.classList.toggle('is-press', z === 2 && drag.hit === as);
+});
+function endDrag(ok) {
+  if (!drag) return;
+  if (DR.scrubbing) { DR.scrubbing = false; slab.innerHTML = slabHTML(SONG()); }
+  menu.classList.remove('is-press');
+  if (drag.moved && drag.z === 2) { const T = curT(); let best = ACT_ROWS[0]; ACT_ROWS.forEach(i => { if (Math.abs(ACTS[i].c - T) < Math.abs(ACTS[best].c - T)) best = i; }); const was = as; as = -1; goAct(best); if (best === was) as = was; }
+  else if (!drag.moved && ok && drag.hit >= 0) {
+    if (drag.z === 0) goAlbum(drag.hit);
+    if (drag.z === 1) goSong(drag.hit);
+    if (drag.z === 2) { if (drag.hit === as && settled()) run(); else { goAct(drag.hit); pendingRun = true; } }
+  }
+  drag = null;
+}
+win.addEventListener('pointerup', () => endDrag(true));
+win.addEventListener('pointercancel', () => endDrag(false));
+
+menu.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowRight') { e.preventDefault(); turn(1); }
+  else if (k === 'ArrowUp' || k === 'ArrowLeft') { e.preventDefault(); turn(-1); }
+  else if (k === 'Enter' || k === ' ') { e.preventDefault(); knob.classList.add('down'); setTimeout(() => knob.classList.remove('down'), 110); push(); }
+  else if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); back(); }
+});
+
+/* ---------- frame ---------- */
+function tip(o, want, h, max) {   // gravity toward `max` (lying), spring back to 0 (standing)
+  if (REDUCE) { o.ang = want; return; }
+  if (want >= max - 0.5 && o.ang < max - 0.5) {
+    o.av += (5200 * Math.sin(Math.max(o.ang, 5) * Math.PI / 180) + 300) * h; o.ang += o.av * h;
+    if (o.ang >= max) { o.ang = max; o.av = -o.av * 0.1; }
+    return;
+  }
+  spring(o, 'ang', 'av', want, 650, 30, h);
+  if (o.ang > max) { o.ang = max; o.av = -o.av * 0.2; }
+}
+let last = performance.now(), knobRender = 0;
+function frame(now) {
+  const dt = Math.min(0.033, (now - last) / 1000) * slow; last = now;
+  const N = 4;
+  for (let s = 0; s < N; s++) {
+    const h = dt / N; clock += h;
+    const closeT = closing ? clock - closeAt : -1;
+    if (REDUCE) A.x = ai; else spring(A, 'x', 'v', ai, 300, 28, h);
+    const prevR = knobRender;
+    knobRender += (knobAng - knobRender) * Math.min(1, h * 30);
+    KT.forEach((t) => {   // a tick crossing 12 o'clock is knocked over the way the knob turns, then stands back up
+      const a0 = ((t.base + prevR) % 360 + 540) % 360 - 180, a1 = ((t.base + knobRender) % 360 + 540) % 360 - 180;
+      if (Math.sign(a0) !== Math.sign(a1) && Math.abs(a0) < 20 && Math.abs(a1) < 20) t.av += (knobRender > prevR ? 1 : -1) * 1100;
+      if (REDUCE) { t.ang = 0; return; }
+      t.av += (-t.ang * 260 - t.av * 14) * h; t.ang = clamp(t.ang + t.av * h, -60, 60);
+    });
+    ALBUMS.forEach((al, i) => {
+      const want = clock >= al.at ? al.tgt : (al.prev ?? al.tgt);
+      if (REDUCE) al.ang = want;
+      else if (al.falling || (al.ang < 1 && want > 45)) {
+        // a standing record tips: gravity's pull grows as it leans; it lands on the one behind with a small knock back
+        al.falling = true; al.av = Math.max(al.av, 220);   // pushed off, not nudged
+        al.av += 5200 * (0.25 + Math.sin(al.ang * Math.PI / 180)) * h; al.ang += al.av * h;
+        if (al.ang >= want) { al.ang = want; if (al.av > 60) { const o = ALBUMS[i - 1]; if (o) o.av += 20; al.av *= -0.1; } else { al.av = 0; al.falling = false; } }
+        if (want < 1) al.falling = false;
+      } else if (want === 0) {
+        // standing up: flicked up past upright, it rocks on its bottom edge a few times (like the ruler's standing stop),
+        // and hops a little each time it slaps through vertical
+        const before = al.ang;
+        al.av += (-560 * (al.ang - want) - 30 * al.av) * h; al.ang = clamp(al.ang + al.av * h, -70, 10);
+        if (Math.sign(before) !== Math.sign(al.ang) && Math.abs(al.av) > 120) al.hv -= Math.min(30, Math.abs(al.av) * 0.06);
+      } else {
+        al.av += (-700 * (al.ang - want) - 50 * al.av) * h; al.ang += al.av * h;
+      }
+      if (!REDUCE) { al.hv += (-700 * al.hop - 40 * al.hv) * h; al.hop += al.hv * h; }
+      // the title is the next domino: it follows the record a beat late and overshoots a little
+      if (REDUCE) al.la = al.ang; else { al.lv += (-900 * (al.la - al.ang) - 56 * al.lv) * h; al.la = clamp(al.la + al.lv * h, -75, 89); }
+      if (REDUCE) al.sc = i === ai ? 1.18 : 1; else spring(al, 'sc', 'sv', i === ai && clock >= al.at ? 1.18 : 1, 420, 30, h);
+    });
+    // Dominoes Drag step: the tape glides to the song's start; every domino follows its resting angle
+    if (DR.al) {
+      const tgtV = DR.al.songs[DR.al.songSel].u0 + (DR.pos || 0);
+      if (REDUCE || DR.scrubbing) { DR.value = tgtV; DR.sv = 0; } else { const K = VAR === 'B' ? [170, 26] : [500, 40]; DR.sv += (-K[0] * (DR.value - tgtV) - K[1] * DR.sv) * h; DR.value += DR.sv * h; }
+      const v = (DR.value - DR.prev) * PXs / Math.max(h, 1e-4); DR.prev = DR.value;
+      DR.tapeV += (v - DR.tapeV) * Math.min(1, h * 30);
+      const tg = targetsD();
+      const front = DR.ticks.findIndex((t) => (DR.value - t.u) * PXs <= 0.01);
+      if (DR.tapAt && clock >= DR.tapAt) { DR.tapAt = 0; const o = DR.ticks[front]; if (o) o.v += 70; }
+      for (const t of DR.ticks) {
+        const T = tg[t.i];
+        if (REDUCE) { t.a = T; t.v = 0; continue; }
+        if (t.post && T === 0) { t.v += (-500 * t.a - 18 * t.v) * h; t.a += t.v * h; continue; }   // a standing stop rocks
+        t.v += (-700 * (t.a - T) - 50 * t.v) * h; t.a += t.v * h;
+        if (t.a < 0) { t.a = 0; if (t.v < 0) t.v = 0; }
+      }
+      spx(DR.lift, DR.hover ? -5 : 0, 420, 28, h);
+      spx(DR.dig, 0, 520, 16, h);
+      DR.flash *= Math.exp(-h / 0.2);
+      spx(DR.pill, 0, 260, 18, h); spx(DR.cdip, 0, 200, 16, h);   // dips settle back; no tilt
+      if (!REDUCE) {
+        const drag = clamp(DR.tapeV * 0.022, -9, 9);
+        const damp = Math.abs(DR.tapeV) > 5 || Math.abs(DR.swing.x) > 1 ? 2.2 : 14;   // swings on, then settles
+        DR.swing.v += (-90 * (DR.swing.x - drag) - damp * DR.swing.v) * h; DR.swing.x = clamp(DR.swing.x + DR.swing.v * h, -18, 18);
+        // its foot can't pass the stop it was knocked off: it bounces off it
+        if (DR.wallDir && clock < DR.wallUntil && DR.wallDir * DR.swing.x < 0) { DR.swing.x = 0; if (DR.wallDir * DR.swing.v < 0) DR.swing.v = -DR.swing.v * 0.75; }
+      }
+      for (let i = DR.knocks.length - 1; i >= 0; i--) if (clock >= DR.knocks[i].at) { const kk = DR.knocks.splice(i, 1)[0]; if (!DR.knock || kk.amp > DR.knock.amp * (1 - DR.knock.ms / KNOCK_MS)) DR.knock = { ms: 0, dir: kk.dir, amp: kk.amp }; }
+      if (DR.knock) { DR.knock.ms += h * 1000; if (DR.knock.ms >= KNOCK_MS) DR.knock = null; }
+    }
+    cols.forEach((col, c) => { if (REDUCE) col.y = curT(); else spring(col, 'y', 'v', T_at(clock - c * HAND), 520, 34, h); });
+    ACTS.forEach((r, i) => {
+      let want = 0;
+      if (closing && closeT > (ACTS.length - 1 - i) * 0.01) want = 90;
+      else if (clock < r.at && r.ang > 89) want = 90;
+      if (r.pend && clock >= r.at) { want = 90; if (r.ang >= 89.5) { apply(r, r.pend.c, r.pend.key); r.pend = null; want = 0; } }
+      tip(r, want, h, 90);
+    });
+    if (sub) sub.opts.forEach((o) => tip(o, clock >= o.at ? 0 : 90, h, 90));
+  }
+  if (closing && clock - closeAt > 0.36) { isOpen = false; closing = false; menu.style.visibility = 'hidden'; }
+  if (pendingRun && settled()) { pendingRun = false; run(); }
+  render();
+  requestAnimationFrame(frame);
+}
+const FADE = [1, 0.46, 0.22, 0.1, 0.04];
+const fadeAt = (s) => { const f = Math.min(4, Math.floor(s)), g = Math.min(4, f + 1); return FADE[f] + (FADE[g] - FADE[f]) * (s - Math.floor(s)); };
+const pad2 = (n) => String(n).padStart(2, '0');
+let cntKey = '';
+function counters() {
+  const k = [ai + 1, ALBUMS.length, AL().songSel + 1, AL().songs.length, ACT_ROWS.indexOf(as) + 1, ACT_ROWS.length].join(',');
+  if (k === cntKey) return; cntKey = k;
+  const c = document.querySelectorAll('.lvl .cnt');
+  c[0].innerHTML = `<b>${pad2(ai + 1)}</b> / ${pad2(ALBUMS.length)}`;
+  c[1].innerHTML = `<b>${pad2(AL().songSel + 1)}</b> / ${pad2(AL().songs.length)}`;
+  c[2].innerHTML = `<b>${pad2(Math.max(1, ACT_ROWS.indexOf(as) + 1))}</b> / ${pad2(ACT_ROWS.length)}`;
+}
+function render() {
+  counters();
+  KT.forEach((t) => { t.el.style.transform = `rotate(${(t.base + knobRender).toFixed(2)}deg)`; t.b.style.transform = Math.abs(t.ang) > 0.05 ? `rotate(${t.ang.toFixed(2)}deg)` : ''; });
+    const cardO = isOpen ? (closing ? clamp(1 - (clock - closeAt - 0.22) / 0.14, 0, 1) : clamp((clock - openAt) / 0.1, 0, 1)) : 0;
+  menu.style.opacity = cardO.toFixed(3);
+  // albums: a reel of rows; passed ones tipped back to an edge, the one in the rail and those ahead face you
+  ALBUMS.forEach((al, i) => {
+    const d = i - A.x;
+    al.el.style.transform = `translateY(${(BAND + d * ROW).toFixed(2)}px)`;
+    // hinged on its bottom edge: + falls back flat (passed), − leans toward you (ahead), 0 stands facing you
+    al.tw.style.transform = Math.abs(al.sc - 1) > 0.002 || Math.abs(al.hop) > 0.05 ? `translateY(${Math.min(0, al.hop).toFixed(2)}px) scale(${al.sc.toFixed(3)})` : '';
+    al.thumb.style.transform = Math.abs(al.ang) > 0.05 ? `rotateX(${al.ang.toFixed(2)}deg)` : '';
+    al.lab.style.transform = Math.abs(al.la) > 0.05 ? `perspective(160px) rotateX(${al.la.toFixed(2)}deg)` : '';
+    al.el.style.opacity = fadeAt(Math.abs(d)).toFixed(3);
+    const k = level === 0 ? clamp(1 - Math.abs(d) * 2, 0, 1) : 0;
+    al.lab.style.boxShadow = `inset 0 0 0 1px rgba(var(--ink-rgb), ${(k * 0.9).toFixed(3)})`;
+  });
+  // Dominoes Drag render
+  if (DR.svg) DR.svg.style.transform = `translateX(${(CXs() - DR.value * PXs).toFixed(2)}px)`;
+  for (const t of DR.ticks) {
+    t.l.classList.toggle('on', t.a > 1 && !(t.post && t.a < 12));
+    t.l.style.transform = Math.abs(t.a) > 0.05 ? `rotate(${t.a.toFixed(2)}deg)` : '';
+    t.l.style.transformOrigin = `${t.x}px ${FOOT}px`;
+  }
+  if (DR.nums) DR.nums.forEach((n, k) => n.classList.toggle('cur', DR.al && k === DR.al.songSel));
+  srFlash.style.opacity = (0.09 * DR.flash).toFixed(3);
+  { const kn = DR.knock ? DR.knock.dir * DR.knock.amp * knockShape(DR.knock.ms / KNOCK_MS) / knockNorm : 0; const pv = DR.knock && DR.knock.dir > 0 ? -152 : 152;
+    // as in Domino Stacks: the whole bar (every level on the rail) takes the knock about its far end and dips; the device tips and dips
+    const half = 392, pvw = DR.knock && DR.knock.dir > 0 ? -half : half;
+    win.style.transformOrigin = '392px 140px';
+    win.style.transform = `translateY(${DR.pill.x.toFixed(2)}px) translateX(${pvw}px) rotate(${kn.toFixed(3)}deg) translateX(${-pvw}px)`;
+    $('#device').style.transform = Math.abs(DR.cdip.x) > 0.01 ? `translateY(${DR.cdip.x.toFixed(2)}px)` : ''; }
+  rod.style.height = (46 + DR.lift.x).toFixed(2) + 'px';
+  rod.style.transform = VAR === 'A' && Math.abs(DR.swing.x) > 0.01 ? `rotate(${DR.swing.x.toFixed(3)}deg)` : '';
+  slab.style.transform = Math.abs(DR.dig.x) > 0.05 ? `translateY(${(DR.dig.x * 0.04).toFixed(2)}px)` : '';
+  slab.style.boxShadow = level === 1 ? 'inset 0 0 0 1px rgba(var(--ink-rgb), .9)' : '';
+  // actions
+  cols.forEach((col) => { col.el.style.transform = `translateY(${(BAND - col.y).toFixed(2)}px)`; });
+  ACTS.forEach((r, i) => {
+    const read = clamp(1 - r.ang / 60, 0, 1);
+    r.cells.forEach((cell, k) => {
+      const c = cols[r.cellCol[k]];
+      let o = fadeAt(Math.abs(r.c - c.y) / ROW) * read;
+      if (hover.z === 2 && hover.k === i && i !== as) o = Math.max(o, 0.9 * read);
+      cell.style.opacity = o.toFixed(3);
+      cell.style.transform = r.ang > 0.3 ? `perspective(420px) rotateX(${(-r.ang).toFixed(2)}deg)` : '';
+    });
+    if (r.lab) { const k = level === 2 ? clamp(1 - Math.abs(r.c - cols[1].y) / (ROW * 0.5), 0, 1) : 0; r.lab.style.boxShadow = `inset 0 0 0 1px rgba(var(--ink-rgb), ${(k * 0.9).toFixed(3)})`; }
+  });
+  if (sub) sub.opts.forEach((o, k) => { o.el.style.transform = `perspective(400px) rotateY(${o.ang.toFixed(2)}deg)`; o.el.style.opacity = clamp(1 - o.ang / 70, 0, 1); o.el.classList.toggle('on', k === sub.sel); });
+}
+document.querySelectorAll('.seg .btn').forEach((b) => b.addEventListener('click', () => {
+  VAR = b.dataset.v; DR.swing.x = DR.swing.v = 0; sr.classList.toggle('vB', VAR === 'B');
+  document.querySelectorAll('.seg .btn').forEach((o) => o.setAttribute('aria-checked', String(o === b)));
+  buildTape(AL());
+}));
+relabel(true); setLevel(0); open(); status.innerHTML = nowLine();
+requestAnimationFrame(frame);
+
+const specBtn = $('#spec-btn'), spec = $('#spec');
+const setSpec = (on) => { spec.hidden = !on; specBtn.setAttribute('aria-expanded', on); };
+specBtn.addEventListener('click', () => setSpec(spec.hidden));
+$('#spec-close').addEventListener('click', () => setSpec(false));
+addEventListener('pointerdown', () => document.documentElement.classList.add('pointer-mode'), true);
+addEventListener('keydown', () => document.documentElement.classList.remove('pointer-mode'), true);
+window.__dm = { open, close, goAlbum, goSong, stepAct, openSub, setLevel, turn, push, back, set slow(v) { slow = v; } };
+})();
+</script>
+</body>
+</html>
