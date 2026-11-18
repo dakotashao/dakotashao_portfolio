@@ -1479,6 +1479,10 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .nk-im .if-thumb { position: absolute; inset: 0; border-radius: 0; background: #f4f4f4; }
 @media (max-width: 900px) { .if-grid, .if-grid.wide { grid-template-columns: 1fr; } .if-set.feat { grid-column: auto; } }
 .sw { display: none !important; }
+.if-veil { position: absolute; top: 10px; left: 10px; display: flex; gap: 4px; pointer-events: none; opacity: 0; transition: opacity .25s ease; z-index: 2; }
+.if-set:hover .if-veil { opacity: 1; }
+.if-veil span { font-size: 13px; line-height: 14px; letter-spacing: -0.02em; padding: 5px 10px; border-radius: 40px; color: rgba(0,0,0,.72); background: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); white-space: nowrap; }
+@media (hover: none) { .if-veil { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -1916,7 +1920,7 @@ function run(){
     { name: "Workout Game", type: "Menus", week: 8, verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, say: "A console workout picker. Cards light up in the colours of the screen transition." },
   ];
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
-  const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1&max=1.6` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
+  const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
     ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type)).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
@@ -1935,7 +1939,7 @@ function run(){
       : `<div class="if-stage" data-src="${ifSrc(ifSlug(it), cls === "feat")}" style="aspect-ratio:${it.ratio}"></div>`;
     return `<div class="if-set ${cls}" data-id="${it.id}">${stage}
       ${it.axes ? `<div class="if-vsw">${ifSegs(it)}</div>` : ""}
-      <button class="if-open" type="button" aria-label="Open ${esc(it.name)} larger">${EXPAND}</button></div>`;
+      <div class="if-veil">${[it.name, it.verb].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</div></div>`;
   };
   const IF_SECS = () => { const its = ifItems(); return IF_ORDER.filter((t) => its.some((i) => i.type === t)); };
   const interfacesPage = (p) => {
@@ -1981,7 +1985,6 @@ function run(){
       const b = e.target.closest(".if-seg button");
       if (b) { it.sel[+b.dataset.a] = +b.dataset.k; set.querySelectorAll(".if-seg button").forEach((x) => x.setAttribute("aria-pressed", it.sel[+x.dataset.a] === +x.dataset.k)); thumbs(set);
         const st = set.querySelector(".if-stage"), f = st.querySelector("iframe.a"), src = ifSrc(ifSlug(it), set.classList.contains("feat")); st.dataset.src = src; if (f) { IFX.frames.delete(f.contentWindow); f.src = src; f.addEventListener("load", () => IFX.frames.set(f.contentWindow, st), { once: true }); } return; }
-      if (e.target.closest(".if-open")) ifOpen(it);
     });
   }
 
