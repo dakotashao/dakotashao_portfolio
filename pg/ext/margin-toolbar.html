@@ -583,7 +583,8 @@ function chip(p,t){const c=document.createElement('div');c.className='chip';c.te
 const pencilEl=$('#pencil'),gestEl=$('#gest');let gestT=null,gestFrom='';
 const PENCIL_IC='<svg viewBox="0 0 24 24"><path d="M4 20l2.5-.6L19 6.9a1.5 1.5 0 0 0 0-2.1l-.8-.8a1.5 1.5 0 0 0-2.1 0L3.6 16.5z"/></svg>';
 function gest(name,detail){clearTimeout(gestT);gestEl.innerHTML=`${PENCIL_IC}<b>${name}</b>${detail?`<span>${detail}</span>`:''}`;gestEl.classList.add('on');gestT=setTimeout(()=>gestEl.classList.remove('on'),1600)}
-document.body.classList.add('pencil-on');
+const SHOW_PENCIL=false; /* Pencil cursor off for now — set true to bring it back */
+if(SHOW_PENCIL)document.body.classList.add('pencil-on');else pencilEl.style.display='none';
 addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const r=screen.getBoundingClientRect(),inside=e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom;
   pencilEl.classList.toggle('on',inside);if(inside){const p=local(e,screen);pencilEl.style.transform=`translate(${p.x}px,${p.y}px)`}},{passive:true});
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')pencilEl.classList.add('down')});
