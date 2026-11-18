@@ -106,6 +106,11 @@ main#app { margin-left: var(--side); padding: 72px 64px 120px; }
 .blk.wall .pair .bk-book { width: 100%; }
 @media (max-width: 900px) { .blk.wall .pair { grid-template-columns: 1fr; } }
 .blk.wall .gal { gap: var(--g); }
+.blk .fds { height: 260vh; margin-top: var(--g, 32px); }
+.blk .fds-in { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; }
+.blk .fds .fd { width: 100%; margin: 0 !important; }
+.blk .fds .fd-stage { height: 86vh !important; }
+.blk .fds .fd-prev, .blk .fds .fd-next { visibility: hidden; }
 .blk .pst { margin-top: var(--g, 32px); } .blk .pst img { display: block; height: min(88vh, 1100px); width: auto; max-width: 100%; margin: 0 auto; }
 .blk .frm { margin-top: var(--g, 32px); border-radius: 14px; overflow: hidden; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
 .blk .frm iframe { display: block; width: 100%; height: 100%; border: 0; }
@@ -2216,8 +2221,9 @@ function run(){
         <div class="bk-bar"><button type="button" class="bk-prev" aria-label="Previous page">←</button><span class="bk-pg">Cover</span><button type="button" class="bk-next" aria-label="Next page">→</button></div></div>`; }
     if (b.t === 'fold') { const pan = (c, r, cls) => `<div class="fd-p ${cls}"><i class="fd-fr" style="background-position:${c / 3 * 100}% ${r / 2 * 100}%"></i><i class="fd-bk"></i></div>`;
       let col = ''; for (let c = 3; c >= 0; c--) col = `<div class="fd-c fd-c${c}">${pan(c, 1, 'fd-m')}<div class="fd-t">${pan(c, 0, '')}</div><div class="fd-b">${pan(c, 2, '')}</div>${col}</div>`;
-      return `<div class="fd" tabindex="0" aria-label="${esc(b.alt || 'Folded poster')}, click to fold it into the booklet">${b.tag ? `<span class="tag">${b.tag}</span>` : ''}<div class="fd-stage" style="--img:url('${b.src}')"><div class="fd-sheet s2 rest">${col}</div></div>
-        <div class="bk-bar"><button type="button" class="fd-prev" aria-label="Fold">←</button><span class="bk-pg">Full poster</span><button type="button" class="fd-next" aria-label="Unfold">→</button></div></div>`; }
+      const fdHtml = `<div class="fd"${b.scroll ? ' data-scroll="1"' : ''} tabindex="0" aria-label="${esc(b.alt || 'Folded poster')}, click to fold it into the booklet">${b.tag ? `<span class="tag">${b.tag}</span>` : ''}<div class="fd-stage" style="--img:url('${b.src}')"><div class="fd-sheet s2 rest">${col}</div></div>
+        <div class="bk-bar"><button type="button" class="fd-prev" aria-label="Fold">←</button><span class="bk-pg">Full poster</span><button type="button" class="fd-next" aria-label="Unfold">→</button></div></div>`;
+      return b.scroll ? `<div class="fds"><div class="fds-in">${fdHtml}</div></div>` : fdHtml; }
     if (b.t === 'desc') return `<div class="desc2"><div><h2>Project Description</h2>${b.text.map((x) => `<p>${esc(x)}</p>`).join('')}</div><div>${b.side.map(([h, v]) => `<h2>${esc(h)}</h2>${v.map((x) => `<p>${esc(x)}</p>`).join('')}`).join('')}</div></div>`;
     if (b.t === 'notes') return `<div class="notes">${b.items.map((it) => `<div><h3>${esc(it.h)}</h3><p>${esc(it.p)}</p></div>`).join('')}</div>`;
     if (b.t === 'cards') return `<div class="cards">${b.items.map((it) => `<div><h3>${esc(it.h)}</h3><p>${esc(it.p)}</p></div>`).join('')}</div>`;
@@ -2575,6 +2581,10 @@ function run(){
         clearTimeout(fd._t); fd._t = setTimeout(() => sh.classList.add('rest'), 1250); pg.textContent = L[s]; pv.disabled = s === 0; nx.disabled = s === 2; };
       nx.disabled = true; place(); addEventListener('resize', place);
       pv.addEventListener('click', () => go(s - 1)); nx.addEventListener('click', () => go(s + 1));
+      if (fd.dataset.scroll) { const wrap = fd.closest('.fds');
+        const onS = () => { if (!wrap.isConnected) return removeEventListener('scroll', onS); const r = wrap.getBoundingClientRect(), p = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
+          go(p < .22 ? 2 : p < .58 ? 1 : 0); };
+        addEventListener('scroll', onS, { passive: true }); onS(); }
       st.addEventListener('click', () => { clearTimeout(fd._b); const to = s === 2 ? 0 : 2, step = to < s ? -1 : 1; go(s + step); fd._b = setTimeout(() => go(to), 1150); });
       fd.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); go(s + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); go(s - 1); } });
     });
