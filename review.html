@@ -1935,14 +1935,13 @@ function run(){
   // the rest of the course, live from the weekly repos (pg/ext/*.html). Each page is drawn at its own size,
   // and only the component is shown: c = the crop [x, y, w, h] in the page's own pixels.
   const EXT = [
-    { name: "Lumen", verb: "Hover · Press", f: "lumen", w: 1100, h: 820, c: [16, 86, 1068, 714], bg: "#111", span: "w" },
-    { name: "Ceiling", verb: "Tap", f: "ceiling", w: 1100, h: 688, c: [362, 20, 376, 564], bg: "#111", span: "t" },
-    { name: "Workout Game", verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, c: [56, 165, 1168, 460], bg: "#1f2a17", span: "w" },
-    { name: "Workout Watch", verb: "Scroll", f: "workout-watch", w: 1200, h: 750, c: [356, 150, 488, 440], bg: "#1c1c1e", span: "n" },
-    { name: "Radical Swap", verb: "Tap", f: "radical-swap", w: 1280, h: 800, c: [144, 28, 993, 690], bg: "#000", span: "w" },
-    { name: "Margin Toolbar", verb: "Drag", f: "margin-toolbar", w: 1280, h: 800, c: [153, 28, 974, 690], bg: "#000", span: "w" },
-    { name: "Pinball Slab", verb: "Hold", f: "pinball-slab", w: 900, h: 600, c: [48, 56, 804, 520], bg: "#f6f6f6", span: "n" },
-    { name: "Dominoes Jukebox", verb: "Turn · Press", f: "dominoes-jukebox", w: 1200, h: 750, c: [64, 28, 1072, 448], bg: "#f4f4f4", span: "w" },
+    { name: "Lumen", verb: "Hover · Press", f: "lumen", w: 1100, h: 820, sel: "#hero", span: "w" },
+    { name: "Workout Game", verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, sel: "#ds", span: "full" },
+    { name: "Workout Watch", verb: "Scroll", f: "workout-watch", w: 1200, h: 750, sel: ".watch", r: 44, span: "n" },
+    { name: "Radical Swap", verb: "Tap", f: "radical-swap", w: 1280, h: 800, sel: "#ipad", span: "fr" },
+    { name: "Margin Toolbar", verb: "Drag", f: "margin-toolbar", w: 1280, h: 800, sel: "#ipad", span: "f" },
+    { name: "Pinball Slab", verb: "Hold", f: "pinball-slab", w: 900, h: 600, sel: "#stage", span: "n" },
+    { name: "Dominoes Jukebox", verb: "Turn · Press", f: "dominoes-jukebox", w: 1200, h: 750, sel: "#device", span: "full" },
   ];
   // the wall, in groups: a big piece leads each group, small ones fill around it, a breath between groups
   const IF_LAYOUT = [
@@ -1959,7 +1958,7 @@ function run(){
     [["Dominoes Jukebox", "full"]],
   ];
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
-  const IF_ZOOM = { "liquid-dial": 0.8, "reading-pile": 1.25, "fling-loader": 0.95, "fling-loader-indeterminate": 0.95 };
+  const IF_ZOOM = { "liquid-dial": 0.8, "reading-pile": 0.95, "fling-loader": 0.95, "fling-loader-indeterminate": 0.95 };
   const ifSrc = (slug, big) => slug === "liquid-dial" ? `pg/liquid-dial.html?soft=1&zoom=${IF_ZOOM[slug]}&detail=1`
     : big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${IF_ZOOM[slug] || ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
@@ -1976,7 +1975,7 @@ function run(){
   const ifSet = (it, cls) => {
     IFI[it.id] = it;
     const stage = it.ext
-      ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" data-c="${it.c.join(",")}" style="background:${it.bg}"></div>`
+      ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" data-sel="${it.sel}" data-pad="${it.pad || 0}" data-r="${it.r || 0}"></div>`
       : `<div class="if-stage" data-src="${ifSrc(ifSlug(it), cls === "feat")}"></div>`;
     return `<div class="if-set ${cls} s-${it.span || (cls === "feat" ? "f" : "n")}" data-id="${it.id}">${stage}
       ${it.axes ? `<div class="if-vsw">${ifSegs(it)}</div>` : ""}
@@ -2002,10 +2001,13 @@ function run(){
     const make = (st, src, cls) => { const f = document.createElement("iframe"); f.src = src; f.title = "Interface"; f.className = cls;
       if (st.classList.contains("ext")) { f.style.width = st.dataset.w + "px"; f.style.height = st.dataset.h + "px"; }
       st.appendChild(f); return f; };
-    const fitExt = (st) => { const [cx, cy, cw, ch] = st.dataset.c.split(",").map(Number), W = st.clientWidth, H = st.clientHeight;
-      const s = Math.min(W / cw, H / ch) * (st.dataset.k ? +st.dataset.k : 1), ox = (W - cw * s) / 2 - cx * s, oy = (H - ch * s) / 2 - cy * s;
-      const fw = +st.dataset.w, fh = +st.dataset.h;
-      st.querySelectorAll("iframe").forEach((f) => { f.style.transform = `translate(${ox}px,${oy}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${16 / s}px)`; }); };
+    // find the component inside the page, then scale and centre just that box in the tile, on the tile's grey
+    const fitExt = (st) => { const f = st.querySelector("iframe"); if (!f) return; let r;
+      try { const el = f.contentDocument.querySelector(st.dataset.sel); r = el && el.getBoundingClientRect(); } catch (e) {}
+      if (!r || !r.width) return; const p = +st.dataset.pad || 0, cx = r.left - p, cy = r.top - p, cw = r.width + 2 * p, ch = r.height + 2 * p;
+      const W = st.clientWidth, H = st.clientHeight, s = Math.min((W - 48) / cw, (H - 48) / ch, 1), fw = +st.dataset.w, fh = +st.dataset.h;
+      f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`;
+      f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${+st.dataset.r || 0}px)`; };
     const ro = new ResizeObserver((es) => es.forEach((en) => fitExt(en.target)));
     IFX.io = new IntersectionObserver((es) => es.forEach((en) => {
       const st = en.target; let f = main(st);
@@ -2014,7 +2016,8 @@ function run(){
         if (!f) { f = make(st, st.dataset.src, "a");
           if (st.classList.contains("ext")) { fitExt(st); ro.observe(st); }
           f.addEventListener("load", () => { IFX.frames.set(f.contentWindow, st);
-            if (st.classList.contains("ext")) try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important}"; d.head.appendChild(s); } catch (e) {} setTimeout(() => play(st), 400 + Math.random() * 900); }); }
+            if (st.classList.contains("ext")) try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important;background:transparent!important}"; d.head.appendChild(s); } catch (e) {}
+            if (st.classList.contains("ext")) { fitExt(st); setTimeout(() => fitExt(st), 700); setTimeout(() => fitExt(st), 2000); } setTimeout(() => play(st), 400 + Math.random() * 900); }); }
         else setTimeout(() => play(st), 300);
       } else { delete st.dataset.vis; if (f) f.contentWindow.postMessage({ type: "demo", on: false }, "*"); }
     }), { rootMargin: "300px 0px" });
@@ -2043,10 +2046,12 @@ function run(){
       ${it.axes ? `<div class="if-vsw on">${ifSegs(it)}</div>` : ""}<button class="if-x" type="button" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
     document.body.appendChild(box); document.documentElement.style.overflow = "hidden";
     const big = box.querySelector(".if-big"), f = big.querySelector("iframe");
-    if (it.ext) { big.style.background = it.bg; const [cx, cy, cw, ch] = it.c; f.style.width = it.w + "px"; f.style.height = it.h + "px";
-      const fit = () => { const W = big.clientWidth, H = big.clientHeight, s = Math.min(1, W / cw, H / ch); f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`; };
-      f.addEventListener("load", () => { try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important}"; d.head.appendChild(s); } catch (e) {} });
-      fit(); addEventListener("resize", fit); box._fit = fit; }
+    if (it.ext) { f.style.width = it.w + "px"; f.style.height = it.h + "px";
+      const fit = () => { let r; try { const el = f.contentDocument.querySelector(it.sel); r = el && el.getBoundingClientRect(); } catch (e) {}
+        if (!r || !r.width) return; const p = it.pad || 0, cx = r.left - p, cy = r.top - p, cw = r.width + 2 * p, ch = r.height + 2 * p, W = big.clientWidth, H = big.clientHeight, s = Math.min((W - 64) / cw, (H - 64) / ch, 1);
+        f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${it.w - cx - cw}px ${it.h - cy - ch}px ${cx}px round ${it.r || 0}px)`; };
+      f.addEventListener("load", () => { try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important;background:transparent!important}"; d.head.appendChild(s); } catch (e) {} fit(); setTimeout(fit, 700); });
+      addEventListener("resize", fit); box._fit = fit; }
     const thumbs = () => box.querySelectorAll(".if-seg").forEach((sg) => { const on = sg.querySelector('[aria-pressed="true"]'), th = sg.querySelector(".th"); th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px"; });
     requestAnimationFrame(() => { box.classList.add("in"); thumbs(); });
     const close = () => { box.classList.remove("in"); document.documentElement.style.overflow = ""; if (box._fit) removeEventListener("resize", box._fit); removeEventListener("keydown", esc_); setTimeout(() => box.remove(), 250); };
