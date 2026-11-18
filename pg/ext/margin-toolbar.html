@@ -605,7 +605,7 @@ const DEMO=(()=>{let on=false,run=0;const sleep=ms=>new Promise(r=>setTimeout(r,
   function stop(){if(!on)return;on=false;run++;closeRing(true);pencilEl.classList.remove('on','down');pencilEl.style.display='none'}
   return {start,stop}})();
 if(EMBED){let back=null;addEventListener('message',e=>{const d=e.data||{};if(d.type==='demo'){d.on?DEMO.start():DEMO.stop()}});
-  addEventListener('pointermove',e=>{if(!e.isTrusted)return;DEMO.stop();clearTimeout(back);back=setTimeout(()=>DEMO.start(),2500)},{passive:true});
+  ['pointerdown','keydown','wheel'].forEach(t=>addEventListener(t,e=>{if(!e.isTrusted)return;DEMO.stop();clearTimeout(back);back=setTimeout(()=>DEMO.start(),4000)},{passive:true,capture:true}));
   setTimeout(()=>DEMO.start(),800)}
 addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const r=screen.getBoundingClientRect(),inside=e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom;
   pencilEl.classList.toggle('on',inside);if(inside){const p=local(e,screen);pencilEl.style.transform=`translate(${p.x}px,${p.y}px)`}},{passive:true});

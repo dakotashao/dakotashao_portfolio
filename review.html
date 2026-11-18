@@ -2117,7 +2117,7 @@ function run(){
     }), { rootMargin: "300px 0px" });
     root.querySelectorAll(".if-stage").forEach((st) => {
       IFX.io.observe(st);
-      st.addEventListener("pointerenter", () => { st.dataset.hand = "1"; st.classList.add("on"); clearTimeout(st._t); const f = main(st); if (f) f.contentWindow.postMessage({ type: "demo", on: false }, "*"); });
+      st.addEventListener("pointerenter", () => { if (st.classList.contains("ext")) return; st.dataset.hand = "1"; st.classList.add("on"); clearTimeout(st._t); const f = main(st); if (f) f.contentWindow.postMessage({ type: "demo", on: false }, "*"); });
       st.addEventListener("pointerleave", () => { delete st.dataset.hand; st.classList.remove("on"); clearTimeout(st._t); st._t = setTimeout(() => play(st), 2500); });
     });
     IFX.play = play;
