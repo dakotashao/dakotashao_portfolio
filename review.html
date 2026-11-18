@@ -1937,7 +1937,7 @@ function run(){
   const EXT = [
     { name: "Lumen", verb: "Hover · Press", f: "lumen", w: 1100, h: 820, sel: "#hero", span: "w" },
     { name: "Workout Game", verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, sel: "#ds", span: "full" },
-    { name: "Workout Watch", verb: "Scroll", f: "workout-watch", w: 1200, h: 750, sel: ".watch", r: 44, span: "n" },
+    { name: "Workout Watch", verb: "Scroll", f: "workout-watch", w: 1200, h: 750, sel: ".watch", span: "n" },
     { name: "Radical Swap", verb: "Tap", f: "radical-swap", w: 1280, h: 800, sel: "#ipad", span: "fr" },
     { name: "Margin Toolbar", verb: "Drag", f: "margin-toolbar", w: 1280, h: 800, sel: "#ipad", span: "f" },
     { name: "Pinball Slab", verb: "Hold", f: "pinball-slab", w: 900, h: 600, sel: "#stage", span: "n" },
@@ -2002,12 +2002,13 @@ function run(){
       if (st.classList.contains("ext")) { f.style.width = st.dataset.w + "px"; f.style.height = st.dataset.h + "px"; }
       st.appendChild(f); return f; };
     // find the component inside the page, then scale and centre just that box in the tile, on the tile's grey
-    const fitExt = (st) => { const f = st.querySelector("iframe"); if (!f) return; let r;
-      try { const el = f.contentDocument.querySelector(st.dataset.sel); r = el && el.getBoundingClientRect(); } catch (e) {}
+    window.extR = (el, r) => { const c = el.ownerDocument.defaultView.getComputedStyle(el); return (parseFloat(c.borderTopLeftRadius) || 0) * (el.offsetWidth ? r.width / el.offsetWidth : 1); };
+    const fitExt = (st) => { const f = st.querySelector("iframe"); if (!f) return; let r, rad = 0;
+      try { const el = f.contentDocument.querySelector(st.dataset.sel); r = el && el.getBoundingClientRect(); if (r) rad = extR(el, r); } catch (e) {}
       if (!r || !r.width) return; const p = +st.dataset.pad || 0, cx = r.left - p, cy = r.top - p, cw = r.width + 2 * p, ch = r.height + 2 * p;
       const W = st.clientWidth, H = st.clientHeight, s = Math.min((W - 48) / cw, (H - 48) / ch, 1), fw = +st.dataset.w, fh = +st.dataset.h;
       f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`;
-      f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${+st.dataset.r || 0}px)`; };
+      f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${p ? 0 : rad}px)`; };
     const ro = new ResizeObserver((es) => es.forEach((en) => fitExt(en.target)));
     IFX.io = new IntersectionObserver((es) => es.forEach((en) => {
       const st = en.target; let f = main(st);
@@ -2047,9 +2048,9 @@ function run(){
     document.body.appendChild(box); document.documentElement.style.overflow = "hidden";
     const big = box.querySelector(".if-big"), f = big.querySelector("iframe");
     if (it.ext) { f.style.width = it.w + "px"; f.style.height = it.h + "px";
-      const fit = () => { let r; try { const el = f.contentDocument.querySelector(it.sel); r = el && el.getBoundingClientRect(); } catch (e) {}
+      const fit = () => { let r, rad = 0; try { const el = f.contentDocument.querySelector(it.sel); r = el && el.getBoundingClientRect(); if (r) rad = extR(el, r); } catch (e) {}
         if (!r || !r.width) return; const p = it.pad || 0, cx = r.left - p, cy = r.top - p, cw = r.width + 2 * p, ch = r.height + 2 * p, W = big.clientWidth, H = big.clientHeight, s = Math.min((W - 64) / cw, (H - 64) / ch, 1);
-        f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${it.w - cx - cw}px ${it.h - cy - ch}px ${cx}px round ${it.r || 0}px)`; };
+        f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${it.w - cx - cw}px ${it.h - cy - ch}px ${cx}px round ${p ? 0 : rad}px)`; };
       f.addEventListener("load", () => { try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important;background:transparent!important}"; d.head.appendChild(s); } catch (e) {} fit(); setTimeout(fit, 700); });
       addEventListener("resize", fit); box._fit = fit; }
     const thumbs = () => box.querySelectorAll(".if-seg").forEach((sg) => { const on = sg.querySelector('[aria-pressed="true"]'), th = sg.querySelector(".th"); th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px"; });
