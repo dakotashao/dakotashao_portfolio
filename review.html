@@ -1566,6 +1566,11 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .if-wall + .if-wall { margin-top: 56px; }
 .if-hero + .if-wall, .nk-cap + .if-wall { margin-top: 96px; }
 .if-wall .s-full { grid-column: 1 / -1; }
+.if-band { margin-top: 56px; padding: 12px; border-radius: 22px; background: #0b0b0c; }
+.if-band .if-wall + .if-wall { margin-top: 12px; }
+.if-band .if-stage { background: #161618 !important; }
+.if-band .if-set .if-veil span { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+.if-band .if-open { background: rgba(255,255,255,.12); color: #fff; }
 .if-wall.two { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: calc((100cqw - 12px) / 2 * .62); }
 .if-wall:has(> .if-set[style*="aspect-ratio"]) { grid-auto-rows: auto; }
 .if-wall .s-fr { grid-column: 2 / span 2; grid-row: 1 / span 2; }
@@ -2039,10 +2044,27 @@ function run(){
     [["Pinball Slab", "n"], ["Pinball Stepper", "n"]],
     [["Dominoes Jukebox", "full"]],
   ];
+  // layout B: warm reading pieces → white components → one dark band → the live dial to close
+  const IF_LAYOUT_B = [
+    [["Autumn", "f"], ["Dominoes List", "n"], ["Fling Loader", "n"]],
+    [["Radical Swap", "full"]],
+    [["Margin Toolbar", "f"], ["Toggle", "n"], ["Radio", "n"]],
+    [["Lever Slider", "n"], ["Rope Slider", "n"], ["Domino Slider", "n"]],
+    [["Tide Loader", "n"], ["Surface Slider", "n"], ["Fluid Interface", "n"]],
+    [["Reading Pile", "n"], ["Balance Slider", "n"], ["Information Has Weight", "n"]],
+    [["Pinball Slab", "n"], ["Pinball Stepper", "n"]],
+    ["DARK", ["Lumen", "full2"]],
+    ["DARK", ["Workout Game", "w"], ["Push Loader", "n"]],
+    ["DARK", ["One-Line Plan", "w"], ["Workout Watch", "t"]],
+    [["Dominoes Jukebox", "full"]],
+    [["Liquid Dial", "full2"]],
+  ];
+  const IFB = !!window.IFC_B;
+  const BIG = /^(weight-sliders|rotation-slider|liquid-sliders|tide-loader|fluid-interface|selection-has-weight|rope|information-has-weight|reading-pile)/;
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
   const IF_ZOOM = { "liquid-dial": 0.8, "reading-pile": 0.95, "fling-loader": 0.95, "fling-loader-indeterminate": 0.95 };
   const ifSrc = (slug, big) => slug === "liquid-dial" ? `pg/liquid-dial.html?soft=1&zoom=${IF_ZOOM[slug]}&detail=1`
-    : big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${IF_ZOOM[slug] || ZOOM[slug] || 1}`;
+    : big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${(IF_ZOOM[slug] || ZOOM[slug] || 1) * (window.IFC_B && BIG.test(slug) ? 1.35 : 1)}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
     ...ITEMS.filter((it) => !["Booklets", "Film"].includes(it.type) && !["Dominoes Wheel", "Dominoes Tape"].includes(it.name)).map((it) => it.name === "Dominoes List" ? { ...it, axes: [["Style", ["Rows", "Wheel", "Tape"]]], grid: ["dominoes-list--rows", "dominoes-list--wheel", "dominoes-list--tape"] } : it).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? (IF_DEF[it.name] || it.axes.map(() => 0)) : [], ratio: "4 / 3" })),
@@ -2079,7 +2101,10 @@ function run(){
       <header class="nk-cap"><div class="nk-l"><p>Interfaces, ${p.year}</p><p class="g">Advanced Interface</p><p class="g">Interaction design</p><p class="g">Prototyping</p><p class="g">Front-end</p></div>
       <div class="nk-r"><p class="nk-desc">Weekly interface studies: loaders, badges, selectors, sliders, lists, menus, toolbars and buttons, each built as a working prototype. Hover a piece to try it.</p>
       <dl class="nk-meta"><div><dt>Team</dt><dd>Solo</dd></div><div><dt>Timeline</dt><dd>Fall 2026, 9 weeks</dd></div><div><dt>Tools</dt><dd>HTML, CSS, JavaScript, Claude</dd></div></dl></div></header>
-      ${IF_LAYOUT.map((g) => `<div class="if-wall${g.length === 2 && g.every(([, s]) => s === "n") ? " two" : ""}">${g.map(([name, span]) => { const it = its.find((i) => i.name === name); return it ? ifSet({ ...it, span }, ["f", "fr", "full", "full2", "w"].includes(span) && !it.ext ? "feat" : it.ext ? "ext" : "one") : ""; }).join("")}</div>`).join("")}`;
+      ${(() => { const wall = (g) => `<div class="if-wall${g.length === 2 && g.every(([, s]) => s === "n") ? " two" : ""}">${g.map(([name, span]) => { const it = its.find((i) => i.name === name); return it ? ifSet({ ...it, span }, ["f", "fr", "full", "full2", "w"].includes(span) && !it.ext ? "feat" : it.ext ? "ext" : "one") : ""; }).join("")}</div>`;
+        let out = "", band = [];
+        const flush = () => { if (band.length) out += `<div class="if-band">${band.map(wall).join("")}</div>`; band = []; };
+        (IFB ? IF_LAYOUT_B : IF_LAYOUT).forEach((g) => { if (g[0] === "DARK") band.push(g.slice(1)); else { flush(); out += wall(g); } }); flush(); return out; })()}`;
   };
   // frames load near the viewport, play their demo on a loop, and stand still while a hand is on them
   const IFX = { io: null, frames: new Map() };
