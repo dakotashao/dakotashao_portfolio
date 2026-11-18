@@ -1502,7 +1502,7 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 /* breathing room: 12px inside a group, 56px between groups */
 .if-wall { gap: 12px; grid-auto-rows: calc((100cqw - 24px) / 3 * .75); }
 .if-wall + .if-wall { margin-top: 56px; }
-.if-hero + .if-wall { margin-top: 56px; }
+.if-hero + .if-wall, .nk-cap + .if-wall { margin-top: 96px; }
 .if-wall .s-full { grid-column: 1 / -1; }
 .if-wall .s-fr { grid-column: 2 / span 2; grid-row: 1 / span 2; }
 .if-wall .s-fr ~ .if-set:not(.s-fr) { grid-column: 1; }
@@ -1984,7 +1984,11 @@ function run(){
   const IF_SECS = () => { const its = ifItems(); return IF_ORDER.filter((t) => its.some((i) => i.type === t)); };
   const interfacesPage = (p) => {
     const its = ifItems();
+
     return `<img class="if-hero" src="img/ifc-hero.webp" alt="Liquid Dial, a smart-home dial, on an iPad held in two hands">
+      <header class="nk-cap"><div class="nk-l"><p>Interfaces, ${p.year}</p><p class="g">Advanced Interface</p><p class="g">Interaction design</p><p class="g">Prototyping</p><p class="g">Front-end</p></div>
+      <div class="nk-r"><p class="nk-desc">Weekly interface studies: loaders, badges, selectors, sliders, lists, menus, toolbars and buttons, each built as a working prototype. Hover a piece to try it.</p>
+      <dl class="nk-meta"><div><dt>Team</dt><dd>Solo</dd></div><div><dt>Timeline</dt><dd>Fall 2026, 9 weeks</dd></div><div><dt>Tools</dt><dd>HTML, CSS, JavaScript, Claude</dd></div></dl></div></header>
       ${IF_LAYOUT.map((g) => `<div class="if-wall">${g.map(([name, span]) => { const it = its.find((i) => i.name === name); return it ? ifSet({ ...it, span }, ["f", "fr", "full", "full2"].includes(span) && !it.ext ? "feat" : it.ext ? "ext" : "one") : ""; }).join("")}</div>`).join("")}`;
   };
   // frames load near the viewport, play their demo on a loop, and stand still while a hand is on them
