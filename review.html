@@ -1469,10 +1469,10 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .if-dlg { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; opacity: 0; transition: opacity .25s ease; }
 .if-dlg.in { opacity: 1; }
 .if-scrim { all: unset; position: absolute; inset: 0; background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-.if-big { position: relative; width: min(1180px, 88vw); height: min(780px, 84vh); border-radius: 20px; overflow: hidden; background: #f4f4f4; transform: scale(.98); transition: transform .3s cubic-bezier(.25,.8,.25,1); }
+.if-big { position: relative; width: min(960px, 86vw); height: min(640px, 80vh); border-radius: 20px; overflow: hidden; background: #f4f4f4; transform: scale(.98); transition: transform .3s cubic-bezier(.25,.8,.25,1); }
 .if-dlg.in .if-big { transform: none; }
 .if-big iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.if-big.ext iframe { inset: auto; left: 50%; top: 50%; transform-origin: 50% 50%; }
+.if-big.ext iframe { inset: auto; left: 0; top: 0; transform-origin: 0 0; }
 .if-big .if-vsw { left: 14px; bottom: 14px; }
 .if-x { all: unset; cursor: pointer; position: absolute; right: 14px; top: 14px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: #fff; color: #0d0d0d; z-index: 2; }
 .if-x:hover { background: #e8e8e8; }
@@ -1483,6 +1483,20 @@ html.f-nk .nk-card b { font-weight: 500 !important; }
 .if-set:hover .if-veil { opacity: 1; }
 .if-veil span { font-size: 13px; line-height: 14px; letter-spacing: -0.02em; padding: 5px 10px; border-radius: 40px; color: rgba(0,0,0,.72); background: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); white-space: nowrap; }
 @media (hover: none) { .if-veil { opacity: 1; } }
+
+/* ===== Interfaces wall: no sections, one grid; every row the same height, big pieces span ===== */
+.if-hero + .if-wall { margin-top: 8px; }
+.if-wall { container-type: inline-size; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: calc((100cqw - 16px) / 3 * .75); gap: 8px; grid-auto-flow: row dense; }
+.if-wall .if-set { position: relative; min-width: 0; margin: 0; }
+.if-wall .if-stage { position: absolute; inset: 0; aspect-ratio: auto !important; height: auto; }
+.if-wall .s-f { grid-column: span 2; grid-row: span 2; }
+.if-wall .s-w { grid-column: span 2; }
+.if-wall .s-w2 { grid-column: span 2; grid-row: span 2; }
+.if-wall .s-t { grid-row: span 2; }
+.if-wall .if-stage.ext iframe { inset: auto; left: 0; top: 0; transform-origin: 0 0; }
+.if-wall .if-set.ext .if-veil span { background: rgba(255,255,255,.14); color: rgba(255,255,255,.86); }
+.if-wall .if-set.ext:has(.if-stage[style*="#fff"]) .if-veil span, .if-wall .if-set.ext:has(.if-stage[style*="#f6f6f6"]) .if-veil span { background: rgba(0,0,0,.06); color: rgba(0,0,0,.72); }
+@media (max-width: 900px) { .if-wall { grid-template-columns: 1fr; grid-auto-rows: 75cqw; } .if-wall .if-set { grid-column: auto !important; grid-row: auto !important; } }
 </style>
 </head>
 <body>
@@ -1748,7 +1762,7 @@ function run(){
   }
   const app = document.getElementById('app'), nav = document.getElementById('nav');
   const tags = (p) => `<span>${p.type}</span>` + p.tags.map((t) => `<span>${t}</span>`).join('');
-  const sections = (p) => p.ifc ? IF_SECS() : p.custom ? CUSTOM_SECS[p.custom] : p.blocks.filter((b) => b.t === 'label').map((b) => b.text);
+  const sections = (p) => p.ifc ? [] : p.custom ? CUSTOM_SECS[p.custom] : p.blocks.filter((b) => b.t === 'label').map((b) => b.text);
 
 
   let lay = 'A';
@@ -1909,22 +1923,24 @@ function run(){
   const IF_ORDER = ["Lists", "Sliders", "Selectors", "Badges & Tooltips", "Buttons", "Menus", "Loaders"];
   const IF_WEEK = { "Fling Loader": 1, "Tide Loader": 1, "Push Loader": 1 };
   // the rest of the course, live from the weekly repos (pg/ext/*.html), each drawn at its own size and scaled into the card
+  // the rest of the course, live from the weekly repos (pg/ext/*.html). Each page is drawn at its own size,
+  // and only the component is shown: c = the crop [x, y, w, h] in the page's own pixels.
   const EXT = [
-    { name: "Lumen", type: "Buttons", week: 9, verb: "Hover · Press", f: "lumen", w: 1100, h: 688, say: "Every button is a small light. It tilts toward you, and when pressed the icon travels into the count." },
-    { name: "Pinball Slab", type: "Buttons", week: 9, verb: "Hold", f: "pinball-slab", w: 900, h: 563, say: "Hold to send works like a plunger: hold and it winds back, let go early and it springs back." },
-    { name: "Ceiling", type: "Buttons", week: 9, verb: "Tap", f: "ceiling", w: 1100, h: 688, say: "One add button shoots each new item up to the ceiling. The sixth knocks the whole stack down." },
-    { name: "Dominoes Jukebox", type: "Menus", week: 6, verb: "Turn · Press", f: "dominoes-jukebox", w: 1200, h: 750, say: "A music menu on one knob. Albums tip back like dominoes, songs run on a ruler." },
-    { name: "Margin Toolbar", type: "Menus", week: 8, verb: "Drag", f: "margin-toolbar", w: 1280, h: 800, say: "A reading toolbar for iPad and Pencil. Drag it to any edge and it docks; shrink it into a ring." },
-    { name: "Radical Swap", type: "Menus", week: 8, verb: "Tap", f: "radical-swap", w: 1280, h: 800, say: "A character study. Point at a part to learn it, then swap it to make a new character: 秋 → 和 → 利." },
-    { name: "Workout Watch", type: "Menus", week: 8, verb: "Scroll", f: "workout-watch", w: 1200, h: 750, say: "A workout menu on the watch. The chosen row's colour runs on and opens into the screen." },
-    { name: "Workout Game", type: "Menus", week: 8, verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, say: "A console workout picker. Cards light up in the colours of the screen transition." },
+    { name: "Lumen", verb: "Hover · Press", f: "lumen", w: 1100, h: 820, c: [16, 86, 1068, 714], bg: "#111", span: "w" },
+    { name: "Ceiling", verb: "Tap", f: "ceiling", w: 1100, h: 688, c: [362, 20, 376, 564], bg: "#111", span: "t" },
+    { name: "Workout Game", verb: "Arrow keys", f: "workout-game", w: 1280, h: 800, c: [56, 165, 1168, 460], bg: "#1f2a17", span: "w" },
+    { name: "Workout Watch", verb: "Scroll", f: "workout-watch", w: 1200, h: 750, c: [356, 150, 488, 440], bg: "#1c1c1e", span: "n" },
+    { name: "Radical Swap", verb: "Tap", f: "radical-swap", w: 1280, h: 800, c: [144, 28, 993, 690], bg: "#000", span: "w" },
+    { name: "Margin Toolbar", verb: "Drag", f: "margin-toolbar", w: 1280, h: 800, c: [153, 28, 974, 690], bg: "#000", span: "w" },
+    { name: "Pinball Slab", verb: "Hold", f: "pinball-slab", w: 900, h: 600, c: [48, 56, 804, 520], bg: "#f6f6f6", span: "n" },
+    { name: "Dominoes Jukebox", verb: "Turn · Press", f: "dominoes-jukebox", w: 1200, h: 750, c: [64, 28, 1072, 448], bg: "#f4f4f4", span: "w" },
   ];
   const combos = (axes) => axes.reduce((acc, [, opts]) => acc.flatMap((c) => opts.map((o) => [...c, o])), [[]]).map((c) => c.join(" · "));
   const ifSrc = (slug, big) => big ? `pg/${slug}.html?soft=1&zoom=1` : `pg/${slug}.html?soft=1&zoom=${ZOOM[slug] || 1}`;
   const ifH = (slug) => Math.min(520, CARD_H[slug] || H[slug] || 380);
   const ifItems = () => [
-    ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type)).map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
-    ...EXT.map((e, n) => ({ ...e, id: "e" + n, ext: true, ratio: `${e.w} / ${e.h}` })),
+    ...ITEMS.filter((it) => !["Booklets", "Film", "Prototypes"].includes(it.type) && it.name !== "Plumb Bob Slider").map((it, n) => ({ ...it, id: "i" + n, sel: it.axes ? it.axes.map(() => 0) : [], ratio: "4 / 3" })),
+    ...EXT.map((e, n) => ({ ...e, id: "e" + n, ext: true })),
   ];
   // which file a block shows for the chosen variant (one segment per axis)
   const ifSlug = (it) => it.axes ? it.grid[it.sel.reduce((acc, k, a) => acc * it.axes[a][1].length + k, 0)] : it.slug;
@@ -1935,21 +1951,20 @@ function run(){
   const ifSet = (it, cls) => {
     IFI[it.id] = it;
     const stage = it.ext
-      ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" style="aspect-ratio:${it.ratio}"></div>`
-      : `<div class="if-stage" data-src="${ifSrc(ifSlug(it), cls === "feat")}" style="aspect-ratio:${it.ratio}"></div>`;
-    return `<div class="if-set ${cls}" data-id="${it.id}">${stage}
+      ? `<div class="if-stage ext" data-src="pg/ext/${it.f}.html" data-w="${it.w}" data-h="${it.h}" data-c="${it.c.join(",")}" style="background:${it.bg}"></div>`
+      : `<div class="if-stage" data-src="${ifSrc(ifSlug(it), cls === "feat")}"></div>`;
+    return `<div class="if-set ${cls} s-${it.span || (cls === "feat" ? "f" : "n")}" data-id="${it.id}">${stage}
       ${it.axes ? `<div class="if-vsw">${ifSegs(it)}</div>` : ""}
+      <button class="if-open" type="button" aria-label="Open ${esc(it.name)} larger">${EXPAND}</button>
       <div class="if-veil">${[it.name, it.verb].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</div></div>`;
   };
   const IF_SECS = () => { const its = ifItems(); return IF_ORDER.filter((t) => its.some((i) => i.type === t)); };
   const interfacesPage = (p) => {
     const its = ifItems();
     return `<img class="if-hero" src="img/ifc-hero.webp" alt="Liquid Dial, a smart-home dial, on an iPad held in two hands">
-      <div class="blk ifc">${IF_SECS().map((t) => {
-        const list = its.filter((i) => i.type === t), feat = list.filter((i) => i.slug === "autumn-full-bleed");
-        return `<p class="lb" id="sec-${slugify(t)}">${t}</p>
-          <div class="if-grid${list.some((i) => i.ext) && t === "Menus" ? " wide" : ""}">${feat.map((i) => ifSet(i, "feat")).join("")}${list.filter((i) => !feat.includes(i)).map((i) => ifSet(i, i.ext ? "ext" : "one")).join("")}</div>`;
-      }).join("")}</div>`;
+      <div class="if-wall">${(() => { const feat = its.find((i) => i.slug === "autumn-full-bleed");
+        const light = its.filter((i) => !i.ext && i !== feat), dark = its.filter((i) => i.ext);
+        return [ifSet(feat, "feat"), ...light.map((i) => ifSet(i, "one")), ...dark.map((i) => ifSet(i, "ext"))].join(""); })()}</div>`;
   };
   // frames load near the viewport, play their demo on a loop, and stand still while a hand is on them
   const IFX = { io: null, frames: new Map() };
@@ -1960,7 +1975,10 @@ function run(){
     const make = (st, src, cls) => { const f = document.createElement("iframe"); f.src = src; f.title = "Interface"; f.className = cls;
       if (st.classList.contains("ext")) { f.style.width = st.dataset.w + "px"; f.style.height = st.dataset.h + "px"; }
       st.appendChild(f); return f; };
-    const fitExt = (st) => { const s = st.clientWidth / +st.dataset.w; st.querySelectorAll("iframe").forEach((f) => { f.style.transform = `scale(${s})`; }); };
+    const fitExt = (st) => { const [cx, cy, cw, ch] = st.dataset.c.split(",").map(Number), W = st.clientWidth, H = st.clientHeight;
+      const s = Math.min(W / cw, H / ch), ox = (W - cw * s) / 2 - cx * s, oy = (H - ch * s) / 2 - cy * s;
+      const fw = +st.dataset.w, fh = +st.dataset.h;
+      st.querySelectorAll("iframe").forEach((f) => { f.style.transform = `translate(${ox}px,${oy}px) scale(${s})`; f.style.clipPath = `inset(${cy}px ${fw - cx - cw}px ${fh - cy - ch}px ${cx}px round ${16 / s}px)`; }); };
     const ro = new ResizeObserver((es) => es.forEach((en) => fitExt(en.target)));
     IFX.io = new IntersectionObserver((es) => es.forEach((en) => {
       const st = en.target; let f = main(st);
@@ -1968,7 +1986,8 @@ function run(){
         st.dataset.vis = "1";
         if (!f) { f = make(st, st.dataset.src, "a");
           if (st.classList.contains("ext")) { fitExt(st); ro.observe(st); }
-          f.addEventListener("load", () => { IFX.frames.set(f.contentWindow, st); setTimeout(() => play(st), 400 + Math.random() * 900); }); }
+          f.addEventListener("load", () => { IFX.frames.set(f.contentWindow, st);
+            if (st.classList.contains("ext")) try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important}"; d.head.appendChild(s); } catch (e) {} setTimeout(() => play(st), 400 + Math.random() * 900); }); }
         else setTimeout(() => play(st), 300);
       } else { delete st.dataset.vis; if (f) f.contentWindow.postMessage({ type: "demo", on: false }, "*"); }
     }), { rootMargin: "300px 0px" });
@@ -1982,6 +2001,7 @@ function run(){
     root.querySelectorAll(".if-set").forEach((s) => { s.addEventListener("pointerenter", () => thumbs(s), { once: true }); });
     if (!root._ifc) root._ifc = 1, root.addEventListener("click", (e) => {
       const set = e.target.closest(".if-set"); if (!set) return; const it = IFI[set.dataset.id];
+      if (e.target.closest(".if-open")) return ifOpen(it);
       const b = e.target.closest(".if-seg button");
       if (b) { it.sel[+b.dataset.a] = +b.dataset.k; set.querySelectorAll(".if-seg button").forEach((x) => x.setAttribute("aria-pressed", it.sel[+x.dataset.a] === +x.dataset.k)); thumbs(set);
         const st = set.querySelector(".if-stage"), f = st.querySelector("iframe.a"), src = ifSrc(ifSlug(it), set.classList.contains("feat")); st.dataset.src = src; if (f) { IFX.frames.delete(f.contentWindow); f.src = src; f.addEventListener("load", () => IFX.frames.set(f.contentWindow, st), { once: true }); } return; }
@@ -1991,12 +2011,15 @@ function run(){
   // the enlarged view: one block, as big as the window allows, with its variant switch
   function ifOpen(it) {
     const box = document.createElement("div"); box.className = "if-dlg"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", it.name);
-    const src = (it2) => it2.ext ? `pg/ext/${it2.f}.html` : `pg/${ifSlug(it2)}.html?max=1.6&detail=1`;
+    const src = (it2) => it2.ext ? `pg/ext/${it2.f}.html` : `pg/${ifSlug(it2)}.html?detail=1`;
     box.innerHTML = `<button class="if-scrim" aria-label="Close"></button><div class="if-big${it.ext ? " ext" : ""}"><iframe title="${esc(it.name)}" src="${src(it)}"></iframe>
       ${it.axes ? `<div class="if-vsw on">${ifSegs(it)}</div>` : ""}<button class="if-x" type="button" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
     document.body.appendChild(box); document.documentElement.style.overflow = "hidden";
     const big = box.querySelector(".if-big"), f = big.querySelector("iframe");
-    if (it.ext) { const fit = () => { const s = Math.min(big.clientWidth / it.w, big.clientHeight / it.h); f.style.width = it.w + "px"; f.style.height = it.h + "px"; f.style.transform = `translate(-50%,-50%) scale(${s})`; }; fit(); addEventListener("resize", fit); box._fit = fit; }
+    if (it.ext) { big.style.background = it.bg; const [cx, cy, cw, ch] = it.c; f.style.width = it.w + "px"; f.style.height = it.h + "px";
+      const fit = () => { const W = big.clientWidth, H = big.clientHeight, s = Math.min(1, W / cw, H / ch); f.style.transform = `translate(${(W - cw * s) / 2 - cx * s}px,${(H - ch * s) / 2 - cy * s}px) scale(${s})`; };
+      f.addEventListener("load", () => { try { const d = f.contentDocument, s = d.createElement("style"); s.textContent = "html,body{overflow:hidden!important}"; d.head.appendChild(s); } catch (e) {} });
+      fit(); addEventListener("resize", fit); box._fit = fit; }
     const thumbs = () => box.querySelectorAll(".if-seg").forEach((sg) => { const on = sg.querySelector('[aria-pressed="true"]'), th = sg.querySelector(".th"); th.style.left = on.offsetLeft + "px"; th.style.width = on.offsetWidth + "px"; });
     requestAnimationFrame(() => { box.classList.add("in"); thumbs(); });
     const close = () => { box.classList.remove("in"); document.documentElement.style.overflow = ""; if (box._fit) removeEventListener("resize", box._fit); removeEventListener("keydown", esc_); setTimeout(() => box.remove(), 250); };
