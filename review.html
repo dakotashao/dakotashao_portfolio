@@ -140,14 +140,22 @@ main#app { margin-left: var(--side); padding: 72px 64px 120px; }
 .bk-book.end { transform: translateX(25%); } .bk-book.mid { transform: none; }
 .bk-leaf { position: absolute; top: 0; left: 50%; width: 50%; height: 100%; transform-origin: left center; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.3,.1,.2,1); }
 .bk-leaf.on { transform: rotateY(-180deg); }
-.bk-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; overflow: hidden; }
-.bk-sh { position: absolute; top: 0; bottom: 0; left: 50%; right: 0; box-shadow: 0 0 0 .5px rgba(0,0,0,.06), 0 4px 10px -6px rgba(0,0,0,.18); transition: left .9s cubic-bezier(.3,.1,.2,1), right .9s cubic-bezier(.3,.1,.2,1); pointer-events: none; }
+.bk-f { position: absolute; inset: 0 0 0 -1px; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; overflow: hidden; }
+.bk-sh { position: absolute; top: 0; bottom: 0; left: 50%; right: 0; box-shadow: 0 0 0 .5px rgba(0,0,0,.07), 1px 1px 0 #ebe7df, 2px 2px 0 #e2ddd3, 3px 3px 0 #d8d2c6, 3px 4px 10px -3px rgba(40,30,20,.22), 0 14px 24px -14px rgba(40,30,20,.3); transition: left .9s cubic-bezier(.3,.1,.2,1), right .9s cubic-bezier(.3,.1,.2,1); pointer-events: none; }
 .bk-book.mid .bk-sh { left: 0; } .bk-book.end .bk-sh { left: 0; right: 50%; }
 .bk-f img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .bk-bk { transform: rotateY(180deg); }
-.bk-fr::after, .bk-bk::after { content: ""; position: absolute; top: 0; bottom: 0; width: 3%; pointer-events: none; }
-.bk-fr::after { left: 0; background: linear-gradient(90deg, rgba(0,0,0,.07), rgba(0,0,0,0)); }
-.bk-bk::after { right: 0; background: linear-gradient(270deg, rgba(0,0,0,.07), rgba(0,0,0,0)); }
+.bk-fr::after, .bk-bk::after { content: ""; position: absolute; top: 0; bottom: 0; width: 14%; pointer-events: none; mix-blend-mode: multiply; }
+/* paper: fine grain over every page, multiplied so it reads as stock rather than a filter */
+.bk-f::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); background-size: 160px; mix-blend-mode: multiply; opacity: .32; }
+/* the page curls into the gutter: a soft fall-off, a faint highlight where the curve turns toward the light */
+.bk-fr::after { left: 0; background: linear-gradient(90deg, rgba(50,38,25,.38) 0%, rgba(50,38,25,.12) 20%, rgba(255,255,255,.10) 38%, rgba(0,0,0,0) 100%); }
+.bk-bk::after { right: 0; background: linear-gradient(270deg, rgba(50,38,25,.38) 0%, rgba(50,38,25,.12) 20%, rgba(255,255,255,.10) 38%, rgba(0,0,0,0) 100%); }
+/* a leaf darkens as it lifts and clears as it lands, like a sheet catching less light mid-turn */
+.bk-f > .bk-lt { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: #1a140c; opacity: 0; }
+@keyframes bkLand { 0% { opacity: .22; } 100% { opacity: 0; } }
+.bk-leaf.on .bk-bk > .bk-lt { animation: bkLand .9s cubic-bezier(.3,.1,.2,1); }
+.bk-leaf.back .bk-fr > .bk-lt { animation: bkLand .9s cubic-bezier(.3,.1,.2,1); }
 .bk-bar { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 14px; font-size: 13px; color: var(--faint); }
 .bk-bar button { border: 0; background: none; font: inherit; font-size: 16px; color: var(--ink, #111); padding: 4px 10px; cursor: pointer; border-radius: 6px; }
 .bk-bar button:disabled { opacity: .25; cursor: default; }
@@ -2204,7 +2212,7 @@ function run(){
     if (b.t === 'gallery' && b.scroll) return `<div class="gal gal-sc" style="--c:${b.cols || b.items.length}">${b.items.map((it) => `<figure><div class="sc"><img src="${it.src}" alt="${esc(it.alt || it.cap || '')}" loading="lazy"></div>${it.cap ? `<figcaption>${esc(it.cap)}</figcaption>` : ''}</figure>`).join('')}</div>`;
     if (b.t === 'gallery') return `<div class="gal" style="--c:${b.cols || b.items.length}">${b.items.map((it) => `<figure${it.span ? ` style="grid-column:span ${it.span}"` : ''}${it.tag ? ` class="tgd${it.lt ? ' lt' : ''}"` : ''}>${it.tag ? `<span class="tag">${it.tag}</span>` : ''}<img src="${it.src}" alt="${esc(it.alt || it.cap || '')}" style="aspect-ratio:${it.r || '4/3'};object-fit:${it.fit || 'cover'}" loading="lazy">${it.cap ? `<figcaption>${esc(it.cap)}</figcaption>` : ''}</figure>`).join('')}</div>`;
     if (b.t === 'book') { const P = b.pages, L = []; for (let i = 0; i < P.length; i += 2) L.push([P[i], P[i + 1]]);
-      return `<div class="bk${b.dk ? ' dk' : ''}${b.bg && !b.dk ? ' lt' : ''}"${b.coverIsPage ? ' data-c="1"' : ''} tabindex="0" aria-label="${esc(b.alt || 'Booklet')}, use the arrow keys to turn pages">${b.tag ? `<span class="tag">${b.tag}</span>` : ''}<div class="bk-stage"${b.bg ? ` style="background:${b.bg}"` : ''}><div class="bk-book" style="--r:${b.r}"><div class="bk-sh"></div>${L.map(([f, k], i) => `<div class="bk-leaf" style="z-index:${L.length - i}"><div class="bk-f bk-fr"><img src="${f}" alt="" draggable="false"${i > 1 ? ' loading="lazy"' : ''}></div><div class="bk-f bk-bk"><img src="${k}" alt="" draggable="false" loading="lazy"></div></div>`).join('')}</div></div>
+      return `<div class="bk${b.dk ? ' dk' : ''}${b.bg && !b.dk ? ' lt' : ''}"${b.coverIsPage ? ' data-c="1"' : ''} tabindex="0" aria-label="${esc(b.alt || 'Booklet')}, use the arrow keys to turn pages">${b.tag ? `<span class="tag">${b.tag}</span>` : ''}<div class="bk-stage"${b.bg ? ` style="background:${b.bg}"` : ''}><div class="bk-book" style="--r:${b.r}"><div class="bk-sh"></div>${L.map(([f, k], i) => `<div class="bk-leaf" style="z-index:${L.length - i}"><div class="bk-f bk-fr"><img src="${f}" alt="" draggable="false"${i > 1 ? ' loading="lazy"' : ''}><i class="bk-lt"></i></div><div class="bk-f bk-bk"><img src="${k}" alt="" draggable="false" loading="lazy"><i class="bk-lt"></i></div></div>`).join('')}</div></div>
         <div class="bk-bar"><button type="button" class="bk-prev" aria-label="Previous page">←</button><span class="bk-pg">Cover</span><button type="button" class="bk-next" aria-label="Next page">→</button></div></div>`; }
     if (b.t === 'fold') { const pan = (c, r, cls) => `<div class="fd-p ${cls}"><i class="fd-fr" style="background-position:${c / 3 * 100}% ${r / 2 * 100}%"></i><i class="fd-bk"></i></div>`;
       let col = ''; for (let c = 3; c >= 0; c--) col = `<div class="fd-c fd-c${c}">${pan(c, 1, 'fd-m')}<div class="fd-t">${pan(c, 0, '')}</div><div class="fd-b">${pan(c, 2, '')}</div>${col}</div>`;
@@ -2576,7 +2584,7 @@ function run(){
       const book = bk.querySelector('.bk-book'), leaves = [...bk.querySelectorAll('.bk-leaf')], N = leaves.length, pg = bk.querySelector('.bk-pg'), pv = bk.querySelector('.bk-prev'), nx = bk.querySelector('.bk-next');
       let s = 0;
       const show = (to) => { to = Math.max(0, Math.min(N, to)); if (to === s) return; const fwd = to > s;
-        leaves.forEach((l, i) => { const on = i < to; if (l.classList.contains('on') !== on) l.style.zIndex = 200 + (fwd ? i : N - i); l.classList.toggle('on', on); });
+        leaves.forEach((l, i) => { const on = i < to, was = l.classList.contains('on'); if (was !== on) l.style.zIndex = 200 + (fwd ? i : N - i); if (was && !on) { l.classList.remove('back'); void l.offsetWidth; l.classList.add('back'); } l.classList.toggle('on', on); });
         s = to; clearTimeout(bk._t); bk._t = setTimeout(() => leaves.forEach((l, i) => l.style.zIndex = i < s ? i + 1 : N - i), 900);
         book.classList.toggle('end', s === N); book.classList.toggle('mid', s > 0 && s < N);
         pg.textContent = s === 0 ? 'Cover' : s === N ? 'Back cover' : bk.dataset.c ? `Pages ${2 * s}–${2 * s + 1}` : s === 1 ? 'Page 1' : `Pages ${2 * s - 2}–${2 * s - 1}`; pv.disabled = s === 0; nx.disabled = s === N; };
