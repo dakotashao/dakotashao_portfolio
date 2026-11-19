@@ -107,7 +107,7 @@ main#app { margin-left: var(--side); padding: 72px 64px 120px; }
 @media (max-width: 900px) { .blk.wall .pair { grid-template-columns: 1fr; } }
 .blk.wall .gal { gap: var(--g); }
 .blk .fb { position: relative; height: 100%; }
-.blk .fb > .fd, .blk .fb > .bk { margin: 0 !important; height: 100%; transition: opacity .45s ease; }
+.blk .fb > .fd, .blk .fb > .bk { margin: 0 !important; height: 100%; }
 .blk .fb > .fd .fd-stage { height: 100% !important; }
 .blk .fb > .fd .bk-bar { display: none; }
 .blk .fb > .bk { position: absolute !important; inset: 0; opacity: 0; pointer-events: none; }
@@ -2583,16 +2583,19 @@ function run(){
       let s = 2; const L = ['Folded', 'Half folded', 'Full poster'];
       const place = () => { const w = parseFloat(getComputedStyle(st).getPropertyValue('--w')), W = st.clientWidth, H = st.clientHeight;
         const box = [[0, 2, 1, 2], [0, 2, 4, 2], [0, 0, 4, 6]][s]; // x, y, width, height in panel units
-        const k = Math.min(W * .86 / (box[2] * w), H * .86 / (box[3] * w));
-        sh.style.transform = `translate(${-(box[0] + box[2] / 2) * w * k}px, ${-(box[1] + box[3] / 2) * w * k}px) scale(${k})`; sh.style.transformOrigin = '0 0'; };
+        let k = Math.min(W * .86 / (box[2] * w), H * .86 / (box[3] * w)), dx = 0, dy = 0;
+        const cv = fd.dataset.fb && s === 0 && fd.parentElement.querySelector('.bk-leaf .bk-fr');
+        if (cv) { const c = cv.getBoundingClientRect(), r = st.getBoundingClientRect(); k = c.height / (2 * w); dx = c.left + c.width / 2 - (r.left + r.width / 2); dy = c.top + c.height / 2 - (r.top + r.height / 2); }
+        sh.style.transform = `translate(${dx - (box[0] + box[2] / 2) * w * k}px, ${dy - (box[1] + box[3] / 2) * w * k}px) scale(${k})`; sh.style.transformOrigin = '0 0'; };
       const go = (to) => { to = Math.max(0, Math.min(2, to)); if (to === s) return; sh.classList.remove('rest'); sh.classList.remove('s' + s); s = to; sh.classList.add('s' + s); place();
         clearTimeout(fd._t); fd._t = setTimeout(() => sh.classList.add('rest'), 1250); pg.textContent = L[s]; pv.disabled = s === 0; nx.disabled = s === 2; };
       nx.disabled = true; place(); addEventListener('resize', place);
       pv.addEventListener('click', () => go(s - 1)); nx.addEventListener('click', () => go(s + 1));
       if (fd.dataset.fb) { const fb = fd.closest('.fb');
         const onF = () => { if (!fb.isConnected) return removeEventListener('scroll', onF); const r = fb.getBoundingClientRect(), p = (innerHeight - r.top) / (innerHeight * .85);
-          const to = p < .5 ? 2 : p < .75 ? 1 : 0; go(to);
-          if (to === 0) { if (!fb._d && !fb.classList.contains('done')) fb._d = setTimeout(() => { fb.classList.add('done'); fb._d = 0; }, 1350); }
+          const to = p < .5 ? 2 : p < .75 ? 1 : 0; fb._to = to;
+          if (!fb._step) { const step = () => { if (s === fb._to) { fb._step = 0; return; } go(s + (fb._to < s ? -1 : 1)); if (s === 0) fb._t0 = performance.now(); fb._step = setTimeout(step, 850); }; step(); }
+          if (to === 0) { if (!fb._d && !fb.classList.contains('done')) fb._d = setTimeout(function w() { if (s !== 0 || performance.now() - (fb._t0 || 0) < 1250) { fb._d = setTimeout(w, 80); return; } fb.classList.add('done'); fb._d = 0; }, 300); }
           else { clearTimeout(fb._d); fb._d = 0; fb.classList.remove('done'); } };
         addEventListener('scroll', onF, { passive: true }); onF(); }
       if (fd.dataset.scroll) { const wrap = fd.closest('.fds');
