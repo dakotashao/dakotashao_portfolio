@@ -1,46 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light only">
 <title>Dakota Shao — Interaction Designer</title>
-<meta name="description" content="Dakota Shao, Interaction Designer.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#151515;--grey:#6a6a66}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#fff}
-  body{font-family:"Courier Prime","Courier New",monospace;color:var(--ink);min-height:100svh;
-       display:flex;align-items:center;justify-content:center;
-       padding:calc(env(safe-area-inset-top) + 40px) 24px calc(env(safe-area-inset-bottom) + 40px)}
-  main{width:100%;max-width:400px}
-  .qiu{font-family:"Noto Serif SC","Songti SC",serif;font-size:40px;line-height:1}
-  h1{font-weight:700;font-size:17px;letter-spacing:1.6px}
-  h1 span{margin-left:12px}
-  p{margin-top:8px;font-size:13px;color:var(--grey)}
-  nav{margin-top:36px}
-  a{display:grid;grid-template-columns:96px 1fr auto;align-items:center;min-height:56px;
-    border-top:1px solid var(--ink);color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
-  a:last-child{border-bottom:1px solid var(--ink)}
-  .k{font-size:10px;letter-spacing:2.4px}
-  .v{font-size:15px;overflow-wrap:anywhere}
-  .arr{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
-  a:active{background:#f4f4f2}
-  a:active .arr,a:hover .arr{transform:translate(3px,-3px)}
-</style>
-</head>
-<body>
-<main>
-  <h1>DAKOTA SHAO</h1>
-  <p>Interaction Designer</p>
-  <nav>
-    <a href="https://dakotashao.com"><span class="k">PORTFOLIO</span><span class="v">dakotashao.com</span><span class="arr">↗</span></a>
-    <a href="https://www.linkedin.com/in/dakota-shao-0b9b39311/" target="_blank" rel="noopener"><span class="k">LINKEDIN</span><span class="v">Dakota Shao</span><span class="arr">↗</span></a>
-    <a href="mailto:wenqiushao@gmail.com"><span class="k">EMAIL</span><span class="v">wenqiushao@gmail.com</span><span class="arr">↗</span></a>
-  </nav>
-</main>
-</body>
-</html>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#fff;color:#151515}
+body{font-family:"Courier Prime","Courier New",monospace;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+.page{min-height:100svh;display:flex;flex-direction:column;justify-content:space-between;
+ padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px)}
+.tiny{font-family:"Geist Mono",monospace;font-weight:300;font-size:10px;letter-spacing:2.4px;text-transform:uppercase}
+.arr{display:inline-block;transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+a:active .arr,a:hover .arr{transform:translate(3px,-3px)}
+
+.page{justify-content:stretch}
+.box{flex:1;display:flex;flex-direction:column;border:1px solid #151515}
+.box>*{display:grid;grid-template-columns:110px 1fr auto;align-items:center;min-height:52px;padding:0 14px;border-top:1px solid #151515}
+.box>*:first-child{border-top:0}
+.box .head{display:block;padding:16px 14px 18px}
+.box .fill{flex:1;min-height:40px}
+.head h1{font-weight:700;font-size:26px;letter-spacing:1.5px}
+.k{font-size:13px}.v{font-size:15px;overflow-wrap:anywhere}
+a:active{background:#f3f3f3}
+</style></head><body><main class="page"><section class="box"><div class="head"><h1>DAKOTA SHAO</h1></div>
+<div><span class="k">Practice</span><span class="v">Interaction Designer</span></div>
+<div><span class="k">School</span><span class="v">ArtCenter, Fall 2026</span></div><div class="fill"></div><a href="https://dakotashao.com"><span class="k">Portfolio</span><span class="v">dakotashao.com</span><span class="arr">↗</span></a><a href="https://www.linkedin.com/in/dakota-shao-0b9b39311/" target="_blank" rel="noopener"><span class="k">LinkedIn</span><span class="v">Dakota Shao</span><span class="arr">↗</span></a><a href="mailto:wenqiushao@gmail.com"><span class="k">Email</span><span class="v">wenqiushao@gmail.com</span><span class="arr">↗</span></a></section></main></body></html>
